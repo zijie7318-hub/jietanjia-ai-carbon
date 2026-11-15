@@ -1,0 +1,28 @@
+# 依赖与缓存
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+node_modules/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 密钥与本地配置：绝不入库
+.env
+.env.*
+!.env.example
+
+# 运行时数据（SQLite 用户记录）
+data/
+*.db
+*.db-journal
+*.sqlite
+
+# 本地临时产物
+*.log
+screenshots/
+.DS_Store
+Thumbs.db

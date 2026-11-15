@@ -1,0 +1,12 @@
+{
+  "version": "demo-2026.11",
+  "is_demo": true,
+  "kg_co2e_per_kwh": 0.55,
+  "default_tariff_yuan_per_kwh": 0.55,
+  "default_monthly_kwh_per_person": 70,
+  "default_upfront_budget": 8000,
+  "region": "全国估算示例",
+  "source": "演示用排放系数与电价参数，正式版须替换为生态环境部及当地电网公开数据",
+  "updated_at": "2026-11-01",
+  "disclaimer": "所有金额和减碳量均为估算，不代表实际账单或经核查的减排量。"
+}

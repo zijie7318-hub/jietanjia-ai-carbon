@@ -1,0 +1,55 @@
+{
+  "version": "demo-1.0",
+  "region": "西安市",
+  "disclaimer": "以下全部为作品演示政策，不是真实有效的政府补贴文件，不构成申领依据。正式版本将替换为带官方链接、文号和有效期的公开政策。",
+  "policies": [
+    {
+      "id": "demo_appliance_trade_in",
+      "title": "节能家电以旧换新补助（演示）",
+      "region": "西安市",
+      "valid_from": "2026-01-01",
+      "valid_to": "2026-12-31",
+      "is_demo": true,
+      "source_name": "作品演示数据，非真实政策",
+      "source_url": "",
+      "benefit": "按成交价约 10% 估算，单件最高 500 元（演示）",
+      "action_ids": ["ac_replace_eff", "fridge_replace_eff"],
+      "requires_owner": true,
+      "requirements": ["自有住房", "购买一级能效产品", "保留发票和旧机回收凭证"],
+      "application": "演示流程：在政策正式渠道提交购买与回收材料。",
+      "updated_at": "2026-11-01"
+    },
+    {
+      "id": "demo_energy_kit",
+      "title": "绿色照明与待机节能包（演示）",
+      "region": "西安市",
+      "valid_from": "2026-01-01",
+      "valid_to": "2026-12-31",
+      "is_demo": true,
+      "source_name": "作品演示数据，非真实政策",
+      "source_url": "",
+      "benefit": "节能用品抵扣 50 元（演示）",
+      "action_ids": ["led_bulbs", "standby_strip", "ac_temp_26"],
+      "requires_owner": false,
+      "requirements": ["居住在本市", "领取后完成至少一项节能行动"],
+      "application": "演示流程：在活动页面登记并上传实施记录。",
+      "updated_at": "2026-11-01"
+    },
+    {
+      "id": "demo_window_insulation",
+      "title": "门窗保温改善材料补助（演示）",
+      "region": "西安市",
+      "valid_from": "2026-01-01",
+      "valid_to": "2026-12-31",
+      "is_demo": true,
+      "source_name": "作品演示数据，非真实政策",
+      "source_url": "",
+      "benefit": "材料费用约 20%，最高 300 元（演示）",
+      "action_ids": ["window_seal_removable", "shade_summer"],
+      "requires_owner": true,
+      "requirements": ["自有住房", "保留材料购买凭证"],
+      "application": "演示流程：提交住房与材料凭证进行审核。",
+      "updated_at": "2026-11-01"
+    }
+  ]
+}

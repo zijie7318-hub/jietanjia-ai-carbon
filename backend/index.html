@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>节碳家 · AI 家庭减碳助手</title>
+<meta name="description" content="节碳家：根据家庭情况生成三档可执行节能方案，估算节电、节省电费与减碳量，展示补贴初筛依据，并记录日常减碳行动。">
+<meta name="theme-color" content="#0E6E5C">
+<meta property="og:type" content="website">
+<meta property="og:title" content="节碳家 · 把家庭节能变成可执行方案">
+<meta property="og:description" content="输入家庭情况，获得三档节能方案、补贴初筛依据和可持续记录的碳迹档案。">
+<meta property="og:locale" content="zh_CN">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="%230E6E5C"/><path d="M9 23V15l7-6 7 6v8h-5v-5h-4v5z" fill="%23EAF8DE"/></svg>'>
+<style>
+/* ============================================================
+   节碳家 · 视觉系统（沿用原页面组件与排版底座）
+   tokens → base → shell → components → panels → footer → modal
+   ============================================================ */
+:root{
+  --paper:#F7EFE1;
+  --paper-2:#FFFBF2;
+  --paper-3:#F1E4CC;
+  --paper-4:#F5EBDA;
+  --ink:#201A14;
+  --ink-2:#3E3428;
+  --body:#5F5342;
+  --muted:#8A7B66;
+  --faint:#A2937C;
+  --line:#E3D3B6;
+  --line-2:#DCCBAB;
+  --red:#DA291C;
+  --red-dark:#A31D12;
+  --red-t:#FBE3DD;
+  --yellow:#FFC72C;
+  --yellow-t:#FFEFC2;
+  --yellow-d:#8A6B12;
+  --green:#1E7A43;
+  --green-t:#E4F2E7;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+  --serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,"Cascadia Mono",Consolas,monospace;
+  --shadow-hard:0 6px 0 rgba(32,26,20,.12);
+  --shadow-card:0 8px 0 rgba(32,26,20,.14);
+  --maxw:1200px;
+  --gutter:max(24px, calc((100vw - var(--maxw)) / 2));
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{
+  font-family:var(--sans);background:var(--paper);color:var(--ink);
+  line-height:1.65;padding:0;-webkit-font-smoothing:antialiased;
+}
+[hidden]{display:none !important;}
+img{max-width:100%;}
+button{font-family:inherit;}
+::selection{background:var(--yellow);color:var(--ink);}
+
+/* ===== 顶部导航 ===== */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,251,242,.94);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border-bottom:2px solid var(--line);
+}
+.topbar-in{
+  max-width:var(--maxw);margin:0 auto;padding:14px 24px;
+  display:flex;align-items:center;gap:24px;
+}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;flex:none;}
+.logo-mark{
+  width:40px;height:40px;border-radius:12px;background:var(--red);
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;flex:none;
+}
+.logo-mark svg{display:block;}
+.logo-text{display:flex;flex-direction:column;gap:2px;line-height:1.1;}
+.logo-name{font-size:18px;font-weight:800;letter-spacing:.02em;}
+.logo-sub{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--faint);}
+
+.tabs{
+  display:flex;align-items:center;gap:4px;margin:0 auto 0 8px;
+  padding:4px;border-radius:999px;background:var(--paper-4);
+}
+.tab{
+  border:none;background:transparent;cursor:pointer;white-space:nowrap;
+  font-family:inherit;font-size:13.5px;font-weight:600;color:var(--body);
+  padding:9px 16px;border-radius:999px;transition:.15s;
+}
+.tab:hover{color:var(--red);background:rgba(255,255,255,.7);}
+.tab.active{background:var(--red);color:#FFFBF2;box-shadow:0 3px 0 var(--red-dark);}
+.tabs-ai{
+  flex:none;margin-left:6px;border:2px solid var(--ink);background:var(--paper-2);
+  color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:8px 16px;border-radius:999px;cursor:pointer;transition:.15s;
+  box-shadow:0 3px 0 rgba(32,26,20,.16);
+}
+.tabs-ai:hover{background:var(--yellow-t);}
+.tabs-ai.on{border-color:var(--green);color:var(--green);background:var(--green-t);box-shadow:0 3px 0 rgba(30,122,67,.25);}
+.tabs-ai.on::before{content:"AI · ";}
+
+/* ===== 首屏 ===== */
+.hero{
+  padding:64px var(--gutter) 72px;
+  display:flex;align-items:center;gap:56px;
+}
+.hero-left{flex:1;min-width:0;display:flex;flex-direction:column;gap:22px;}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:9px;align-self:flex-start;
+  padding:8px 15px;border-radius:999px;background:var(--yellow-t);
+  border:1.5px solid var(--ink);
+}
+.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex:none;}
+.hero-badge span{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:#6B4E10;
+}
+.hero-badge b{font-family:var(--mono);font-weight:700;color:var(--red);font-size:12.5px;}
+.hero h1{
+  font-size:clamp(40px,5.4vw,76px);line-height:1.12;font-weight:800;
+  letter-spacing:-.02em;color:var(--ink);
+}
+.hero h1 em{display:block;font-style:normal;color:var(--red);}
+.hero .sub{
+  font-size:17px;line-height:1.75;color:var(--body);max-width:520px;
+}
+.hero-cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;}
+.hero-trust{
+  font-family:var(--mono);font-size:11.5px;color:var(--faint);letter-spacing:.02em;
+}
+
+/* 首屏小票视觉（纯装饰） */
+.hero-visual{position:relative;width:470px;flex:none;height:400px;}
+.hv-circle{
+  position:absolute;right:0;top:0;width:250px;height:250px;border-radius:50%;
+  background:var(--yellow);
+}
+.hv-back{
+  position:absolute;left:0;top:78px;width:300px;height:196px;border-radius:20px;
+  background:var(--paper-3);border:2px solid var(--ink);transform:rotate(-7deg);
+}
+.tk{
+  position:absolute;left:56px;top:96px;width:392px;
+  background:var(--paper-2);border:2px solid var(--ink);border-radius:18px;
+  padding:22px 24px 18px;transform:rotate(3deg);
+  box-shadow:0 10px 0 rgba(32,26,20,.18);
+}
+.tk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.tk-head b{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--red);font-weight:700;}
+.tk-head i{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--faint);font-style:normal;}
+.tk-line{height:1px;background:var(--line-2);margin:0 0 12px;}
+.tk-date{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.04em;margin-bottom:10px;}
+.tk-quote{
+  font-family:var(--serif);font-size:20px;line-height:1.55;font-weight:600;color:var(--ink);
+  margin-bottom:8px;
+}
+.tk-sub{font-size:11.5px;color:var(--muted);margin-bottom:14px;}
+.tk-foot{display:flex;justify-content:space-between;align-items:center;}
+.tk-foot span{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--faint);}
+.tk-foot .ok{color:var(--green);}
+.tk-sticker{
+  position:absolute;left:-20px;top:308px;width:88px;height:88px;border-radius:50%;
+  background:var(--red);color:#FFFBF2;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.12em;
+  transform:rotate(-12deg);box-shadow:0 5px 0 rgba(163,29,18,.45);
+}
+
+/* ===== 三功能总览 ===== */
+.features{
+  background:var(--paper-3);border-top:2px solid var(--line);
+  padding:64px var(--gutter) 68px;
+}
+.feat-head{max-width:var(--maxw);margin:0 auto 30px;}
+.feat-eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted);
+  font-weight:700;margin-bottom:12px;
+}
+.feat-title{font-size:clamp(26px,3vw,40px);line-height:1.25;font-weight:800;letter-spacing:-.01em;}
+.feat-desc{font-size:14.5px;color:var(--body);margin-top:10px;max-width:560px;}
+.feat-grid{
+  max-width:var(--maxw);margin:0 auto;
+  display:grid;grid-template-columns:1.35fr 1fr;gap:20px;
+}
+.feat-card{
+  text-align:left;cursor:pointer;font-family:inherit;color:inherit;
+  background:var(--paper-2);border:2px solid var(--ink);border-radius:20px;
+  padding:24px 26px;display:flex;flex-direction:column;gap:12px;
+  box-shadow:var(--shadow-hard);transition:transform .12s ease,box-shadow .12s ease;
+}
+.feat-card:hover{transform:translateY(-2px);box-shadow:0 8px 0 rgba(32,26,20,.16);}
+.feat-card:active{transform:translateY(2px);box-shadow:0 3px 0 rgba(32,26,20,.14);}
+.feat-card.tinted{background:var(--yellow-t);}
+.feat-card.dark{background:var(--ink);border-color:var(--ink);}
+.feat-h{display:flex;align-items:center;gap:12px;}
+.feat-num{
+  width:36px;height:36px;border-radius:11px;background:var(--red);color:#FFFBF2;
+  display:flex;align-items:center;justify-content:center;flex:none;
+  font-family:var(--mono);font-size:12.5px;font-weight:700;
+}
+.feat-card.dark .feat-num{background:var(--yellow);color:var(--ink);}
+.feat-h h3{font-size:20px;font-weight:800;letter-spacing:-.01em;}
+.feat-card.dark .feat-h h3{color:#FFFBF2;}
+.feat-p{font-size:13.5px;line-height:1.7;color:var(--body);}
+.feat-card.dark .feat-p{color:#C9BBA4;}
+.feat-mini{
+  background:var(--paper-4);border-radius:14px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.feat-mini .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--faint);font-weight:700;}
+.feat-mini .qt{font-family:var(--serif);font-size:14.5px;line-height:1.6;color:var(--ink);font-weight:600;}
+.feat-link{
+  display:inline-flex;align-items:center;gap:7px;margin-top:auto;padding-top:4px;
+  font-size:13.5px;font-weight:700;color:var(--red);
+}
+.feat-card.dark .feat-link{color:var(--yellow);}
+.feat-wide{
+  grid-column:1 / -1;flex-direction:row;align-items:center;justify-content:space-between;gap:28px;
+}
+.feat-wide .feat-body{display:flex;flex-direction:column;gap:10px;min-width:0;}
+.feat-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.feat-chip{
+  font-family:var(--mono);font-size:12px;padding:8px 14px;border-radius:999px;
+  background:#332C24;color:#C9BBA4;white-space:nowrap;
+}
+.feat-cta{
+  flex:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+  background:var(--red);color:#FFFBF2;border:none;border-radius:12px;padding:14px 22px;
+  box-shadow:0 4px 0 var(--red-dark);
+}
+
+.param-prompt{
+  flex:0 0 100%;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:#8A5A00;
+  background:var(--yellow-t);border:1px solid #E8C86A;border-radius:10px;
+  padding:9px 12px;
+}
+.param-prompt b{color:var(--red);}
+.param-pref{
+  flex:0 0 100%;display:flex;align-items:center;gap:12px;
+  border-top:1px dashed var(--line);padding-top:12px;
+}
+.param-pref label{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);
+  font-weight:600;white-space:nowrap;flex:none;
+}
+.param-pref input{
+  flex:1;min-width:0;font-family:inherit;font-size:14px;color:var(--ink);
+  padding:7px 0;border:none;border-bottom:1.5px solid var(--line);
+  background:transparent;outline:none;
+}
+.param-pref input:hover{border-bottom-color:var(--faint);}
+.param-pref input:focus{border-bottom-color:var(--red);}
+.param-pref input::placeholder{color:var(--faint);}
+.param-bar.needs{border-color:var(--red);box-shadow:0 0 0 4px rgba(218,41,28,.14);background:var(--paper-2);}
+
+/* ===== 内容容器 ===== */
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 24px;}
+
+/* ===== 参数条 ===== */
+.param-bar{
+  display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:16px;
+  padding:16px 20px;margin:0 0 16px;
+}
+.param-field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:110px;}
+.param-field.narrow{flex:0 0 100px;min-width:100px;}
+.param-field.wide{flex:2;min-width:190px;}
+.param-field label{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--faint);font-weight:600;
+}
+.param-field label b{font-size:13px;font-family:var(--mono);color:var(--red);letter-spacing:0;}
+.param-field input[type=text],.param-field input[type=number]{
+  font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);
+  padding:8px 2px;border:none;border-bottom:1.5px solid transparent;background:transparent;
+  width:100%;outline:none;transition:.15s;
+}
+.param-field input[type=text]:hover,.param-field input[type=number]:hover{border-bottom-color:var(--line);}
+.param-field input:focus{border-bottom-color:var(--red);}
+.param-field input[type=range]{width:100%;accent-color:var(--red);height:22px;}
+.param-go{
+  flex:none;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;
+  background:var(--ink);color:#FFFBF2;border:none;border-radius:12px;padding:12px 24px;
+  transition:.15s;
+}
+.param-go:hover{background:#37302a;}
+.param-go:disabled{opacity:.55;cursor:not-allowed;}
+.param-store{
+  flex:0 0 100%;font-family:var(--mono);font-size:11px;color:var(--faint);
+  padding:2px 2px 0;letter-spacing:.02em;
+}
+.param-store.has{color:var(--body);}
+.param-store .pname{font-weight:700;color:var(--ink);}
+.param-bar[hidden]{display:none;}
+
+/* ===== 面板 ===== */
+.panel{
+  position:relative;background:var(--paper-2);
+  border:2px solid var(--ink);border-radius:22px;
+  padding:30px 32px;margin-top:26px;box-shadow:var(--shadow-hard);
+  scroll-margin-top:96px;
+}
+.panel::before{
+  content:attr(data-step);
+  display:block;font-family:var(--mono);font-size:10.5px;font-weight:700;
+  letter-spacing:.18em;color:var(--red);margin-bottom:14px;
+}
+.panel[hidden]{display:none;}
+.panel-head{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:16px;flex-wrap:wrap;margin-bottom:20px;
+}
+.panel-head h2{display:flex;align-items:center;gap:10px;font-size:23px;font-weight:800;letter-spacing:-.01em;}
+.tab-dot{width:9px;height:9px;border-radius:50%;background:var(--red);flex:none;}
+.panel-sub{color:var(--body);font-size:13.5px;margin-top:6px;line-height:1.7;max-width:620px;}
+
+/* 输入 / 按钮 */
+.big-input,.hp-input,.bb-input{
+  width:100%;font-family:inherit;font-size:15.5px;line-height:1.75;color:var(--ink);
+  padding:16px 18px;border:1.5px solid var(--line);border-radius:14px;background:var(--paper);
+  resize:vertical;min-height:118px;outline:none;transition:.15s;
+}
+.big-input::placeholder,.hp-input::placeholder,.bb-input::placeholder{color:var(--faint);}
+.big-input:focus,.hp-input:focus,.bb-input:focus{
+  border-color:var(--ink);background:var(--paper-2);
+}
+.chip-row,.bb-chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px;}
+.chip{
+  border:1px solid var(--line);background:var(--paper-4);color:var(--body);
+  font-family:inherit;font-size:12.5px;padding:8px 14px;border-radius:999px;
+  cursor:pointer;transition:.15s;text-align:left;
+}
+.chip:hover{border-color:var(--ink);color:var(--ink);background:var(--yellow-t);}
+.panel-actions,.hp-actions,.bb-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch;justify-content:flex-start;margin-top:18px;}
+.panel-actions .btn,.hp-actions .btn,.bb-actions .btn{flex:0 0 auto;min-width:210px;}
+.btn{
+  background:var(--red);color:#FFFBF2;border:none;border-radius:13px;
+  font-family:inherit;font-size:16px;font-weight:700;padding:15px 28px;cursor:pointer;
+  box-shadow:0 4px 0 var(--red-dark);transition:.1s;
+}
+.btn:hover{background:#C52519;}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--red-dark);}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+.btn-ghost{
+  background:var(--paper-2);color:var(--ink);border:2px solid var(--ink);border-radius:13px;
+  font-family:inherit;font-size:15px;font-weight:700;padding:0 24px;cursor:pointer;
+  box-shadow:0 4px 0 rgba(32,26,20,.14);transition:.1s;
+}
+.btn-ghost:hover{background:var(--paper-4);}
+.btn-ghost:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(32,26,20,.14);}
+
+/* ===== 账户 ===== */
+.hp-account{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+.hp-acct-row{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--faint);}
+.hp-acct-row b{color:var(--ink);}
+.hp-link{
+  border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:700;
+  color:var(--red);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px;
+}
+.hp-auth{
+  display:flex;flex-direction:column;gap:8px;width:290px;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:14px;
+}
+.hp-auth input{
+  font-family:inherit;font-size:14px;padding:10px 12px;border:1.5px solid var(--line);
+  border-radius:10px;background:var(--paper-2);width:100%;outline:none;
+}
+.hp-auth input:focus{border-color:var(--ink);}
+.hp-auth-actions{display:flex;gap:8px;}
+.hp-auth-actions button{flex:1;}
+.hp-btn-sm{
+  border:none;border-radius:10px;background:var(--red);color:#FFFBF2;font-family:inherit;
+  font-size:13px;font-weight:700;padding:10px 0;cursor:pointer;transition:.15s;
+}
+.hp-btn-sm:hover{background:#C52519;}
+.hp-btn-sm.ghost{background:var(--paper-2);color:var(--ink);border:1.5px solid var(--ink);}
+.hp-btn-sm:disabled{opacity:.55;cursor:not-allowed;}
+.hp-msg{font-family:var(--mono);font-size:11.5px;color:var(--red);}
+.hp-msg.ok{color:var(--green);}
+
+/* 碳迹反馈结果：小票组件 */
+.hp-card{
+  margin-top:22px;background:var(--paper-2);border:2px solid var(--ink);
+  border-radius:18px;padding:24px 26px;box-shadow:var(--shadow-hard);
+}
+.hp-card-label{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.18em;
+  color:var(--red);padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--line-2);
+}
+.hp-text{
+  font-family:var(--serif);font-size:21px;line-height:1.7;font-weight:600;color:var(--ink);
+}
+.hp-ops{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:20px;
+  padding-top:16px;border-top:1px solid var(--line-2);}
+.hp-src{font-family:var(--mono);font-size:10.5px;color:var(--faint);}
+.hp-save-tip{
+  margin-top:20px;padding-top:14px;border-top:1px dashed var(--line);
+  font-size:12.5px;color:var(--muted);
+}
+.hp-save-tip .hp-link{margin-left:6px;}
+
+/* 通用小按钮 */
+.bb-op{
+  border:1.5px solid var(--ink);background:var(--paper-2);color:var(--ink);
+  font-family:inherit;font-size:12.5px;font-weight:700;padding:9px 16px;
+  border-radius:11px;cursor:pointer;transition:.15s;
+}
+.bb-op:hover{background:var(--paper-4);}
+.bb-op.primary{background:var(--red);border-color:var(--red);color:#FFFBF2;box-shadow:0 3px 0 var(--red-dark);}
+.bb-op.primary:hover{background:#C52519;}
+
+/* ===== 旧版结果组件（保留样式兼容）===== */
+.box-result{margin-top:22px;padding-top:20px;border-top:2px dashed var(--line);}
+.box-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.box-theme{font-size:21px;font-weight:800;letter-spacing:-.01em;}
+.box-badge{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;
+  padding:5px 11px;border-radius:999px;background:var(--paper-4);color:var(--body);
+}
+.box-badge.ai{background:var(--green-t);color:var(--green);}
+.box-reason{font-size:13.5px;color:var(--body);margin-bottom:16px;line-height:1.7;}
+.box-body{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;}
+.box-list{list-style:none;font-size:14px;}
+.box-list li{
+  display:flex;justify-content:space-between;gap:10px;padding:8px 0;
+  border-bottom:1px dashed var(--line);
+}
+.box-list li:last-child{border-bottom:none;}
+.box-list li span:last-child{color:var(--muted);white-space:nowrap;font-family:var(--mono);font-size:12.5px;}
+.box-sum{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:16px 18px;font-size:13px;}
+.box-sum .row{display:flex;justify-content:space-between;padding:4px 0;}
+.box-sum .total{
+  font-family:var(--mono);font-size:27px;font-weight:700;color:var(--red);
+  margin:8px 0 2px;letter-spacing:-.02em;
+}
+.box-sum .disc{color:var(--green);font-weight:700;}
+.box-sum .over{color:var(--red);font-weight:600;}
+.box-ops{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+.box-note{margin-top:14px;font-size:11.5px;color:var(--faint);line-height:1.7;}
+.box-error{margin-top:18px;background:var(--red-t);color:#A32D2D;border-radius:12px;padding:12px 14px;font-size:13px;}
+
+/* ===== 旧版列表组件（保留样式兼容）===== */
+.blindbox{background:var(--paper-2);border:2px solid var(--ink);border-radius:22px;padding:28px 30px;box-shadow:var(--shadow-hard);}
+.bb-head{margin-bottom:16px;}
+.bb-head h2{font-size:22px;font-weight:800;}
+.bb-head .bb-sub{color:var(--body);font-size:13.5px;margin-top:5px;}
+.bb-result{margin-top:20px;border-top:2px dashed var(--line);padding-top:18px;}
+.bb-conclusion{font-size:15px;font-weight:700;margin-bottom:10px;}
+.bb-conclusion .bb-theme{color:var(--red);}
+.bb-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.bb-tag{
+  font-family:var(--mono);font-size:11px;background:var(--paper-4);color:var(--body);
+  border-radius:999px;padding:5px 12px;
+}
+.bb-tag b{color:var(--ink);}
+.bb-style-switch{display:inline-flex;background:var(--paper-4);border-radius:999px;padding:3px;gap:2px;margin-bottom:16px;}
+.bb-style-switch button{
+  border:none;background:transparent;font-family:inherit;font-size:12.5px;font-weight:600;
+  color:var(--muted);padding:7px 20px;border-radius:999px;cursor:pointer;transition:.15s;
+}
+.bb-style-switch button.active{background:var(--red);color:#FFFBF2;}
+.bb-style-switch button:disabled{opacity:.35;cursor:not-allowed;}
+.bb-body{display:grid;grid-template-columns:1.1fr 1.1fr .9fr;gap:16px;}
+.bb-col{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;}
+.bb-col h3{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--faint);font-weight:700;margin-bottom:10px;}
+.bb-diner{padding:7px 0;border-bottom:1px dashed var(--line);}
+.bb-diner:last-child{border-bottom:none;}
+.bb-diner .bb-diner-name{font-size:13px;font-weight:700;}
+.bb-diner .bb-diner-items{font-size:13px;color:var(--body);}
+.bb-list{list-style:none;font-size:13px;}
+.bb-list li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);}
+.bb-list li:last-child{border-bottom:none;}
+.bb-list li span:last-child{color:var(--muted);white-space:nowrap;font-family:var(--mono);font-size:12px;}
+.bb-sum{font-size:13px;}
+.bb-sum .bb-sum-row{display:flex;justify-content:space-between;padding:4px 0;}
+.bb-sum .bb-sum-total{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--red);margin:6px 0 2px;}
+.bb-sum .bb-sum-discount{color:var(--green);font-weight:700;}
+.bb-sum .bb-sum-over{color:var(--red);font-weight:600;}
+.bb-ops{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+.bb-risk{margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--faint);}
+.bb-mode{
+  display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;
+  padding:3px 9px;border-radius:999px;margin-right:6px;letter-spacing:.06em;
+}
+.bb-mode.demo{background:var(--yellow-t);color:var(--yellow-d);}
+.bb-mode.real{background:var(--green-t);color:#1E7B34;}
+.bb-mode.ai{background:var(--green-t);color:#1E7B34;}
+.bb-notice{margin:0 0 12px;font-size:12px;line-height:1.7;color:var(--yellow-d);background:#FFF8E6;border-radius:10px;padding:9px 12px;}
+.bb-happy{margin-top:18px;background:#FFFBF0;border:1.5px solid #F1E4C3;border-radius:14px;padding:16px;}
+.bb-happy-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;}
+.bb-happy-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--yellow-d);}
+.bb-happy-src{font-family:var(--mono);font-size:10.5px;color:var(--faint);}
+.bb-happy-text{font-family:var(--serif);font-size:16px;line-height:1.8;font-weight:600;}
+.bb-happy-ops{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+.bb-happy .hp-msg{margin-top:8px;}
+.bb-result.bb-error .bb-tags,.bb-result.bb-error .bb-style-switch,
+.bb-result.bb-error .bb-body,.bb-result.bb-error .bb-ops{display:none;}
+.bb-result.bb-error .bb-conclusion{color:var(--body);font-weight:600;}
+
+/* ===== 我的记录 ===== */
+.rec-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px;}
+.rec-toolbar input[type=search],.rec-toolbar input[type=date]{
+  font-family:inherit;font-size:13px;padding:9px 12px;border:1.5px solid var(--line);
+  border-radius:10px;background:var(--paper);outline:none;color:var(--ink);
+}
+.rec-toolbar input[type=search]{flex:1;min-width:180px;}
+.rec-toolbar input:focus{border-color:var(--ink);}
+.rec-btn{
+  border:1.5px solid var(--ink);background:var(--paper-2);color:var(--ink);
+  font-family:inherit;font-size:12.5px;font-weight:700;padding:9px 14px;
+  border-radius:10px;cursor:pointer;transition:.15s;
+}
+.rec-btn:hover{background:var(--paper-4);}
+.rec-count{font-family:var(--mono);font-size:11px;color:var(--faint);margin-left:auto;}
+.rec-empty{color:var(--muted);font-size:13px;padding:28px 0;text-align:center;line-height:1.8;}
+.rec-tree details{margin:0;}
+.rec-tree summary{
+  cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;
+  padding:10px 4px;user-select:none;
+}
+.rec-tree summary::-webkit-details-marker{display:none;}
+.rec-tree summary::before{content:"▸";font-size:11px;color:var(--faint);transition:transform .15s;flex:none;}
+.rec-tree details[open] > summary::before{transform:rotate(90deg);}
+.rec-n{font-family:var(--mono);font-size:10.5px;color:var(--faint);font-weight:400;}
+.rec-year{border-top:1px solid var(--line);padding-top:4px;}
+.rec-year > summary{font-size:16px;font-weight:800;letter-spacing:.02em;}
+.rec-month{margin-left:16px;}
+.rec-month > summary{font-size:13px;font-weight:700;color:var(--ink-2);}
+.rec-day{margin:0 0 10px 24px;background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:12px 16px;}
+.rec-day-head{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--yellow-d);margin-bottom:6px;letter-spacing:.08em;}
+.rec-item{padding:9px 0;border-bottom:1px dashed var(--line);}
+.rec-item:last-child{border-bottom:none;padding-bottom:2px;}
+.rec-item-meta{font-family:var(--mono);font-size:10.5px;color:var(--faint);display:flex;gap:8px;flex-wrap:wrap;}
+.rec-item-text{font-size:14px;line-height:1.8;margin:4px 0 6px;font-family:var(--serif);font-weight:500;}
+.rec-item-ops{display:flex;gap:14px;}
+
+/* 兼容旧列表 */
+.hp-saved h3{font-size:14px;margin-bottom:4px;}
+.hp-saved h3 span{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--faint);margin-left:6px;}
+.hp-list{list-style:none;margin-top:8px;}
+.hp-list li{padding:12px 0;border-bottom:1px dashed var(--line);}
+.hp-list li:last-child{border-bottom:none;}
+.hp-item-meta{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-bottom:6px;}
+.hp-item-text{font-size:14px;line-height:1.8;}
+.hp-item-ops{display:flex;gap:14px;margin-top:8px;}
+.hp-empty{font-size:13px;color:var(--muted);padding:8px 0;}
+
+/* ===== 三档方案卡 ===== */
+.steps{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 6px;}
+.step{
+  font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--paper-4);
+  border-radius:999px;padding:6px 13px;display:flex;align-items:center;gap:6px;transition:.2s;
+}
+.step.doing{background:var(--yellow-t);color:var(--yellow-d);font-weight:700;}
+.step.done{background:var(--green-t);color:var(--green);}
+.step.fail{background:var(--red-t);color:var(--red);font-weight:700;}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px;}
+.card{
+  background:var(--paper-2);border:2px solid var(--ink);border-radius:18px;padding:22px;
+  box-shadow:var(--shadow-hard);display:flex;flex-direction:column;
+  animation:pop .35s ease;
+}
+@keyframes pop{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.card.econ{border-top:8px solid #A8C256;}
+.card.bal{border-top:8px solid var(--yellow);}
+.card.rich{border-top:8px solid var(--red);}
+.tier{font-size:16px;font-weight:800;margin-bottom:10px;letter-spacing:-.01em;}
+.total{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--ink);letter-spacing:-.02em;}
+.per{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-bottom:12px;}
+.badge{
+  display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;
+  padding:4px 11px;border-radius:999px;margin-bottom:12px;
+}
+.badge.ok{background:var(--green-t);color:var(--green);}
+.badge.over{background:var(--red-t);color:var(--red);}
+.saved{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--green);margin:0 0 8px;}
+.coupon-line{font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:10px;}
+.items{list-style:none;font-size:13.5px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+.items li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line);}
+.items li:last-child{border-bottom:none;}
+.items li span:last-child{color:var(--muted);font-family:var(--mono);font-size:12px;}
+.items li .tag{font-family:inherit;font-size:10.5px;color:var(--green);}
+
+.realnote{
+  margin-top:18px;background:var(--paper);border:1.5px solid var(--line);border-radius:14px;
+  padding:14px 16px;font-size:12.5px;color:var(--body);line-height:1.75;
+}
+.realnote b{color:var(--yellow-d);}
+.realnote code{background:var(--paper-4);border-radius:5px;padding:1px 6px;font-family:var(--mono);font-size:11.5px;}
+.realnote .err-hint{color:#8A7A5C;}
+.realnote:empty,.aireview:empty{display:none;}
+
+.aireview{
+  margin-top:18px;background:var(--green-t);border:1.5px solid #C6E3D0;border-radius:14px;
+  padding:16px 18px;font-size:13px;color:#2F4B3A;
+}
+.aireview .ai-head{font-weight:800;font-size:14px;margin-bottom:8px;color:var(--green);}
+.aireview .ai-summary{margin-bottom:8px;}
+.aireview .ai-sug{list-style:none;}
+.aireview .ai-sug li{padding:6px 0;border-bottom:1px dashed #CFE6D8;}
+.aireview .ai-sug b{color:var(--green);}
+.aireview .ai-why{color:#6B7A70;font-size:11.5px;}
+.aireview .ai-overall{margin-top:10px;padding:9px 12px;background:var(--paper-2);border-radius:10px;font-weight:700;color:var(--green);}
+.aireview .ai-note{margin-top:8px;color:#8A9A8F;font-size:11.5px;}
+.aireview .ai-err{color:var(--red);}
+.ai-loading{color:#6B7A70;}
+
+/* ===== LLM 配置 ===== */
+.llmbar{border-top:1px dashed var(--line);margin-top:18px;padding-top:16px;display:flex;flex-direction:column;gap:10px;}
+.llm-toggle{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--body);cursor:pointer;user-select:none;}
+.llm-toggle input{width:16px;height:16px;accent-color:var(--green);}
+.llm-config{display:none;flex-wrap:wrap;gap:10px;align-items:flex-end;}
+.llmbar.on .llm-config{display:flex;}
+.llm-config .field{flex:1;min-width:160px;}
+.llm-config .field label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:5px;}
+.llm-config input,.llm-config select{
+  font-family:inherit;font-size:14px;padding:10px 12px;border:1.5px solid var(--line);
+  border-radius:10px;background:var(--paper-2);width:100%;outline:none;color:var(--ink);
+}
+.llm-config input:focus,.llm-config select:focus{border-color:var(--ink);}
+.custom-llm{display:none;gap:10px;flex:2;}
+.llmbar.custom .custom-llm{display:flex;}
+.field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px;}
+
+/* ===== 收尾 CTA ===== */
+.cta-band{
+  background:var(--yellow);border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);
+  padding:48px var(--gutter);display:flex;align-items:center;gap:40px;flex-wrap:wrap;
+}
+.cta-in{max-width:var(--maxw);margin:0 auto;width:100%;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
+.cta-text{flex:1;min-width:260px;}
+.cta-text h2{font-size:clamp(24px,3vw,36px);line-height:1.25;font-weight:800;letter-spacing:-.02em;}
+.cta-text p{font-size:13.5px;color:#6B4E10;margin-top:8px;}
+.cta-btn{
+  flex:none;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;
+  background:var(--red);color:#FFFBF2;border:none;border-radius:13px;padding:16px 30px;
+  box-shadow:0 5px 0 var(--red-dark);transition:.1s;
+}
+.cta-btn:active{transform:translateY(2px);box-shadow:0 3px 0 var(--red-dark);}
+
+/* ===== 页脚 ===== */
+footer{background:var(--ink);color:#C9BBA4;padding:52px var(--gutter) 28px;}
+.foot-in{max-width:var(--maxw);margin:0 auto;}
+.foot-top{display:flex;justify-content:space-between;gap:48px;flex-wrap:wrap;padding-bottom:32px;}
+.foot-brand{max-width:360px;}
+.foot-name{font-size:26px;font-weight:800;color:#FFFBF2;letter-spacing:-.01em;}
+.foot-mono{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:#7A6C58;margin-top:6px;}
+.foot-tag{font-size:13px;line-height:1.8;margin-top:14px;color:#B8A992;}
+.foot-cols{display:flex;gap:56px;flex-wrap:wrap;}
+.foot-col{display:flex;flex-direction:column;gap:10px;}
+.foot-col h4{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:#7A6C58;font-weight:700;}
+.foot-col a,.foot-col button{
+  color:#C9BBA4;font-size:13px;text-decoration:none;background:none;border:none;
+  text-align:left;padding:0;cursor:pointer;font-family:inherit;transition:.15s;
+}
+.foot-col a:hover,.foot-col button:hover{color:#FFFBF2;}
+.foot-rule{height:1px;background:#3A3229;}
+.foot-bottom{
+  display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  padding-top:20px;font-family:var(--mono);font-size:10.5px;color:#8A7B66;line-height:1.8;
+}
+.foot-bottom .tip{
+  background:none;padding:0;display:block;color:#7A6C58;font-family:var(--mono);font-size:10.5px;
+}
+.footnote{display:none;}
+
+/* ===== AI 弹窗 ===== */
+.aimodal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;}
+.aimodal[hidden]{display:none;}
+.aimodal-mask{position:absolute;inset:0;background:rgba(32,26,20,.5);}
+.aimodal-panel{
+  position:relative;width:100%;max-width:520px;max-height:88vh;overflow:auto;
+  background:var(--paper-2);border:2px solid var(--ink);border-radius:22px;
+  padding:28px 28px 22px;box-shadow:0 20px 0 rgba(32,26,20,.35);animation:pop .25s ease;
+}
+.aimodal-x{
+  position:absolute;top:14px;right:16px;border:none;background:none;cursor:pointer;
+  font-size:22px;line-height:1;color:var(--muted);padding:4px 8px;border-radius:8px;
+}
+.aimodal-x:hover{color:var(--ink);background:var(--paper-4);}
+.aimodal-panel h2{font-size:20px;font-weight:800;margin-bottom:8px;}
+.aimodal-sub{font-size:13px;color:var(--body);line-height:1.75;margin-bottom:18px;}
+.aimodal-opts{display:flex;flex-direction:column;gap:10px;}
+.aio{
+  display:flex;flex-direction:column;gap:4px;text-align:left;cursor:pointer;
+  font-family:inherit;border:2px solid var(--ink);background:var(--paper);border-radius:14px;
+  padding:16px 18px;transition:.15s;
+}
+.aio b{font-size:15px;color:var(--ink);}
+.aio span{font-size:12px;color:var(--body);line-height:1.65;}
+.aio:hover{background:var(--yellow-t);}
+.aio.ghost{background:var(--paper-2);}
+.aio.ghost:hover{background:var(--paper-4);}
+.aimodal-form{display:flex;flex-direction:column;gap:12px;margin-top:4px;}
+.aimodal-form .field label{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--faint);
+  display:block;margin-bottom:5px;
+}
+.aimodal-form input,.aimodal-form select{
+  font-family:inherit;font-size:14px;padding:11px 13px;border:1.5px solid var(--line);
+  border-radius:11px;background:var(--paper);width:100%;outline:none;transition:.15s;color:var(--ink);
+}
+.aimodal-form input:focus,.aimodal-form select:focus{border-color:var(--ink);background:var(--paper-2);}
+.ai-custom{display:none;flex-direction:column;gap:12px;}
+.ai-custom.on{display:flex;}
+.aimodal-actions{display:flex;gap:10px;align-items:stretch;margin-top:4px;}
+.aimodal-actions .btn{flex:1;font-size:15px;padding:13px 18px;}
+.aimodal-actions .btn-ghost{padding:0 18px;}
+.ai-msg{font-family:var(--mono);font-size:11.5px;color:var(--red);min-height:16px;}
+.ai-remember{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--body);line-height:1.65;cursor:pointer;}
+.ai-remember input[type=checkbox]{width:auto;flex:none;margin:3px 0 0;accent-color:var(--red);}
+.ai-secure{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--body);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;
+}
+.ai-secure code{font-family:var(--mono);font-weight:600;}
+.ai-clear{
+  border:1.5px solid var(--ink);background:var(--paper-2);color:var(--red);font-family:inherit;
+  font-size:11.5px;padding:4px 11px;border-radius:999px;cursor:pointer;
+}
+.ai-clear:hover{background:var(--red-t);}
+.ai-warn{font-size:11px;color:var(--faint);line-height:1.75;margin:0;}
+
+/* ===== 来源提示条 ===== */
+.flow-src{
+  font-size:12px;line-height:1.75;color:var(--yellow-d);background:#FFF8E6;
+  border-radius:10px;padding:10px 13px;margin:0 0 14px;
+}
+.foot-col span{color:#C9BBA4;font-size:13px;}
+
+/* ===== 响应式 ===== */
+@media(max-width:1080px){
+  .hero{gap:32px;padding-top:48px;padding-bottom:56px;}
+  .hero-visual{width:400px;height:360px;transform:scale(.92);transform-origin:right top;}
+  .feat-grid{grid-template-columns:1fr;}
+  .feat-wide{flex-direction:column;align-items:flex-start;}
+}
+@media(max-width:860px){
+  .hero{flex-direction:column;align-items:flex-start;}
+  .hero-visual{display:none;}
+  .topbar-in{padding:12px 20px;gap:14px;flex-wrap:wrap;}
+  .tabs{order:3;width:100%;margin:0;overflow:auto;justify-content:flex-start;}
+  .tab{padding:8px 13px;}
+  .wrap{padding:0 20px 24px;}
+  .panel{padding:24px 20px;}
+  .cards{grid-template-columns:1fr;}
+  .box-body,.bb-body{grid-template-columns:1fr;}
+  .foot-top{gap:32px;}
+  .foot-cols{gap:32px;}
+}
+@media(max-width:560px){
+  .hero{padding:36px var(--gutter) 44px;}
+  .hero h1{font-size:38px;}
+  .hero .sub{font-size:15px;}
+  .hero-cta{width:100%;}
+  .hero-cta .btn,.hero-cta .btn-ghost{flex:1;padding:14px 16px;font-size:15px;}
+  .tabs-ai{display:none;}
+  .param-field{flex:1 1 44%;}
+  .param-field.wide{flex:1 1 100%;}
+  .param-go{flex:1 1 100%;}
+  .panel-actions,.hp-actions,.bb-actions{flex-direction:column;}
+  .panel-actions .btn-ghost,.hp-actions .btn-ghost{padding:13px 0;}
+  .hp-head{flex-direction:column;}
+  .hp-account{align-items:stretch;width:100%;}
+  .hp-acct-row{justify-content:space-between;}
+  .hp-auth{width:100%;}
+  .rec-toolbar input[type=search]{flex:1 1 100%;}
+  .rec-count{margin-left:0;flex:1 1 100%;}
+  .rec-month{margin-left:10px;}
+  .rec-day{margin-left:12px;}
+  .feat-card{padding:20px;}
+  .cta-band{padding:36px var(--gutter);}
+  .cta-btn{width:100%;}
+}
+
+/* ===== 节碳家主题覆盖：沿用原页面排版与组件，替换品牌色和信息结构 ===== */
+:root{
+  --paper:#F3F7F3;
+  --paper-2:#FFFFFF;
+  --paper-3:#E6F0E9;
+  --paper-4:#EDF4EF;
+  --ink:#14231D;
+  --ink-2:#263B31;
+  --body:#4C6358;
+  --muted:#70857A;
+  --faint:#8DA095;
+  --line:#D8E5DC;
+  --line-2:#C9DACF;
+  --red:#0E6E5C;
+  --red-dark:#084F42;
+  --red-t:#E4F3EC;
+  --yellow:#CDEB9B;
+  --yellow-t:#EDF8DE;
+  --yellow-d:#456A25;
+  --green:#4B7F34;
+  --green-t:#EAF3E3;
+  --shadow-hard:0 5px 0 rgba(20,35,29,.08);
+  --shadow-card:0 8px 24px rgba(20,35,29,.08);
+}
+body{background:var(--paper);}
+.logo-mark{background:var(--red);border-radius:12px;padding-bottom:0;align-items:center;justify-content:center;}
+.logo-mark svg{width:26px;height:26px;}
+.logo-name{font-weight:700;letter-spacing:.04em;}
+.logo-sub{letter-spacing:.12em;}
+.tabs .tab{font-weight:500;}
+.tabs .tab.active{background:var(--red-t);color:var(--red-dark);}
+.tabs-ai{border-color:var(--line-2);}
+.tabs-ai.on{background:var(--red);color:#fff;border-color:var(--red);}
+.jt-hero{max-width:var(--maxw);margin:0 auto;padding:56px 24px 28px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:48px;align-items:center;}
+.jt-kicker{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--red-dark);background:var(--red-t);border:1px solid #C8E4D8;border-radius:999px;padding:6px 11px;}
+.jt-kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--red);}
+.jt-hero h1{font-size:clamp(38px,5vw,62px);line-height:1.12;letter-spacing:-.04em;margin:18px 0 16px;max-width:700px;}
+.jt-hero h1 em{font-style:normal;color:var(--red);}
+.jt-hero-lead{font-size:17px;color:var(--body);max-width:620px;line-height:1.8;}
+.jt-hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin:26px 0 18px;}
+.jt-hero-actions .btn,.jt-hero-actions .btn-ghost{min-height:48px;padding:0 22px;}
+.jt-principles{display:flex;flex-wrap:wrap;gap:8px;}
+.jt-principle{font-size:12px;color:var(--body);background:var(--paper-2);border:1px solid var(--line);padding:7px 10px;border-radius:8px;}
+.jt-preview{background:var(--paper-2);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow-card);position:relative;overflow:hidden;}
+.jt-preview:before{content:"";position:absolute;inset:0 0 auto;height:6px;background:var(--red);}
+.jt-preview-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px;}
+.jt-preview-head b{font-size:15px;}
+.jt-preview-head span{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;}
+.jt-preview-metric{padding:15px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:18px;align-items:baseline;}
+.jt-preview-metric:first-of-type{border-top:0;padding-top:0;}
+.jt-preview-metric span{font-size:13px;color:var(--muted);}
+.jt-preview-metric strong{font-family:var(--mono);font-size:22px;color:var(--ink);font-weight:600;}
+.jt-preview-metric strong small{font-size:11px;color:var(--muted);font-weight:400;margin-left:3px;}
+.jt-preview-note{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2);font-size:11px;color:var(--muted);line-height:1.65;}
+.jt-strip{max-width:var(--maxw);margin:0 auto;padding:0 24px 30px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.jt-strip-item{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+.jt-strip-item b{display:block;font-size:14px;margin-bottom:4px;}
+.jt-strip-item span{font-size:12px;color:var(--muted);line-height:1.6;}
+.jt-shell{max-width:var(--maxw);margin:0 auto;padding:8px 24px 64px;}
+.jt-panel{display:none;}
+.jt-panel.active{display:block;animation:jtIn .22s ease both;}
+@keyframes jtIn{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+.jt-panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:22px 0 18px;border-top:1px solid var(--line);margin-top:8px;}
+.jt-panel-head h2{font-size:26px;letter-spacing:-.02em;display:flex;align-items:center;gap:10px;}
+.jt-panel-head p{color:var(--muted);font-size:13px;margin-top:6px;max-width:720px;}
+.jt-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.13em;color:var(--red);margin-bottom:6px;}
+.jt-tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:999px;padding:5px 9px;font-size:11px;color:var(--body);background:var(--paper-2);white-space:nowrap;}
+.jt-form{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 3px 0 rgba(20,35,29,.04);}
+.jt-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+.jt-field{display:flex;flex-direction:column;gap:6px;min-width:0;}
+.jt-field label{font-size:12px;font-weight:500;color:var(--ink-2);}
+.jt-field label small{font-weight:400;color:var(--muted);margin-left:4px;}
+.jt-field input,.jt-field select{width:100%;height:44px;border:1px solid var(--line-2);border-radius:9px;background:#fff;color:var(--ink);padding:0 12px;font-size:14px;outline:none;}
+.jt-field input:focus,.jt-field select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(14,110,92,.09);}
+.jt-field .help{font-size:11px;color:var(--muted);line-height:1.5;}
+.jt-form-foot{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--line);flex-wrap:wrap;}
+.jt-form-foot p{font-size:11px;color:var(--muted);max-width:600px;line-height:1.65;}
+.jt-submit{min-height:46px;padding:0 22px;border:0;border-radius:9px;background:var(--red);color:#fff;font-weight:500;cursor:pointer;white-space:nowrap;}
+.jt-submit:hover{background:var(--red-dark);}
+.jt-submit:disabled{opacity:.55;cursor:wait;}
+.jt-error{display:none;margin-top:14px;padding:11px 13px;border:1px solid #E8B4AA;background:#FDF1EE;color:#8D2F1F;border-radius:8px;font-size:13px;}
+.jt-error.on{display:block;}
+.jt-progress{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0 0;}
+.jt-progress-item{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--paper-2);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.jt-progress-item i{width:7px;height:7px;border-radius:50%;background:var(--line-2);flex:none;}
+.jt-progress-item.done{border-color:#BFDCCB;background:var(--green-t);color:var(--green);}
+.jt-progress-item.done i{background:var(--green);}
+.jt-progress-item.active{border-color:#B7D9CC;background:var(--red-t);color:var(--red-dark);}
+.jt-progress-item.active i{background:var(--red);animation:jtPulse 1s infinite;}
+@keyframes jtPulse{50%{opacity:.35}}
+.jt-summary{display:flex;align-items:center;gap:14px 24px;flex-wrap:wrap;margin:22px 0 12px;padding:14px 16px;background:var(--paper-3);border-radius:10px;font-size:12px;color:var(--body);}
+.jt-summary b{color:var(--ink);font-weight:600;}
+.jt-summary .sep{width:1px;height:14px;background:var(--line-2);}
+.jt-ai{margin:14px 0 18px;border:1px solid #B9D9CB;background:#F7FCF9;border-radius:14px;padding:17px 18px;}
+.jt-ai-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:9px;}
+.jt-ai-head b{font-size:14px;}
+.jt-ai-state{font-size:11px;color:var(--muted);text-align:right;line-height:1.6;}
+.jt-ai-stages{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.jt-ai-stages span{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 7px;background:#fff;}
+.jt-ai-stages span.done{color:var(--green);border-color:#C4DCCB;background:var(--green-t);}
+.jt-ai-body{font-size:12px;color:var(--body);line-height:1.8;}
+.jt-ai-body p{margin:0 0 8px;}
+.jt-ai-body ul{margin:0 0 8px 18px;}
+.jt-ai-body li{margin-bottom:3px;}
+.jt-ai-tier{display:flex;gap:8px;padding:6px 0;border-top:1px solid #E1EEE6;}
+.jt-ai-tier:first-child{border-top:0;}
+.jt-ai-tier b{min-width:72px;color:var(--red-dark);font-weight:500;}
+.jt-ai-note{font-size:10px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed #CADFD4;}
+.jt-ai-placeholder{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;}
+.jt-ai-placeholder i{width:8px;height:8px;border-radius:50%;background:var(--red);animation:jtPulse 1s infinite;}
+.jt-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:14px;}
+.jt-plan{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;min-width:0;box-shadow:0 3px 0 rgba(20,35,29,.04);}
+.jt-plan.recommended{border-color:#8FC4AF;box-shadow:0 0 0 2px rgba(14,110,92,.08),0 3px 0 rgba(20,35,29,.04);}
+.jt-plan-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:6px;}
+.jt-plan-tier{font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:.08em;}
+.jt-plan h3{font-size:21px;line-height:1.25;margin:2px 0 5px;}
+.jt-plan-tagline{font-size:12px;color:var(--muted);min-height:38px;line-height:1.6;}
+.jt-rec{font-size:10px;background:var(--red-t);color:var(--red-dark);border-radius:999px;padding:4px 7px;white-space:nowrap;}
+.jt-metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:14px 0;}
+.jt-metric{background:var(--paper-2);padding:11px 10px;}
+.jt-metric span{display:block;font-size:10px;color:var(--muted);margin-bottom:2px;}
+.jt-metric strong{font-family:var(--mono);font-size:16px;color:var(--ink);font-weight:600;word-break:break-word;}
+.jt-metric strong small{font-size:10px;font-weight:400;color:var(--muted);margin-left:2px;}
+.jt-action-list{display:flex;flex-direction:column;gap:7px;margin:0 0 14px;}
+.jt-action{border-top:1px solid var(--line);padding-top:8px;}
+.jt-action:first-child{border-top:0;padding-top:0;}
+.jt-action summary{cursor:pointer;font-size:12px;font-weight:500;list-style:none;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
+.jt-action summary::-webkit-details-marker{display:none;}
+.jt-action summary:after{content:"+";font-family:var(--mono);color:var(--muted);font-size:14px;line-height:1;}
+.jt-action[open] summary:after{content:"−";}
+.jt-action-body{font-size:11px;color:var(--muted);line-height:1.7;padding:6px 0 2px;}
+.jt-action-body b{color:var(--body);font-weight:500;}
+.jt-plan-note{font-size:10px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+.jt-plan-btn{margin-top:auto;height:40px;border:1px solid var(--red);background:transparent;color:var(--red-dark);border-radius:8px;font-size:12px;cursor:pointer;font-weight:500;}
+.jt-plan-btn:hover{background:var(--red-t);}
+.jt-subhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin:34px 0 10px;}
+.jt-subhead h3{font-size:19px;}
+.jt-subhead p{font-size:12px;color:var(--muted);margin-top:3px;}
+.jt-policy-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.jt-policy{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0;}
+.jt-policy-head{display:flex;gap:8px;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.jt-policy h4{font-size:15px;line-height:1.4;}
+.jt-status{font-size:10px;padding:3px 7px;border-radius:999px;white-space:nowrap;background:var(--paper-3);color:var(--body);}
+.jt-status.ok{background:var(--green-t);color:var(--green);}
+.jt-status.no{background:#F7EEE7;color:#8A5734;}
+.jt-policy p{font-size:12px;color:var(--body);line-height:1.7;}
+.jt-policy-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.jt-policy-meta span{font-size:10px;background:var(--paper-4);border-radius:5px;padding:3px 6px;color:var(--muted);}
+.jt-policy-reason{margin-top:9px;font-size:11px;color:var(--muted);line-height:1.65;}
+.jt-policy-demo{margin-top:10px;font-size:10px;color:#8A5734;background:#FCF4EA;border:1px solid #EED7BF;border-radius:6px;padding:6px 7px;line-height:1.55;}
+.jt-empty{padding:24px;text-align:center;border:1px dashed var(--line-2);border-radius:10px;color:var(--muted);font-size:12px;background:var(--paper-2);}
+.jt-meta{margin-top:22px;padding:16px;background:var(--paper-3);border-radius:10px;font-size:11px;color:var(--muted);line-height:1.8;}
+.jt-meta b{color:var(--body);}
+.jt-meta ul{margin:5px 0 0 18px;}
+.jt-diary-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start;}
+.jt-card{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:20px;}
+.jt-card-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.jt-card-sub{font-size:12px;color:var(--muted);line-height:1.65;margin-bottom:14px;}
+.jt-diary-aside{display:flex;flex-direction:column;gap:12px;}
+.jt-entry-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 4px;padding:10px 12px;background:var(--paper-4);border:1px solid var(--line);border-radius:9px;}
+.jt-entry-status label{font-size:12px;font-weight:500;color:var(--body);}
+.jt-entry-status select{height:34px;border:1px solid var(--line-2);background:#fff;border-radius:7px;padding:0 9px;font-size:12px;color:var(--ink);}
+.jt-entry-status span{font-size:11px;color:var(--muted);line-height:1.55;}
+.rec-status{display:inline-flex;font-size:10px;border-radius:999px;padding:2px 6px;margin-left:5px;background:var(--paper-3);color:var(--muted);vertical-align:1px;}
+.rec-status.done{background:var(--green-t);color:var(--green);}
+.jt-mini{background:var(--paper-3);border-radius:12px;padding:15px;font-size:12px;color:var(--body);line-height:1.75;}
+.jt-mini b{display:block;color:var(--ink);margin-bottom:3px;}
+.jt-demo-banner{display:flex;gap:9px;align-items:flex-start;background:#FCF4EA;border:1px solid #EED7BF;color:#765032;border-radius:9px;padding:10px 12px;font-size:11px;line-height:1.65;margin-bottom:16px;}
+.jt-demo-banner b{white-space:nowrap;}
+@media(max-width:980px){
+  .jt-hero{grid-template-columns:1fr;gap:28px;padding-top:34px;}
+  .jt-preview{max-width:580px;}
+  .jt-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .jt-cards{grid-template-columns:1fr;}
+  .jt-policy-list{grid-template-columns:1fr;}
+  .jt-diary-grid{grid-template-columns:1fr;}
+}
+@media(max-width:640px){
+  .jt-hero{padding:26px 18px 20px;}
+  .jt-hero h1{font-size:38px;}
+  .jt-hero-lead{font-size:15px;}
+  .jt-strip{grid-template-columns:1fr;padding:0 18px 18px;}
+  .jt-shell{padding:6px 18px 48px;}
+  .jt-form{padding:16px;}
+  .jt-form-grid{grid-template-columns:1fr;}
+  .jt-progress{grid-template-columns:1fr;}
+  .jt-panel-head{align-items:flex-start;flex-direction:column;gap:10px;}
+  .jt-summary{align-items:flex-start;flex-direction:column;gap:7px;}
+  .jt-summary .sep{display:none;}
+  .jt-metrics{grid-template-columns:1fr 1fr;}
+  .jt-plan{padding:16px;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-in">
+    <a class="logo" href="#plans">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 25V15l9-7 9 7v10h-7v-6h-4v6z" stroke="#EAF8DE" stroke-width="2" stroke-linejoin="round"/><path d="M16 8c0-2.2 1.8-4 4-4" stroke="#CDEB9B" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      <span class="logo-text">
+        <span class="logo-name">节碳家</span>
+        <span class="logo-sub">JIETANJIA · AI ENERGY ASSISTANT</span>
+      </span>
+    </a>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="主要功能区">
+      <button type="button" class="tab active" data-tab="plans" role="tab" aria-selected="true" aria-controls="panel-plans">节能方案</button>
+      <button type="button" class="tab" data-tab="diary" role="tab" aria-selected="false" aria-controls="panel-diary">碳迹日记</button>
+      <button type="button" class="tab" data-tab="records" role="tab" aria-selected="false" aria-controls="panel-records">我的碳档案</button>
+    </nav>
+    <button type="button" class="tabs-ai" id="aiPill">开启 AI</button>
+  </div>
+</div>
+
+<section class="jt-hero">
+  <div>
+    <span class="jt-kicker"><span class="dot"></span>AI 家庭减碳与补贴助手</span>
+    <h1>把节能想法，<br><em>变成算得清的方案。</em></h1>
+    <p class="jt-hero-lead">填几项家庭情况，得到轻量、均衡、深度三档节能方案。每项措施都说明投入、节电、节省电费、减碳量和回收周期，再查看相关补贴依据。</p>
+    <div class="jt-hero-actions">
+      <button type="button" class="btn" data-goto="plans">开始家庭评估</button>
+      <button type="button" class="btn-ghost" data-goto="diary">记录今天减碳</button>
+    </div>
+    <div class="jt-principles">
+      <span class="jt-principle">数值由本地规则计算</span>
+      <span class="jt-principle">政策标注演示状态</span>
+      <span class="jt-principle">无 AI 也能完整使用</span>
+    </div>
+  </div>
+  <aside class="jt-preview" aria-label="最近一次方案摘要">
+    <div class="jt-preview-head">
+      <div><b>方案摘要</b><div class="jt-preview-sub" id="heroPreviewHint">生成后显示真实计算结果</div></div>
+      <span>RULES / ESTIMATE</span>
+    </div>
+    <div class="jt-preview-metric"><span>月省电费</span><strong id="heroMoney">—<small>元</small></strong></div>
+    <div class="jt-preview-metric"><span>年减碳量</span><strong id="heroCo2">—<small>kg</small></strong></div>
+    <div class="jt-preview-metric"><span>投入回收</span><strong id="heroPayback">—<small>个月</small></strong></div>
+    <p class="jt-preview-note">所有数字均为基于家庭基线和版本化参数的估算，不替代电费账单、检测报告或正式补贴审核。</p>
+  </aside>
+</section>
+
+<section class="jt-strip" aria-label="产品原则">
+  <div class="jt-strip-item"><b>先算清，再推荐</b><span>措施筛选、节电和费用计算均在服务端确定性完成。</span></div>
+  <div class="jt-strip-item"><b>政策只做初筛</b><span>展示日期、条件和来源状态，不宣称获批或实时有效。</span></div>
+  <div class="jt-strip-item"><b>行动可以累积</b><span>把做过的措施写成碳迹，按年月日归档回看。</span></div>
+</section>
+
+<main class="jt-shell">
+  <section class="jt-panel active" id="panel-plans" aria-labelledby="plansTitle">
+    <div class="jt-panel-head">
+      <div>
+        <div class="jt-eyebrow">HOUSEHOLD ASSESSMENT</div>
+        <h2 id="plansTitle">家庭节能评估</h2>
+        <p>只需填写会影响方案的必要信息。月用电量和月电费至少填一项；都不填时会使用明确标注的演示基线。</p>
+      </div>
+      <span class="jt-tag" id="dataVersionTag">规则引擎加载中</span>
+    </div>
+
+    <div class="jt-demo-banner"><b>数据说明</b><span>当前措施参数、排放因子和补贴政策均为演示数据，用于展示完整产品流程，不构成节电承诺或申领依据。</span></div>
+
+    <form class="jt-form" id="planForm" novalidate>
+      <div class="jt-form-grid">
+        <div class="jt-field">
+          <label for="cityInput">所在城市</label>
+          <input type="text" id="cityInput" value="西安市" maxlength="30" autocomplete="off" placeholder="例如：西安市">
+          <span class="help">首批演示政策覆盖西安市；其他城市仍可生成节能方案。</span>
+        </div>
+        <div class="jt-field">
+          <label for="housingInput">住房情况</label>
+          <select id="housingInput">
+            <option value="own">自有住房</option>
+            <option value="rent">租住</option>
+            <option value="other">其他 / 不便说明</option>
+          </select>
+          <span class="help">租住会自动排除固定施工和需业主同意的措施。</span>
+        </div>
+        <div class="jt-field">
+          <label for="residentsInput">家庭人口</label>
+          <input type="number" id="residentsInput" min="1" max="20" step="1" value="3" inputmode="numeric">
+          <span class="help">用于在缺少电费数据时建立估算基线。</span>
+        </div>
+        <div class="jt-field">
+          <label for="monthlyKwhInput">月用电量 <small>kWh，可选</small></label>
+          <input type="number" id="monthlyKwhInput" min="1" max="10000" step="0.1" placeholder="例如：260" inputmode="decimal">
+          <span class="help">账单上的“本期用电量”。与月电费同时填写时优先使用本项。</span>
+        </div>
+        <div class="jt-field">
+          <label for="monthlyBillInput">月电费 <small>元，可选</small></label>
+          <input type="number" id="monthlyBillInput" min="1" max="50000" step="0.01" placeholder="例如：150" inputmode="decimal">
+          <span class="help">将按演示电价换算用电量，并明确展示换算过程。</span>
+        </div>
+        <div class="jt-field">
+          <label for="budgetInput">可接受前期投入 <small>元</small></label>
+          <input type="number" id="budgetInput" min="0" max="200000" step="100" value="8000" inputmode="numeric">
+          <span class="help">只筛选单项投入不超过该预算的措施。</span>
+        </div>
+      </div>
+      <div class="jt-form-foot">
+        <div class="jt-principles">
+          <button type="button" class="chip" data-sample="rent">示例：租住小户型</button>
+          <button type="button" class="chip" data-sample="family">示例：三口自住</button>
+          <button type="button" class="chip" data-sample="elder">示例：四人家庭</button>
+        </div>
+        <button type="submit" class="jt-submit" id="genPlansBtn">生成三档方案</button>
+      </div>
+      <div class="jt-error" id="planError" role="alert"></div>
+    </form>
+
+    <div class="jt-progress" id="planProgress" aria-live="polite">
+      <div class="jt-progress-item" data-stage="1"><i></i>校验家庭条件</div>
+      <div class="jt-progress-item" data-stage="2"><i></i>筛选措施并计算</div>
+      <div class="jt-progress-item" data-stage="3"><i></i>匹配政策并整理依据</div>
+    </div>
+
+    <div id="planResult" hidden>
+      <div class="jt-summary" id="baselineSummary"></div>
+      <section class="jt-ai" id="aiExplainBox" hidden aria-live="polite">
+        <div class="jt-ai-head">
+          <b>AI 方案解释</b>
+          <span class="jt-ai-state" id="aiExplainState"></span>
+        </div>
+        <div class="jt-ai-stages" id="aiExplainStages">
+          <span data-ai-stage="1">读取规则计算结果</span>
+          <span data-ai-stage="2">检索相关政策条款</span>
+          <span data-ai-stage="3">组织可读解释</span>
+        </div>
+        <div class="jt-ai-body" id="aiExplainBody"></div>
+        <div class="jt-ai-note" id="aiExplainNote"></div>
+      </section>
+      <div class="jt-cards" id="planCards"></div>
+      <div class="jt-subhead">
+        <div><h3>相关政策依据</h3><p>只展示与当前方案措施有关、同城市的演示政策。</p></div>
+        <span class="jt-tag">规则初筛，不代表获批</span>
+      </div>
+      <div class="jt-policy-list" id="policyList"></div>
+      <div class="jt-meta" id="planMeta"></div>
+    </div>
+  </section>
+
+  <section class="jt-panel" id="panel-diary" aria-labelledby="diaryTitle">
+    <div class="jt-panel-head">
+      <div>
+        <div class="jt-eyebrow">CARBON TRACE</div>
+        <h2 id="diaryTitle">碳迹日记</h2>
+        <p>记下一件已经做过的节能行动，写成可回看的碳迹。登录后保存在当前账号。</p>
+      </div>
+      <div class="hp-account" id="hpAccount">
+        <div class="hp-acct-row" id="hpGuestRow">
+          <span>未登录 · 登录后可长期保存</span>
+          <button type="button" class="hp-link" id="hpToggleAuth">登录 / 注册</button>
+        </div>
+        <div class="hp-acct-row" id="hpUserRow" hidden>
+          <span>已登录：<b id="hpUserName">-</b></span>
+          <button type="button" class="hp-link" id="hpLogoutBtn">退出登录</button>
+        </div>
+        <div class="hp-auth" id="hpAuthBox" hidden>
+          <input type="text" id="hpUser" placeholder="用户名（2~20 个字符）" autocomplete="username">
+          <input type="password" id="hpPass" placeholder="密码（至少 6 位）" autocomplete="current-password">
+          <div class="hp-auth-actions">
+            <button type="button" class="hp-btn-sm" id="hpLoginBtn">登录</button>
+            <button type="button" class="hp-btn-sm ghost" id="hpRegBtn">注册</button>
+          </div>
+          <div class="hp-msg" id="hpAuthMsg"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="jt-diary-grid">
+      <div class="jt-card">
+        <div class="jt-card-title">今天做了什么？</div>
+        <p class="jt-card-sub">写具体行动即可，例如调高空调温度、清洗滤网、替换灯具。<b>只记录已经发生或明确计划执行的事情。</b></p>
+        <textarea class="big-input" id="hpInput" rows="4" maxlength="200" placeholder="比如：今天把空调调到 26℃，并打开了睡眠模式。"></textarea>
+        <div class="jt-entry-status">
+          <label for="entryType">记录类型</label>
+          <select id="entryType">
+            <option value="done">已完成</option>
+            <option value="planned">计划执行</option>
+          </select>
+          <span>计划执行的行动不会被展示成已完成的减碳结果。</span>
+        </div>
+        <div class="chip-row" id="hpChips">
+          <button type="button" class="chip" data-text="今天把空调调到26℃，并打开了睡眠模式">空调 26℃</button>
+          <button type="button" class="chip" data-text="今天清洗了空调滤网">清洗滤网</button>
+          <button type="button" class="chip" data-text="今天把常用灯泡换成了LED灯">更换 LED</button>
+          <button type="button" class="chip" data-text="今天用冷水洗衣并自然晾干">冷水洗衣</button>
+        </div>
+        <div class="panel-actions">
+          <button type="button" class="btn" id="hpGenBtn">生成碳迹反馈</button>
+          <button type="button" class="btn-ghost" id="hpClearBtn">清空</button>
+        </div>
+        <div class="hp-msg" id="hpFlowMsg"></div>
+
+        <div class="hp-card" id="hpResult" hidden>
+          <div class="hp-card-label" id="hpLabel">碳迹反馈</div>
+          <p class="hp-text" id="hpText"></p>
+          <div class="hp-ops">
+            <button type="button" class="bb-op" id="hpCopyBtn">复制</button>
+            <button type="button" class="bb-op" id="hpSaveBtn">保存到碳迹</button>
+            <span class="hp-src" id="hpSrc"></span>
+          </div>
+          <div class="hp-msg" id="hpSaveMsg"></div>
+        </div>
+
+        <div class="hp-save-tip" id="hpSaved">
+          保存后的碳迹在「我的碳档案」中按年 / 月 / 日归档。
+          <button type="button" class="hp-link" id="hpGoRecords">查看碳档案 →</button>
+        </div>
+      </div>
+
+      <aside class="jt-diary-aside">
+        <div class="jt-mini"><b>记录边界</b>碳迹是行动记录，不是经过核查的减排量。方案中的节电和减碳数字均为估算。</div>
+        <div class="jt-mini"><b>隐私提示</b>无需填写详细地址、姓名或证件信息。账号只保存用户名和碳迹文本。</div>
+        <div class="jt-mini"><b>本地模板可用</b>关闭 AI 或模型调用失败时，仍可生成反馈并保存碳迹。</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="jt-panel" id="panel-records" aria-labelledby="recordsTitle">
+    <div class="jt-panel-head">
+      <div>
+        <div class="jt-eyebrow">MY CARBON ARCHIVE</div>
+        <h2 id="recordsTitle">我的碳档案</h2>
+        <p>保存过的碳迹按年、月、日归档；登录同一账号后可在其他设备查看。</p>
+      </div>
+      <span class="jt-tag">仅当前账号可读</span>
+    </div>
+
+    <div class="rec-toolbar">
+      <input type="search" id="recSearch" placeholder="搜索行动关键词，例如「空调」「LED」" autocomplete="off">
+      <input type="date" id="recDate" aria-label="按日期查找">
+      <button type="button" class="rec-btn" id="recClear">清除筛选</button>
+      <button type="button" class="rec-btn" id="recRefresh">刷新</button>
+      <span class="rec-count" id="recCount"></span>
+    </div>
+
+    <div class="rec-empty" id="recEmpty">还没有保存的碳迹</div>
+    <div class="rec-tree" id="recTree"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <div class="foot-name">节碳家</div>
+        <div class="foot-mono">AI ENERGY ASSISTANT</div>
+        <p class="foot-tag">把家庭节能变成可执行、可比较、可回看的方案。<br>只提供估算和初筛，不代替专业检测或政策审核。</p>
+      </div>
+      <div class="foot-cols">
+        <div class="foot-col">
+          <h4>产品</h4>
+          <button type="button" data-goto="plans">节能方案</button>
+          <button type="button" data-goto="diary">碳迹日记</button>
+          <button type="button" data-goto="records">我的碳档案</button>
+        </div>
+        <div class="foot-col">
+          <h4>说明</h4>
+          <span>估算与数据边界</span>
+          <span>政策来源说明</span>
+          <span>账号与隐私</span>
+        </div>
+      </div>
+    </div>
+    <div class="foot-rule"></div>
+    <div class="foot-bottom">
+      <div class="tip">所有节能与减碳数字均为估算，演示政策不构成申领依据。</div>
+      <span>2026 · 节碳家</span>
+    </div>
+    <div class="footnote">当前版本为竞赛演示，不提供自动申领、支付或设备控制。</div>
+  </div>
+</footer>
+
+<div class="aimodal" id="aiModal" hidden>
+  <div class="aimodal-mask" id="aiMask"></div>
+  <div class="aimodal-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
+    <button type="button" class="aimodal-x" id="aiClose" aria-label="关闭">×</button>
+    <h2 id="aiTitle">选择 AI 解释方式</h2>
+    <p class="aimodal-sub">绑定你自己的 OpenAI 兼容服务后，可用 AI 生成碳迹反馈与方案解释；不配置也能使用全部规则计算。</p>
+    <div class="aimodal-opts" id="aiOpts">
+      <button type="button" class="aio" id="aiChooseLlm">
+        <b>使用我的 AI</b>
+        <span>用于自然语言反馈与解释，不参与金额、减碳量或资格计算</span>
+      </button>
+      <button type="button" class="aio ghost" id="aiChooseLocal">
+        <b>暂不使用 AI</b>
+        <span>使用本地模板与规则计算，随时可在顶部切换</span>
+      </button>
+    </div>
+    <div class="aimodal-form" id="aiForm" hidden>
+      <div class="field">
+        <label>AI 服务</label>
+        <select id="aiModelSel"></select>
+      </div>
+      <div class="ai-custom" id="aiCustom">
+        <div class="field">
+          <label>base_url</label>
+          <input type="text" id="aiBase" placeholder="https://api.deepseek.com/v1" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>模型名称</label>
+          <input type="text" id="aiModelName" placeholder="deepseek-chat" autocomplete="off">
+        </div>
+      </div>
+      <div class="field">
+        <label>API Key</label>
+        <input type="password" id="aiKey" placeholder="sk-..." autocomplete="off" spellcheck="false">
+      </div>
+      <label class="ai-remember">
+        <input type="checkbox" id="aiRemember">
+        <span>在这台设备记住 Key（默认关闭浏览器后清空）</span>
+      </label>
+      <div class="ai-secure">
+        <span id="aiKeyState">当前：未填写</span>
+        <button type="button" class="ai-clear" id="aiClearKey" hidden>清除已保存的 Key</button>
+      </div>
+      <p class="ai-warn">Key 只保存在本机浏览器，使用时会随当次请求发送到本站服务并转发给模型方。服务端不落盘、不写日志；任何计算结论不采信模型输出。</p>
+      <div class="aimodal-actions">
+        <button type="button" class="btn" id="aiSave">保存并启用</button>
+        <button type="button" class="btn-ghost" id="aiCancel">取消</button>
+      </div>
+      <div class="ai-msg" id="aiMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const DEFAULT_API_BASE = location.protocol === 'file:' ? 'http://localhost:5000' : location.origin;
+  const qs = new URLSearchParams(location.search);
+  const API_BASE = DEFAULT_API_BASE;
+  const SHARE_CODE = qs.get('sharecode') || localStorage.getItem('jtc_sharecode') || '';
+  if (qs.get('sharecode')) localStorage.setItem('jtc_sharecode', qs.get('sharecode'));
+
+  function apiUrl(path) {
+    const base = API_BASE.replace(/\/+$/, '');
+    if (!SHARE_CODE) return base + path;
+    return base + path + (path.indexOf('?') >= 0 ? '&' : '?') + 'sharecode=' + encodeURIComponent(SHARE_CODE);
+  }
+  async function fetchWithTimeout(url, opts, ms) {
+    if (typeof AbortController === 'undefined') return fetch(url, opts);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), ms || 20000);
+    try {
+      return await fetch(url, Object.assign({}, opts, { signal: ctrl.signal }));
+    } finally { clearTimeout(timer); }
+  }
+  async function requestJson(path, options, timeout) {
+    const r = await fetchWithTimeout(apiUrl(path), options, timeout);
+    const j = await r.json().catch(() => null);
+    if (!r.ok || !j || !j.success) throw new Error((j && j.error) || ('HTTP ' + r.status));
+    return j;
+  }
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmt = n => '¥' + Number(n || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const num = (n, d) => Number(n || 0).toLocaleString('zh-CN', { maximumFractionDigits: d == null ? 1 : d });
+  const pad = n => String(n).padStart(2, '0');
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  async function copyText(text) {
+    if (!text) return false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text); return true;
+      }
+    } catch (_) {}
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta); return true;
+    } catch (_) { return false; }
+  }
+  function flashBtn(btn, text) {
+    const old = btn.textContent; btn.textContent = text;
+    setTimeout(() => { btn.textContent = old; }, 1500);
+  }
+
+  const LLM_PRESETS = [
+    { id: 'deepseek', label: 'DeepSeek（推荐）', baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
+    { id: 'openai', label: 'OpenAI GPT', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+    { id: 'zhipu', label: '智谱 GLM', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' },
+    { id: 'moonshot', label: 'Moonshot Kimi', baseUrl: 'https://api.moonshot.cn/v1', model: 'moonshot-v1-8k' },
+    { id: 'qwen', label: '通义千问', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus' },
+    { id: 'custom', label: '自建 / 自定义服务（需服务端允许）', baseUrl: '', model: '' }
+  ];
+  const AI_STORE_KEY = 'jtc_ai';
+  const AI_KEY_SESSION = 'jtc_ai_key_s';
+  const AI_KEY_LOCAL = 'jtc_ai_key_l';
+  function readKey() {
+    try { return sessionStorage.getItem(AI_KEY_SESSION) || localStorage.getItem(AI_KEY_LOCAL) || ''; }
+    catch (_) { return ''; }
+  }
+  function writeKey(key, remember) {
+    try {
+      if (remember) { localStorage.setItem(AI_KEY_LOCAL, key); sessionStorage.removeItem(AI_KEY_SESSION); }
+      else { sessionStorage.setItem(AI_KEY_SESSION, key); localStorage.removeItem(AI_KEY_LOCAL); }
+    } catch (_) {}
+  }
+  function loadAi() {
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(AI_STORE_KEY) || '{}') || {}; } catch (_) {}
+    return {
+      mode: saved.mode === 'llm' ? 'llm' : (saved.mode === 'local' ? 'local' : ''),
+      preset: saved.preset || 'deepseek',
+      baseUrl: saved.baseUrl || '', model: saved.model || '',
+      remember: !!saved.remember, key: readKey()
+    };
+  }
+  let ai = loadAi();
+  function persistAi() {
+    localStorage.setItem(AI_STORE_KEY, JSON.stringify({
+      mode: ai.mode, preset: ai.preset, baseUrl: ai.baseUrl, model: ai.model, remember: !!ai.remember
+    }));
+  }
+  function clearKey() {
+    try { sessionStorage.removeItem(AI_KEY_SESSION); localStorage.removeItem(AI_KEY_LOCAL); } catch (_) {}
+    ai.key = ''; ai.mode = ai.mode === 'llm' ? 'local' : ai.mode;
+    persistAi(); syncAiUi();
+  }
+  function maskKey(key) {
+    if (!key) return '未填写';
+    return key.length <= 8 ? '****' : key.slice(0, 4) + '****' + key.slice(-4);
+  }
+  function currentLlm() {
+    const p = LLM_PRESETS.find(x => x.id === ai.preset) || LLM_PRESETS[0];
+    return { baseUrl: p.id === 'custom' ? ai.baseUrl : p.baseUrl,
+             model: p.id === 'custom' ? ai.model : p.model, key: ai.key };
+  }
+  function aiReady() {
+    if (ai.mode !== 'llm') return false;
+    const c = currentLlm(); return !!(c.key && c.baseUrl && c.model);
+  }
+  function aiJsonHeaders() {
+    return { 'Content-Type': 'application/json', 'X-LLM-Key': currentLlm().key };
+  }
+  function aiPair() { const c = currentLlm(); return { baseUrl: c.baseUrl, model: c.model }; }
+
+  const TAB_NAMES = ['plans', 'diary', 'records'];
+  const tabsEl = document.getElementById('tabs');
+  function switchTab(name, opts) {
+    if (TAB_NAMES.indexOf(name) < 0) name = 'plans';
+    TAB_NAMES.forEach(t => {
+      const panel = document.getElementById('panel-' + t);
+      if (panel) panel.classList.toggle('active', t === name);
+      const btn = tabsEl.querySelector('.tab[data-tab="' + t + '"]');
+      if (btn) { btn.classList.toggle('active', t === name); btn.setAttribute('aria-selected', t === name ? 'true' : 'false'); }
+    });
+    if (!(opts && opts.silent)) history.replaceState(null, '', '#' + name);
+    if (name === 'records') hpLoadList();
+    if (!(opts && opts.noScroll)) {
+      const target = document.getElementById('panel-' + name);
+      if (target) window.scrollTo({ top: target.offsetTop - 76, behavior: 'smooth' });
+    }
+  }
+  tabsEl.querySelectorAll('.tab').forEach(btn => { btn.onclick = () => switchTab(btn.dataset.tab); });
+  document.querySelectorAll('[data-goto]').forEach(el => {
+    el.addEventListener('click', ev => { ev.preventDefault(); switchTab(el.dataset.goto); });
+  });
+  window.addEventListener('hashchange', () => {
+    switchTab((location.hash || '#plans').slice(1), { noScroll: true, silent: true });
+  });
+
+  const planForm = document.getElementById('planForm');
+  const planCardsEl = document.getElementById('planCards');
+  const policyListEl = document.getElementById('policyList');
+  const planResultEl = document.getElementById('planResult');
+  const planErrorEl = document.getElementById('planError');
+  const progressEl = document.getElementById('planProgress');
+  const genPlansBtn = document.getElementById('genPlansBtn');
+  const aiExplainBox = document.getElementById('aiExplainBox');
+  const aiExplainState = document.getElementById('aiExplainState');
+  const aiExplainStages = document.getElementById('aiExplainStages');
+  const aiExplainBody = document.getElementById('aiExplainBody');
+  const aiExplainNote = document.getElementById('aiExplainNote');
+  let lastPlans = null;
+
+  function resetAiExplain() {
+    aiExplainBox.hidden = true;
+    aiExplainState.textContent = '';
+    aiExplainBody.innerHTML = '';
+    aiExplainNote.textContent = '';
+    aiExplainStages.querySelectorAll('span').forEach(x => x.classList.remove('done'));
+  }
+  function markAiStages(count) {
+    aiExplainStages.querySelectorAll('span').forEach(el => {
+      el.classList.toggle('done', Number(el.dataset.aiStage) <= count);
+    });
+  }
+  async function runAiExplanation(householdPayload) {
+    if (!aiReady()) { resetAiExplain(); return; }
+    aiExplainBox.hidden = false;
+    markAiStages(1);
+    aiExplainState.textContent = '正在请求服务端重算方案、检索政策条款并生成解释…';
+    aiExplainBody.innerHTML = '<div class="jt-ai-placeholder"><i></i><span>AI 解释生成中，方案卡片已可正常查看。</span></div>';
+    aiExplainNote.textContent = 'AI 只组织说明，不参与节电量、费用、减碳量和政策资格计算。';
+    try {
+      const data = await requestJson('/api/energy/explain', {
+        method: 'POST', headers: aiJsonHeaders(),
+        body: JSON.stringify({ ...householdPayload, ...aiPair() })
+      }, 32000);
+      const aiData = data.ai || {};
+      markAiStages(3);
+      aiExplainState.textContent = aiData.mode === 'llm'
+        ? 'AI 解释已生成 · 数值仍来自规则计算'
+        : 'AI 暂不可用 · 已展示规则解释';
+      const tierHtml = (aiData.tierNotes || []).map(item =>
+        '<div class="jt-ai-tier"><b>' + esc(item.tierName || item.tier) + '</b><span>' + esc(item.note) + '</span></div>'
+      ).join('');
+      const policyHtml = (aiData.policyNotes || []).map(item =>
+        '<li><b>' + esc(item.title || item.policyId) + '：</b>' + esc(item.note) + '</li>'
+      ).join('');
+      aiExplainBody.innerHTML =
+        (aiData.intro ? '<p>' + esc(aiData.intro) + '</p>' : '')
+        + tierHtml
+        + (policyHtml ? '<p><b>政策说明</b></p><ul>' + policyHtml + '</ul>' : '')
+        + (aiData.nextStep ? '<p><b>下一步：</b>' + esc(aiData.nextStep) + '</p>' : '');
+      const retrieval = data.retrieval || {};
+      aiExplainNote.textContent = (data.aiNote || '')
+        + (retrieval.clauseCount ? ' 已检索 ' + retrieval.clauseCount + ' 个政策条款片段，仅使用演示政策。' : '');
+    } catch (err) {
+      markAiStages(1);
+      aiExplainState.textContent = 'AI 解释暂不可用';
+      aiExplainBody.innerHTML = '<p>规则方案和全部数值不受影响，可继续比较方案。'
+        + esc(err && err.name === 'AbortError' ? '解释请求超时。' : (err.message || '')) + '</p>';
+      aiExplainNote.textContent = '即使没有 AI，核心评估、方案计算与政策初筛仍可正常使用。';
+    }
+  }
+
+  function formValue(id) { return document.getElementById(id).value.trim(); }
+  function numberOrNull(id) {
+    const raw = formValue(id);
+    if (!raw) return null;
+    const value = Number(raw);
+    return Number.isFinite(value) ? value : NaN;
+  }
+  function setPlanError(message) {
+    planErrorEl.textContent = message || '';
+    planErrorEl.classList.toggle('on', !!message);
+  }
+  function setProgress(stage, done) {
+    progressEl.querySelectorAll('.jt-progress-item').forEach(item => {
+      const n = Number(item.dataset.stage);
+      item.classList.toggle('done', done || n < stage);
+      item.classList.toggle('active', !done && n === stage);
+    });
+  }
+  function sampleInput(kind) {
+    const samples = {
+      rent: { city: '西安市', housing: 'rent', residents: 2, kwh: 170, bill: '', budget: 1200 },
+      family: { city: '西安市', housing: 'own', residents: 3, kwh: 280, bill: '', budget: 8000 },
+      elder: { city: '西安市', housing: 'own', residents: 4, kwh: 360, bill: '', budget: 12000 }
+    };
+    const s = samples[kind]; if (!s) return;
+    document.getElementById('cityInput').value = s.city;
+    document.getElementById('housingInput').value = s.housing;
+    document.getElementById('residentsInput').value = s.residents;
+    document.getElementById('monthlyKwhInput').value = s.kwh;
+    document.getElementById('monthlyBillInput').value = s.bill;
+    document.getElementById('budgetInput').value = s.budget;
+    setPlanError('');
+  }
+  document.querySelectorAll('[data-sample]').forEach(btn => {
+    btn.onclick = () => sampleInput(btn.dataset.sample);
+  });
+
+  function paybackText(months) {
+    if (months == null) return '—';
+    if (Number(months) === 0) return '无需投入';
+    return num(months, 1) + ' 个月';
+  }
+  function planCardHtml(plan, recommended) {
+    const actions = (plan.actions || []).map(action => {
+      return '<details class="jt-action"><summary><span>' + esc(action.name)
+        + '</span><span>' + esc(action.category || '') + '</span></summary>'
+        + '<div class="jt-action-body"><b>年节电</b> ' + num(action.annualKwhSaved) + ' kWh · '
+        + '<b>年节省</b> ' + fmt(action.annualMoneySaved) + ' · <b>投入</b> ' + fmt(action.upfrontCost)
+        + ' · <b>回收</b> ' + paybackText(action.paybackMonths)
+        + '<br>' + esc(action.assumption || '估算参数见数据说明。') + '</div></details>';
+    }).join('');
+    return '<article class="jt-plan' + (recommended ? ' recommended' : '') + '">'
+      + '<div class="jt-plan-top"><div><div class="jt-plan-tier">' + esc(plan.tier.toUpperCase()) + '</div>'
+      + '<h3>' + esc(plan.name) + '</h3></div>'
+      + (recommended ? '<span class="jt-rec">均衡参考</span>' : '') + '</div>'
+      + '<p class="jt-plan-tagline">' + esc(plan.tagline) + '</p>'
+      + '<div class="jt-metrics">'
+      + '<div class="jt-metric"><span>前期投入</span><strong>' + fmt(plan.upfrontCost) + '</strong></div>'
+      + '<div class="jt-metric"><span>月省电费</span><strong>' + fmt(plan.monthlyMoneySaved) + '</strong></div>'
+      + '<div class="jt-metric"><span>年节电</span><strong>' + num(plan.annualKwhSaved) + '<small>kWh</small></strong></div>'
+      + '<div class="jt-metric"><span>年减碳</span><strong>' + num(plan.annualCo2eKg) + '<small>kg CO₂e</small></strong></div>'
+      + '</div>'
+      + '<div class="jt-action-list">' + (actions || '<div class="jt-empty">当前条件下暂无合适措施</div>') + '</div>'
+      + '<p class="jt-plan-note">回收周期 ' + paybackText(plan.paybackMonths) + '。'
+      + esc((plan.notes || []).join(' ')) + '</p>'
+      + '<button type="button" class="jt-plan-btn" data-record-tier="' + esc(plan.tier) + '"'
+      + ((plan.actions || []).length ? '' : ' disabled') + '>把方案带入碳迹日记</button>'
+      + '</article>';
+  }
+  function policyCardHtml(policy) {
+    const ok = !!policy.eligible;
+    const meta = [
+      policy.validFrom && policy.validTo ? ('有效期 ' + policy.validFrom + ' 至 ' + policy.validTo) : '',
+      policy.updatedAt ? ('更新 ' + policy.updatedAt) : ''
+    ].filter(Boolean).map(t => '<span>' + esc(t) + '</span>').join('');
+    return '<article class="jt-policy"><div class="jt-policy-head"><h4>' + esc(policy.title) + '</h4>'
+      + '<span class="jt-status ' + (ok ? 'ok' : 'no') + '">' + (ok ? '初筛符合' : '未通过初筛') + '</span></div>'
+      + '<p>' + esc(policy.benefit || '') + '</p>'
+      + '<div class="jt-policy-meta"><span>' + esc(policy.region) + '</span>' + meta + '</div>'
+      + '<div class="jt-policy-reason"><b>判断依据：</b>' + esc((policy.reasons || []).join('；'))
+      + (policy.requirements && policy.requirements.length ? '<br><b>材料条件：</b>' + esc(policy.requirements.join('、')) : '')
+      + '</div>'
+      + '<div class="jt-policy-demo">' + (policy.isDemo ? '演示政策，不构成申领依据。' : '')
+      + esc(policy.sourceName || '') + '</div></article>';
+  }
+  function renderPlans(data) {
+    lastPlans = data;
+    const base = data.baseline;
+    document.getElementById('baselineSummary').innerHTML =
+      '<span>月用电基线 <b>' + num(base.monthlyKwh) + ' kWh</b></span><span class="sep"></span>'
+      + '<span>年用电基线 <b>' + num(base.annualKwh) + ' kWh</b></span><span class="sep"></span>'
+      + '<span>前期预算 <b>' + fmt(data.budget) + '</b></span><span class="sep"></span>'
+      + '<span>' + esc(base.source) + (base.isDefault ? '（演示基线）' : '') + '</span>';
+    planCardsEl.innerHTML = (data.plans || []).map((plan, index) =>
+      planCardHtml(plan, index === 1)).join('');
+    policyListEl.innerHTML = (data.policies || []).length
+      ? data.policies.map(policyCardHtml).join('')
+      : '<div class="jt-empty">当前城市或措施暂无匹配的演示政策。</div>';
+    const meta = data.meta || {};
+    document.getElementById('planMeta').innerHTML =
+      '<b>数据版本：</b>措施 ' + esc(meta.actionsVersion) + ' · 政策 ' + esc(meta.policiesVersion)
+      + ' · 排放因子 ' + esc(meta.factorVersion) + '（' + esc(meta.factorKgCo2ePerKwh) + ' kg CO₂e/kWh）<br>'
+      + '<b>计算与展示边界：</b><ul>' + (meta.assumptions || []).map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+    planResultEl.hidden = false;
+    const balanced = (data.plans || [])[1] || (data.plans || [])[0];
+    if (balanced) {
+      document.getElementById('heroMoney').innerHTML = fmt(balanced.monthlyMoneySaved) + '<small>元</small>';
+      document.getElementById('heroCo2').innerHTML = num(balanced.annualCo2eKg) + '<small>kg</small>';
+      document.getElementById('heroPayback').innerHTML = paybackText(balanced.paybackMonths).replace(' 个月', '') + '<small>个月</small>';
+      document.getElementById('heroPreviewHint').textContent = '最近一次：' + balanced.name;
+    }
+  }
+  planForm.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    setPlanError('');
+    const payload = {
+      city: formValue('cityInput'),
+      housing: formValue('housingInput'),
+      residents: numberOrNull('residentsInput'),
+      monthlyKwh: numberOrNull('monthlyKwhInput'),
+      monthlyBill: numberOrNull('monthlyBillInput'),
+      budget: numberOrNull('budgetInput')
+    };
+    if (!payload.city) { setPlanError('请填写所在城市。'); return; }
+    if ([payload.residents, payload.monthlyKwh, payload.monthlyBill, payload.budget]
+        .some(v => Number.isNaN(v))) { setPlanError('数字字段格式不正确，请检查后重试。'); return; }
+    genPlansBtn.disabled = true;
+    genPlansBtn.textContent = '正在计算…';
+    planResultEl.hidden = true;
+    resetAiExplain();
+    setProgress(2, false);
+    try {
+      const data = await requestJson('/api/energy/plans', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+      }, 16000);
+      setProgress(3, true);
+      await sleep(180);
+      renderPlans(data);
+      if (aiReady()) runAiExplanation(payload);
+    } catch (err) {
+      setProgress(1, false);
+      setPlanError(err && err.name === 'AbortError' ? '计算超时，请稍后重试。' : (err.message || '方案生成失败。'));
+    } finally {
+      genPlansBtn.disabled = false;
+      genPlansBtn.textContent = '生成三档方案';
+    }
+  });
+  planCardsEl.addEventListener('click', ev => {
+    const btn = ev.target.closest('[data-record-tier]'); if (!btn || !lastPlans) return;
+    const plan = lastPlans.plans.find(p => p.tier === btn.dataset.recordTier); if (!plan) return;
+    const lines = ['计划采用「' + plan.name + '」节能方案：']
+      .concat(plan.actions.map(a => '· ' + a.name))
+      .concat(['预计年节电 ' + num(plan.annualKwhSaved) + ' kWh，年节省电费 ' + fmt(plan.annualMoneySaved)
+        + '，年减碳约 ' + num(plan.annualCo2eKg) + ' kg CO₂e（估算）。']);
+    document.getElementById('hpInput').value = lines.join('\n');
+    document.getElementById('entryType').value = 'planned';
+    document.getElementById('hpFlowMsg').textContent = '方案摘要已按「计划执行」带入；完成后可改为「已完成」，再生成碳迹反馈。';
+    switchTab('diary');
+    setTimeout(() => document.getElementById('hpInput').focus(), 240);
+  });
+
+  const hpInputEl = document.getElementById('hpInput');
+  const hpResultEl = document.getElementById('hpResult');
+  const hpTextEl = document.getElementById('hpText');
+  const hpLabelEl = document.getElementById('hpLabel');
+  const hpSrcEl = document.getElementById('hpSrc');
+  const hpSaveMsgEl = document.getElementById('hpSaveMsg');
+  const hpFlowMsgEl = document.getElementById('hpFlowMsg');
+  const recTreeEl = document.getElementById('recTree');
+  const recEmptyEl = document.getElementById('recEmpty');
+  const recCountEl = document.getElementById('recCount');
+  const recSearchEl = document.getElementById('recSearch');
+  const recDateEl = document.getElementById('recDate');
+  const hpAuthMsgEl = document.getElementById('hpAuthMsg');
+  const hpAuthBoxEl = document.getElementById('hpAuthBox');
+  const hpUserEl = document.getElementById('hpUser');
+  const hpPassEl = document.getElementById('hpPass');
+  const hpGenBtn = document.getElementById('hpGenBtn');
+  const HP_TOKEN_KEY = 'jtc_token';
+  let hpMe = null, hpCurrent = null, hpItems = [];
+
+  function friendlyErr(msg) {
+    const m = String(msg || '');
+    if (/429|限流|太频繁/i.test(m)) return '请求有点频繁，请稍等片刻再试。';
+    if (/超时|timeout|AbortError/i.test(m)) return '请求超时，请检查网络后重试。';
+    if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return '网络连接中断，请稍后重试。';
+    if (/401|403|登录|令牌/i.test(m)) return '登录状态已失效，请重新登录。';
+    return m || '操作失败，请稍后重试。';
+  }
+  function hpErrText(e) {
+    const m = e && e.message ? e.message : '';
+    return /Failed to fetch|NetworkError|Load failed|fetch/i.test(m) ? '账号服务暂时不可用，请稍后重试。' : m;
+  }
+  function hpAuthMsg(text, ok) {
+    hpAuthMsgEl.textContent = text || '';
+    hpAuthMsgEl.classList.toggle('ok', !!ok);
+  }
+  function hpSaveMsg(text, ok) {
+    hpSaveMsgEl.textContent = text || '';
+    hpSaveMsgEl.classList.toggle('ok', !!ok);
+  }
+  function hpSetUser(user) {
+    hpMe = user || null;
+    document.getElementById('hpGuestRow').hidden = !!hpMe;
+    document.getElementById('hpUserRow').hidden = !hpMe;
+    document.getElementById('hpUserName').textContent = hpMe ? hpMe.username : '-';
+    hpAuthBoxEl.hidden = true;
+    hpAuthMsg('');
+    if (hpMe) hpUserEl.value = hpMe.username;
+  }
+  async function hpAuthPost(path, body) {
+    return requestJson(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, 15000);
+  }
+  async function hpDoAuth(kind) {
+    const username = hpUserEl.value.trim(), password = hpPassEl.value;
+    if (!username || !password) { hpAuthMsg('用户名和密码都要填。'); return; }
+    const loginBtn = document.getElementById('hpLoginBtn');
+    const regBtn = document.getElementById('hpRegBtn');
+    loginBtn.disabled = regBtn.disabled = true;
+    hpAuthMsg(kind === 'reg' ? '注册中…' : '登录中…', true);
+    try {
+      const data = await hpAuthPost(kind === 'reg' ? '/api/auth/register' : '/api/auth/login',
+        { username, password });
+      localStorage.setItem(HP_TOKEN_KEY, data.token);
+      hpSetUser(data.user); hpPassEl.value = '';
+      hpAuthMsg(kind === 'reg' ? '注册成功，已自动登录。' : '登录成功。', true);
+      hpLoadList();
+    } catch (err) { hpAuthMsg(hpErrText(err)); }
+    finally { loginBtn.disabled = regBtn.disabled = false; }
+  }
+  const REC_WD = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  function recDateOf(item) {
+    const d = new Date(item.createdAt);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function recItemHtml(item, d) {
+    const time = d ? pad(d.getHours()) + ':' + pad(d.getMinutes()) : '';
+    const done = item.scene !== 'planned';
+    const status = '<span class="rec-status ' + (done ? 'done' : '') + '">'
+      + (done ? '已完成' : '计划执行') + '</span>';
+    const from = item.inputText ? status + '「' + esc(item.inputText).slice(0, 90) + '」' : status;
+    return '<div class="rec-item"><div class="rec-item-meta"><span>' + time + '</span><span>' + from + '</span></div>'
+      + '<div class="rec-item-text">' + esc(item.content) + '</div>'
+      + '<div class="rec-item-ops"><button type="button" class="hp-link" data-act="copy" data-id="' + item.id + '">复制</button>'
+      + '<button type="button" class="hp-link" data-act="del" data-id="' + item.id + '">删除</button></div></div>';
+  }
+  function hpRenderList(items) {
+    hpItems = (items || []).slice().sort((a, b) =>
+      String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    renderRecords();
+  }
+  function renderRecords() {
+    if (!recTreeEl) return;
+    const kw = (recSearchEl.value || '').trim();
+    const day = (recDateEl.value || '').trim();
+    let list = hpItems.slice();
+    if (kw) list = list.filter(it => String(it.content || '').indexOf(kw) >= 0 || String(it.inputText || '').indexOf(kw) >= 0);
+    if (day) list = list.filter(it => {
+      const d = recDateOf(it); if (!d) return false;
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) === day;
+    });
+    recCountEl.textContent = hpItems.length ? '共 ' + hpItems.length + ' 条' + ((kw || day) ? '，筛出 ' + list.length + ' 条' : '') : '';
+    if (!list.length) {
+      recEmptyEl.hidden = false;
+      recEmptyEl.textContent = hpItems.length ? '没有匹配的碳迹，换个关键词或日期试试。'
+        : (hpMe ? '还没有保存的碳迹，去「碳迹日记」记录第一条。' : '登录后，保存过的碳迹会按日期显示在这里。');
+      recTreeEl.innerHTML = ''; return;
+    }
+    recEmptyEl.hidden = true;
+    const years = new Map();
+    list.forEach(it => {
+      const d = recDateOf(it); if (!d) return;
+      const y = d.getFullYear(), m = d.getMonth() + 1, dd = d.getDate();
+      if (!years.has(y)) years.set(y, { y, count: 0, months: new Map() });
+      const yn = years.get(y); yn.count++;
+      if (!yn.months.has(m)) yn.months.set(m, { m, count: 0, days: new Map() });
+      const mn = yn.months.get(m); mn.count++;
+      if (!mn.days.has(dd)) mn.days.set(dd, { dd, wd: d.getDay(), items: [] });
+      mn.days.get(dd).items.push({ it, d });
+    });
+    const expandAll = !!(kw || day);
+    const nowY = new Date().getFullYear(), nowM = new Date().getMonth() + 1;
+    recTreeEl.innerHTML = [...years.values()].sort((a, b) => b.y - a.y).map(yn => {
+      const months = [...yn.months.values()].sort((a, b) => b.m - a.m).map(mn => {
+        const days = [...mn.days.values()].sort((a, b) => b.dd - a.dd).map(dn => {
+          const items = dn.items.sort((a, b) => b.d - a.d).map(x => recItemHtml(x.it, x.d)).join('');
+          return '<div class="rec-day"><div class="rec-day-head">' + mn.m + ' 月 ' + dn.dd + ' 日 · '
+            + REC_WD[dn.wd] + '</div>' + items + '</div>';
+        }).join('');
+        return '<details class="rec-month"' + (expandAll || (yn.y === nowY && mn.m === nowM) ? ' open' : '')
+          + '><summary>' + mn.m + ' 月 <span class="rec-n">' + mn.count + ' 条</span></summary>' + days + '</details>';
+      }).join('');
+      return '<details class="rec-year"' + (expandAll || yn.y === nowY ? ' open' : '') + '><summary>'
+        + yn.y + ' 年 <span class="rec-n">' + yn.count + ' 条</span></summary>' + months + '</details>';
+    }).join('');
+  }
+  async function hpLoadList() {
+    const token = localStorage.getItem(HP_TOKEN_KEY);
+    if (!token || !hpMe) { hpRenderList([]); return; }
+    try {
+      const data = await requestJson('/api/carbon-entries', { headers: { 'X-HT-Token': token } }, 12000);
+      hpRenderList(data.items);
+    } catch (err) {
+      if (/401|登录/.test(err.message || '')) {
+        localStorage.removeItem(HP_TOKEN_KEY); hpSetUser(null); hpRenderList([]);
+      } else {
+        recEmptyEl.hidden = false;
+        recEmptyEl.textContent = '暂时读不到碳迹：' + hpErrText(err);
+      }
+    }
+  }
+  async function hpInit() {
+    const token = localStorage.getItem(HP_TOKEN_KEY);
+    if (!token) { hpSetUser(null); hpRenderList([]); return; }
+    try {
+      const data = await requestJson('/api/auth/me', { headers: { 'X-HT-Token': token } }, 10000);
+      hpSetUser(data.user); hpLoadList();
+    } catch (_) {
+      localStorage.removeItem(HP_TOKEN_KEY); hpSetUser(null); hpRenderList([]);
+    }
+  }
+  function composeFeedback(text, entryType) {
+    const action = text.replace(/[。！!，,、；;：:？?～~\s]+$/g, '').trim().slice(0, 80);
+    const doneTemplates = [
+      '今天你完成了「' + action + '」。这不是一句口号，而是一个已经发生的行动。把它留在这里，下一次评估时你会更清楚哪些改变真正适合自己。',
+      '「' + action + '」已经写进今天的碳迹。单次行动看起来很小，但可回看的记录会帮你判断哪些习惯值得继续。',
+      '今天的行动是「' + action + '」。先做能做的，再根据账单和实际体验调整，比追求一次到位更可靠。'
+    ];
+    const plannedTemplates = [
+      '你把「' + action + '」列入了下一步计划。先确认执行条件和时间，完成后再回来把状态改为已完成。',
+      '「' + action + '」已作为计划行动保存。计划不等于已经产生的减碳结果，完成后记得补上实际执行记录。',
+      '下一步计划是「' + action + '」。从一项能真正执行的措施开始，之后再用账单和体验复盘。'
+    ];
+    const templates = entryType === 'planned' ? plannedTemplates : doneTemplates;
+    const idx = [...text].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % templates.length;
+    return templates[idx];
+  }
+  function hpShow(content, source, inputText, entryType) {
+    hpCurrent = { input: inputText, content, scene: entryType };
+    hpLabelEl.textContent = entryType === 'planned' ? '碳迹计划 · 待执行' : '今日碳迹 · 已完成';
+    hpTextEl.textContent = content;
+    hpSrcEl.textContent = source;
+    hpResultEl.hidden = false;
+    hpSaveMsg('');
+  }
+  async function hpRun() {
+    const text = hpInputEl.value.trim();
+    if (!text) { hpFlowMsgEl.textContent = '先写下一件已经完成或准备执行的节能行动。'; hpInputEl.focus(); return; }
+    hpFlowMsgEl.textContent = '';
+    const entryType = document.getElementById('entryType').value;
+    const sceneLabel = entryType === 'planned' ? '计划执行' : '已完成';
+    const old = hpGenBtn.textContent;
+    hpGenBtn.disabled = true; hpGenBtn.textContent = '生成中…';
+    try {
+      if (aiReady()) {
+        try {
+          const data = await requestJson('/api/llm/carbon-feedback', {
+            method: 'POST', headers: aiJsonHeaders(),
+            body: JSON.stringify({ text, scene: sceneLabel, ...aiPair() })
+          }, 22000);
+          hpShow(data.content, 'AI 生成 · ' + currentLlm().model, text, entryType);
+        } catch (err) {
+          hpShow(composeFeedback(text, entryType), 'AI 失败，已使用本地模板', text, entryType);
+          hpFlowMsgEl.textContent = 'AI 调用失败，已自动降级：' + friendlyErr(err.message);
+        }
+      } else {
+        hpShow(composeFeedback(text, entryType), '本地模板 · 规则模式', text, entryType);
+      }
+    } finally { hpGenBtn.disabled = false; hpGenBtn.textContent = old; }
+  }
+  async function hpSave() {
+    if (!hpCurrent) return;
+    if (!hpMe) {
+      hpSaveMsg('登录后才能保存，换设备登录同一账号也能看到。', false);
+      hpAuthBoxEl.hidden = false; hpUserEl.focus(); return;
+    }
+    const btn = document.getElementById('hpSaveBtn');
+    btn.disabled = true; hpSaveMsg('保存中…', true);
+    try {
+      const token = localStorage.getItem(HP_TOKEN_KEY) || '';
+      await requestJson('/api/carbon-entries', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-HT-Token': token },
+        body: JSON.stringify({ inputText: hpCurrent.input, content: hpCurrent.content, scene: hpCurrent.scene })
+      }, 15000);
+      hpSaveMsg('已保存到碳档案。', true);
+      hpLoadList();
+    } catch (err) {
+      hpSaveMsg('保存失败：' + hpErrText(err), false);
+    } finally { btn.disabled = false; }
+  }
+  async function hpDelete(id) {
+    const token = localStorage.getItem(HP_TOKEN_KEY) || '';
+    try {
+      await requestJson('/api/carbon-entries/' + id, { method: 'DELETE', headers: { 'X-HT-Token': token } }, 12000);
+      hpLoadList();
+    } catch (err) {
+      recEmptyEl.hidden = false; recEmptyEl.textContent = '删除失败：' + hpErrText(err);
+    }
+  }
+  document.querySelectorAll('#hpChips .chip').forEach(chip => {
+    chip.onclick = () => { hpInputEl.value = chip.dataset.text || ''; hpInputEl.focus(); };
+  });
+  hpGenBtn.onclick = hpRun;
+  document.getElementById('hpCopyBtn').onclick = async ev => {
+    if (hpCurrent && await copyText(hpCurrent.content)) flashBtn(ev.currentTarget, '已复制');
+  };
+  document.getElementById('hpSaveBtn').onclick = hpSave;
+  document.getElementById('hpClearBtn').onclick = () => {
+    hpInputEl.value = ''; hpCurrent = null; hpResultEl.hidden = true;
+    hpSaveMsg(''); hpFlowMsgEl.textContent = ''; hpInputEl.focus();
+  };
+  document.getElementById('hpToggleAuth').onclick = () => {
+    hpAuthBoxEl.hidden = !hpAuthBoxEl.hidden;
+    if (!hpAuthBoxEl.hidden) hpUserEl.focus();
+  };
+  document.getElementById('hpLoginBtn').onclick = () => hpDoAuth('login');
+  document.getElementById('hpRegBtn').onclick = () => hpDoAuth('reg');
+  document.getElementById('hpLogoutBtn').onclick = async () => {
+    const token = localStorage.getItem(HP_TOKEN_KEY) || '';
+    localStorage.removeItem(HP_TOKEN_KEY); hpSetUser(null); hpRenderList([]);
+    try { await fetch(apiUrl('/api/auth/logout'), { method: 'POST', headers: { 'X-HT-Token': token } }); } catch (_) {}
+  };
+  recSearchEl.oninput = renderRecords;
+  recDateEl.onchange = renderRecords;
+  document.getElementById('recClear').onclick = () => { recSearchEl.value = ''; recDateEl.value = ''; renderRecords(); };
+  document.getElementById('recRefresh').onclick = hpLoadList;
+  document.getElementById('hpGoRecords').onclick = () => switchTab('records');
+  recTreeEl.onclick = ev => {
+    const btn = ev.target.closest('button[data-act]'); if (!btn) return;
+    if (btn.dataset.act === 'del') { hpDelete(btn.dataset.id); return; }
+    const text = btn.closest('.rec-item') && btn.closest('.rec-item').querySelector('.rec-item-text');
+    if (text) copyText(text.textContent).then(ok => { if (ok) flashBtn(btn, '已复制'); });
+  };
+
+  const aiModal = document.getElementById('aiModal');
+  const aiOpts = document.getElementById('aiOpts');
+  const aiForm = document.getElementById('aiForm');
+  const aiPill = document.getElementById('aiPill');
+  const aiModelSel = document.getElementById('aiModelSel');
+  const aiKeyInput = document.getElementById('aiKey');
+  const aiBaseInput = document.getElementById('aiBase');
+  const aiModelNameInput = document.getElementById('aiModelName');
+  const aiCustom = document.getElementById('aiCustom');
+  const aiMsg = document.getElementById('aiMsg');
+  LLM_PRESETS.forEach(p => {
+    const option = document.createElement('option'); option.value = p.id; option.textContent = p.label;
+    aiModelSel.appendChild(option);
+  });
+  function syncAiUi() {
+    const ready = aiReady();
+    aiPill.textContent = ready ? 'AI 已开启' : '开启 AI';
+    aiPill.classList.toggle('on', ready);
+    aiPill.title = ready ? 'AI 已开启（' + currentLlm().model + ' · ' + maskKey(ai.key) + '）'
+      : '配置 AI 用于生成反馈与解释；不配置也可使用规则模式';
+    aiCustom.classList.toggle('on', aiModelSel.value === 'custom');
+  }
+  function renderKeyState() {
+    const el = document.getElementById('aiKeyState');
+    const btn = document.getElementById('aiClearKey');
+    if (ai.key) {
+      el.innerHTML = '当前：<code>' + esc(maskKey(ai.key)) + '</code>　'
+        + (ai.remember ? '已记住（本设备）' : '仅本次会话');
+      btn.hidden = false;
+    } else { el.textContent = '当前：未填写'; btn.hidden = true; }
+  }
+  function openAiModal(showForm) {
+    aiModelSel.value = ai.preset || 'deepseek';
+    aiKeyInput.value = '';
+    aiKeyInput.placeholder = ai.key ? '已保存 ' + maskKey(ai.key) + '，留空表示不修改' : 'sk-...';
+    document.getElementById('aiRemember').checked = !!ai.remember;
+    aiBaseInput.value = ai.baseUrl || '';
+    aiModelNameInput.value = ai.model || '';
+    aiMsg.textContent = ''; renderKeyState();
+    const wantForm = showForm === undefined ? ai.mode === 'llm' : !!showForm;
+    aiOpts.hidden = wantForm; aiForm.hidden = !wantForm; aiModal.hidden = false;
+    syncAiUi(); if (wantForm) setTimeout(() => aiKeyInput.focus(), 80);
+  }
+  function closeAiModal() { aiModal.hidden = true; }
+  document.getElementById('aiChooseLlm').onclick = () => {
+    aiOpts.hidden = true; aiForm.hidden = false;
+    aiCustom.classList.toggle('on', aiModelSel.value === 'custom');
+    setTimeout(() => aiKeyInput.focus(), 80);
+  };
+  document.getElementById('aiChooseLocal').onclick = () => {
+    ai.mode = 'local'; persistAi(); syncAiUi(); closeAiModal();
+  };
+  document.getElementById('aiCancel').onclick = closeAiModal;
+  document.getElementById('aiClose').onclick = closeAiModal;
+  document.getElementById('aiMask').onclick = closeAiModal;
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && !aiModal.hidden) closeAiModal(); });
+  aiModelSel.onchange = () => { aiCustom.classList.toggle('on', aiModelSel.value === 'custom'); aiMsg.textContent = ''; };
+  document.getElementById('aiClearKey').onclick = () => {
+    clearKey(); aiKeyInput.value = ''; aiKeyInput.placeholder = 'sk-...';
+    renderKeyState(); aiMsg.textContent = '已清除本机保存的 Key。';
+  };
+  document.getElementById('aiSave').onclick = () => {
+    const preset = aiModelSel.value;
+    const p = LLM_PRESETS.find(x => x.id === preset) || LLM_PRESETS[0];
+    const baseUrl = preset === 'custom' ? aiBaseInput.value.trim() : p.baseUrl;
+    const model = preset === 'custom' ? aiModelNameInput.value.trim() : p.model;
+    const typed = aiKeyInput.value.trim();
+    const remember = !!document.getElementById('aiRemember').checked;
+    if (!typed && !ai.key) { aiMsg.textContent = '请填写 API Key。'; return; }
+    if (!baseUrl || !model) { aiMsg.textContent = '请填写接口地址和模型名称。'; return; }
+    const key = typed || ai.key;
+    writeKey(key, remember);
+    ai = { mode: 'llm', preset, baseUrl, model, remember, key };
+    persistAi(); syncAiUi(); closeAiModal();
+  };
+  aiPill.onclick = () => openAiModal();
+  if (!ai.mode) syncAiUi();
+
+  async function loadMeta() {
+    try {
+      const data = await requestJson('/api/energy/meta', {}, 10000);
+      document.getElementById('dataVersionTag').textContent =
+        data.actionCount + ' 项措施 · ' + data.policyCount + ' 条演示政策';
+    } catch (_) {
+      document.getElementById('dataVersionTag').textContent = '规则数据暂时不可用';
+    }
+  }
+
+  hpInit();
+  loadMeta();
+  switchTab((location.hash || '#plans').slice(1), { noScroll: true, silent: true });
+</script>
+</body>
+</html>
