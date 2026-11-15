@@ -23,6 +23,6 @@ data/
 
 # 本地临时产物
 *.log
-screenshots/
+/screenshots/
 .DS_Store
 Thumbs.db
