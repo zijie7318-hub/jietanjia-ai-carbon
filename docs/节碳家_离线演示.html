@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>节碳家 · 离线交互演示</title>
+<meta name="description" content="节碳家离线交互演示：无需安装或服务器，可直接查看家庭节能方案、政策初筛和碳迹记录。">
+<meta name="theme-color" content="#0E6E5C">
+<meta property="og:type" content="website">
+<meta property="og:title" content="节碳家 · 把家庭节能变成可执行方案">
+<meta property="og:description" content="输入家庭情况，获得三档节能方案、补贴初筛依据和可持续记录的碳迹档案。">
+<meta property="og:locale" content="zh_CN">
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="%230E6E5C"/><path d="M9 23V15l7-6 7 6v8h-5v-5h-4v5z" fill="%23EAF8DE"/></svg>'>
+<style>
+/* ============================================================
+   节碳家 · 视觉系统（沿用原页面组件与排版底座）
+   tokens → base → shell → components → panels → footer → modal
+   ============================================================ */
+:root{
+  --paper:#F7EFE1;
+  --paper-2:#FFFBF2;
+  --paper-3:#F1E4CC;
+  --paper-4:#F5EBDA;
+  --ink:#201A14;
+  --ink-2:#3E3428;
+  --body:#5F5342;
+  --muted:#8A7B66;
+  --faint:#A2937C;
+  --line:#E3D3B6;
+  --line-2:#DCCBAB;
+  --red:#DA291C;
+  --red-dark:#A31D12;
+  --red-t:#FBE3DD;
+  --yellow:#FFC72C;
+  --yellow-t:#FFEFC2;
+  --yellow-d:#8A6B12;
+  --green:#1E7A43;
+  --green-t:#E4F2E7;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+  --serif:"Noto Serif SC","Songti SC","SimSun",serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,"Cascadia Mono",Consolas,monospace;
+  --shadow-hard:0 6px 0 rgba(32,26,20,.12);
+  --shadow-card:0 8px 0 rgba(32,26,20,.14);
+  --maxw:1200px;
+  --gutter:max(24px, calc((100vw - var(--maxw)) / 2));
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{
+  font-family:var(--sans);background:var(--paper);color:var(--ink);
+  line-height:1.65;padding:0;-webkit-font-smoothing:antialiased;
+}
+[hidden]{display:none !important;}
+img{max-width:100%;}
+button{font-family:inherit;}
+::selection{background:var(--yellow);color:var(--ink);}
+
+/* ===== 顶部导航 ===== */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,251,242,.94);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  border-bottom:2px solid var(--line);
+}
+.topbar-in{
+  max-width:var(--maxw);margin:0 auto;padding:14px 24px;
+  display:flex;align-items:center;gap:24px;
+}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;flex:none;}
+.logo-mark{
+  width:40px;height:40px;border-radius:12px;background:var(--red);
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;flex:none;
+}
+.logo-mark svg{display:block;}
+.logo-text{display:flex;flex-direction:column;gap:2px;line-height:1.1;}
+.logo-name{font-size:18px;font-weight:800;letter-spacing:.02em;}
+.logo-sub{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--faint);}
+
+.tabs{
+  display:flex;align-items:center;gap:4px;margin:0 auto 0 8px;
+  padding:4px;border-radius:999px;background:var(--paper-4);
+}
+.tab{
+  border:none;background:transparent;cursor:pointer;white-space:nowrap;
+  font-family:inherit;font-size:13.5px;font-weight:600;color:var(--body);
+  padding:9px 16px;border-radius:999px;transition:.15s;
+}
+.tab:hover{color:var(--red);background:rgba(255,255,255,.7);}
+.tab.active{background:var(--red);color:#FFFBF2;box-shadow:0 3px 0 var(--red-dark);}
+.tabs-ai{
+  flex:none;margin-left:6px;border:2px solid var(--ink);background:var(--paper-2);
+  color:var(--ink);font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:8px 16px;border-radius:999px;cursor:pointer;transition:.15s;
+  box-shadow:0 3px 0 rgba(32,26,20,.16);
+}
+.tabs-ai:hover{background:var(--yellow-t);}
+.tabs-ai.on{border-color:var(--green);color:var(--green);background:var(--green-t);box-shadow:0 3px 0 rgba(30,122,67,.25);}
+.tabs-ai.on::before{content:"AI · ";}
+
+/* ===== 首屏 ===== */
+.hero{
+  padding:64px var(--gutter) 72px;
+  display:flex;align-items:center;gap:56px;
+}
+.hero-left{flex:1;min-width:0;display:flex;flex-direction:column;gap:22px;}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:9px;align-self:flex-start;
+  padding:8px 15px;border-radius:999px;background:var(--yellow-t);
+  border:1.5px solid var(--ink);
+}
+.hero-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex:none;}
+.hero-badge span{
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;color:#6B4E10;
+}
+.hero-badge b{font-family:var(--mono);font-weight:700;color:var(--red);font-size:12.5px;}
+.hero h1{
+  font-size:clamp(40px,5.4vw,76px);line-height:1.12;font-weight:800;
+  letter-spacing:-.02em;color:var(--ink);
+}
+.hero h1 em{display:block;font-style:normal;color:var(--red);}
+.hero .sub{
+  font-size:17px;line-height:1.75;color:var(--body);max-width:520px;
+}
+.hero-cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center;}
+.hero-trust{
+  font-family:var(--mono);font-size:11.5px;color:var(--faint);letter-spacing:.02em;
+}
+
+/* 首屏小票视觉（纯装饰） */
+.hero-visual{position:relative;width:470px;flex:none;height:400px;}
+.hv-circle{
+  position:absolute;right:0;top:0;width:250px;height:250px;border-radius:50%;
+  background:var(--yellow);
+}
+.hv-back{
+  position:absolute;left:0;top:78px;width:300px;height:196px;border-radius:20px;
+  background:var(--paper-3);border:2px solid var(--ink);transform:rotate(-7deg);
+}
+.tk{
+  position:absolute;left:56px;top:96px;width:392px;
+  background:var(--paper-2);border:2px solid var(--ink);border-radius:18px;
+  padding:22px 24px 18px;transform:rotate(3deg);
+  box-shadow:0 10px 0 rgba(32,26,20,.18);
+}
+.tk-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.tk-head b{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--red);font-weight:700;}
+.tk-head i{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--faint);font-style:normal;}
+.tk-line{height:1px;background:var(--line-2);margin:0 0 12px;}
+.tk-date{font-family:var(--mono);font-size:11px;color:var(--faint);letter-spacing:.04em;margin-bottom:10px;}
+.tk-quote{
+  font-family:var(--serif);font-size:20px;line-height:1.55;font-weight:600;color:var(--ink);
+  margin-bottom:8px;
+}
+.tk-sub{font-size:11.5px;color:var(--muted);margin-bottom:14px;}
+.tk-foot{display:flex;justify-content:space-between;align-items:center;}
+.tk-foot span{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--faint);}
+.tk-foot .ok{color:var(--green);}
+.tk-sticker{
+  position:absolute;left:-20px;top:308px;width:88px;height:88px;border-radius:50%;
+  background:var(--red);color:#FFFBF2;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.12em;
+  transform:rotate(-12deg);box-shadow:0 5px 0 rgba(163,29,18,.45);
+}
+
+/* ===== 三功能总览 ===== */
+.features{
+  background:var(--paper-3);border-top:2px solid var(--line);
+  padding:64px var(--gutter) 68px;
+}
+.feat-head{max-width:var(--maxw);margin:0 auto 30px;}
+.feat-eyebrow{
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted);
+  font-weight:700;margin-bottom:12px;
+}
+.feat-title{font-size:clamp(26px,3vw,40px);line-height:1.25;font-weight:800;letter-spacing:-.01em;}
+.feat-desc{font-size:14.5px;color:var(--body);margin-top:10px;max-width:560px;}
+.feat-grid{
+  max-width:var(--maxw);margin:0 auto;
+  display:grid;grid-template-columns:1.35fr 1fr;gap:20px;
+}
+.feat-card{
+  text-align:left;cursor:pointer;font-family:inherit;color:inherit;
+  background:var(--paper-2);border:2px solid var(--ink);border-radius:20px;
+  padding:24px 26px;display:flex;flex-direction:column;gap:12px;
+  box-shadow:var(--shadow-hard);transition:transform .12s ease,box-shadow .12s ease;
+}
+.feat-card:hover{transform:translateY(-2px);box-shadow:0 8px 0 rgba(32,26,20,.16);}
+.feat-card:active{transform:translateY(2px);box-shadow:0 3px 0 rgba(32,26,20,.14);}
+.feat-card.tinted{background:var(--yellow-t);}
+.feat-card.dark{background:var(--ink);border-color:var(--ink);}
+.feat-h{display:flex;align-items:center;gap:12px;}
+.feat-num{
+  width:36px;height:36px;border-radius:11px;background:var(--red);color:#FFFBF2;
+  display:flex;align-items:center;justify-content:center;flex:none;
+  font-family:var(--mono);font-size:12.5px;font-weight:700;
+}
+.feat-card.dark .feat-num{background:var(--yellow);color:var(--ink);}
+.feat-h h3{font-size:20px;font-weight:800;letter-spacing:-.01em;}
+.feat-card.dark .feat-h h3{color:#FFFBF2;}
+.feat-p{font-size:13.5px;line-height:1.7;color:var(--body);}
+.feat-card.dark .feat-p{color:#C9BBA4;}
+.feat-mini{
+  background:var(--paper-4);border-radius:14px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.feat-mini .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--faint);font-weight:700;}
+.feat-mini .qt{font-family:var(--serif);font-size:14.5px;line-height:1.6;color:var(--ink);font-weight:600;}
+.feat-link{
+  display:inline-flex;align-items:center;gap:7px;margin-top:auto;padding-top:4px;
+  font-size:13.5px;font-weight:700;color:var(--red);
+}
+.feat-card.dark .feat-link{color:var(--yellow);}
+.feat-wide{
+  grid-column:1 / -1;flex-direction:row;align-items:center;justify-content:space-between;gap:28px;
+}
+.feat-wide .feat-body{display:flex;flex-direction:column;gap:10px;min-width:0;}
+.feat-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.feat-chip{
+  font-family:var(--mono);font-size:12px;padding:8px 14px;border-radius:999px;
+  background:#332C24;color:#C9BBA4;white-space:nowrap;
+}
+.feat-cta{
+  flex:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+  background:var(--red);color:#FFFBF2;border:none;border-radius:12px;padding:14px 22px;
+  box-shadow:0 4px 0 var(--red-dark);
+}
+
+.param-prompt{
+  flex:0 0 100%;font-family:var(--mono);font-size:11.5px;line-height:1.7;color:#8A5A00;
+  background:var(--yellow-t);border:1px solid #E8C86A;border-radius:10px;
+  padding:9px 12px;
+}
+.param-prompt b{color:var(--red);}
+.param-pref{
+  flex:0 0 100%;display:flex;align-items:center;gap:12px;
+  border-top:1px dashed var(--line);padding-top:12px;
+}
+.param-pref label{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--muted);
+  font-weight:600;white-space:nowrap;flex:none;
+}
+.param-pref input{
+  flex:1;min-width:0;font-family:inherit;font-size:14px;color:var(--ink);
+  padding:7px 0;border:none;border-bottom:1.5px solid var(--line);
+  background:transparent;outline:none;
+}
+.param-pref input:hover{border-bottom-color:var(--faint);}
+.param-pref input:focus{border-bottom-color:var(--red);}
+.param-pref input::placeholder{color:var(--faint);}
+.param-bar.needs{border-color:var(--red);box-shadow:0 0 0 4px rgba(218,41,28,.14);background:var(--paper-2);}
+
+/* ===== 内容容器 ===== */
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 24px;}
+
+/* ===== 参数条 ===== */
+.param-bar{
+  display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:16px;
+  padding:16px 20px;margin:0 0 16px;
+}
+.param-field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:110px;}
+.param-field.narrow{flex:0 0 100px;min-width:100px;}
+.param-field.wide{flex:2;min-width:190px;}
+.param-field label{
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--faint);font-weight:600;
+}
+.param-field label b{font-size:13px;font-family:var(--mono);color:var(--red);letter-spacing:0;}
+.param-field input[type=text],.param-field input[type=number]{
+  font-family:inherit;font-size:15px;font-weight:600;color:var(--ink);
+  padding:8px 2px;border:none;border-bottom:1.5px solid transparent;background:transparent;
+  width:100%;outline:none;transition:.15s;
+}
+.param-field input[type=text]:hover,.param-field input[type=number]:hover{border-bottom-color:var(--line);}
+.param-field input:focus{border-bottom-color:var(--red);}
+.param-field input[type=range]{width:100%;accent-color:var(--red);height:22px;}
+.param-go{
+  flex:none;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;
+  background:var(--ink);color:#FFFBF2;border:none;border-radius:12px;padding:12px 24px;
+  transition:.15s;
+}
+.param-go:hover{background:#37302a;}
+.param-go:disabled{opacity:.55;cursor:not-allowed;}
+.param-store{
+  flex:0 0 100%;font-family:var(--mono);font-size:11px;color:var(--faint);
+  padding:2px 2px 0;letter-spacing:.02em;
+}
+.param-store.has{color:var(--body);}
+.param-store .pname{font-weight:700;color:var(--ink);}
+.param-bar[hidden]{display:none;}
+
+/* ===== 面板 ===== */
+.panel{
+  position:relative;background:var(--paper-2);
+  border:2px solid var(--ink);border-radius:22px;
+  padding:30px 32px;margin-top:26px;box-shadow:var(--shadow-hard);
+  scroll-margin-top:96px;
+}
+.panel::before{
+  content:attr(data-step);
+  display:block;font-family:var(--mono);font-size:10.5px;font-weight:700;
+  letter-spacing:.18em;color:var(--red);margin-bottom:14px;
+}
+.panel[hidden]{display:none;}
+.panel-head{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:16px;flex-wrap:wrap;margin-bottom:20px;
+}
+.panel-head h2{display:flex;align-items:center;gap:10px;font-size:23px;font-weight:800;letter-spacing:-.01em;}
+.tab-dot{width:9px;height:9px;border-radius:50%;background:var(--red);flex:none;}
+.panel-sub{color:var(--body);font-size:13.5px;margin-top:6px;line-height:1.7;max-width:620px;}
+
+/* 输入 / 按钮 */
+.big-input,.hp-input,.bb-input{
+  width:100%;font-family:inherit;font-size:15.5px;line-height:1.75;color:var(--ink);
+  padding:16px 18px;border:1.5px solid var(--line);border-radius:14px;background:var(--paper);
+  resize:vertical;min-height:118px;outline:none;transition:.15s;
+}
+.big-input::placeholder,.hp-input::placeholder,.bb-input::placeholder{color:var(--faint);}
+.big-input:focus,.hp-input:focus,.bb-input:focus{
+  border-color:var(--ink);background:var(--paper-2);
+}
+.chip-row,.bb-chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px;}
+.chip{
+  border:1px solid var(--line);background:var(--paper-4);color:var(--body);
+  font-family:inherit;font-size:12.5px;padding:8px 14px;border-radius:999px;
+  cursor:pointer;transition:.15s;text-align:left;
+}
+.chip:hover{border-color:var(--ink);color:var(--ink);background:var(--yellow-t);}
+.panel-actions,.hp-actions,.bb-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch;justify-content:flex-start;margin-top:18px;}
+.panel-actions .btn,.hp-actions .btn,.bb-actions .btn{flex:0 0 auto;min-width:210px;}
+.btn{
+  background:var(--red);color:#FFFBF2;border:none;border-radius:13px;
+  font-family:inherit;font-size:16px;font-weight:700;padding:15px 28px;cursor:pointer;
+  box-shadow:0 4px 0 var(--red-dark);transition:.1s;
+}
+.btn:hover{background:#C52519;}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--red-dark);}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+.btn-ghost{
+  background:var(--paper-2);color:var(--ink);border:2px solid var(--ink);border-radius:13px;
+  font-family:inherit;font-size:15px;font-weight:700;padding:0 24px;cursor:pointer;
+  box-shadow:0 4px 0 rgba(32,26,20,.14);transition:.1s;
+}
+.btn-ghost:hover{background:var(--paper-4);}
+.btn-ghost:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(32,26,20,.14);}
+
+/* ===== 账户 ===== */
+.hp-account{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+.hp-acct-row{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--faint);}
+.hp-acct-row b{color:var(--ink);}
+.hp-link{
+  border:none;background:none;font-family:inherit;font-size:12.5px;font-weight:700;
+  color:var(--red);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px;
+}
+.hp-auth{
+  display:flex;flex-direction:column;gap:8px;width:290px;
+  background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:14px;
+}
+.hp-auth input{
+  font-family:inherit;font-size:14px;padding:10px 12px;border:1.5px solid var(--line);
+  border-radius:10px;background:var(--paper-2);width:100%;outline:none;
+}
+.hp-auth input:focus{border-color:var(--ink);}
+.hp-auth-actions{display:flex;gap:8px;}
+.hp-auth-actions button{flex:1;}
+.hp-btn-sm{
+  border:none;border-radius:10px;background:var(--red);color:#FFFBF2;font-family:inherit;
+  font-size:13px;font-weight:700;padding:10px 0;cursor:pointer;transition:.15s;
+}
+.hp-btn-sm:hover{background:#C52519;}
+.hp-btn-sm.ghost{background:var(--paper-2);color:var(--ink);border:1.5px solid var(--ink);}
+.hp-btn-sm:disabled{opacity:.55;cursor:not-allowed;}
+.hp-msg{font-family:var(--mono);font-size:11.5px;color:var(--red);}
+.hp-msg.ok{color:var(--green);}
+
+/* 碳迹反馈结果：小票组件 */
+.hp-card{
+  margin-top:22px;background:var(--paper-2);border:2px solid var(--ink);
+  border-radius:18px;padding:24px 26px;box-shadow:var(--shadow-hard);
+}
+.hp-card-label{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.18em;
+  color:var(--red);padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--line-2);
+}
+.hp-text{
+  font-family:var(--serif);font-size:21px;line-height:1.7;font-weight:600;color:var(--ink);
+}
+.hp-ops{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:20px;
+  padding-top:16px;border-top:1px solid var(--line-2);}
+.hp-src{font-family:var(--mono);font-size:10.5px;color:var(--faint);}
+.hp-save-tip{
+  margin-top:20px;padding-top:14px;border-top:1px dashed var(--line);
+  font-size:12.5px;color:var(--muted);
+}
+.hp-save-tip .hp-link{margin-left:6px;}
+
+/* 通用小按钮 */
+.bb-op{
+  border:1.5px solid var(--ink);background:var(--paper-2);color:var(--ink);
+  font-family:inherit;font-size:12.5px;font-weight:700;padding:9px 16px;
+  border-radius:11px;cursor:pointer;transition:.15s;
+}
+.bb-op:hover{background:var(--paper-4);}
+.bb-op.primary{background:var(--red);border-color:var(--red);color:#FFFBF2;box-shadow:0 3px 0 var(--red-dark);}
+.bb-op.primary:hover{background:#C52519;}
+
+/* ===== 旧版结果组件（保留样式兼容）===== */
+.box-result{margin-top:22px;padding-top:20px;border-top:2px dashed var(--line);}
+.box-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.box-theme{font-size:21px;font-weight:800;letter-spacing:-.01em;}
+.box-badge{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;
+  padding:5px 11px;border-radius:999px;background:var(--paper-4);color:var(--body);
+}
+.box-badge.ai{background:var(--green-t);color:var(--green);}
+.box-reason{font-size:13.5px;color:var(--body);margin-bottom:16px;line-height:1.7;}
+.box-body{display:grid;grid-template-columns:1.4fr 1fr;gap:18px;}
+.box-list{list-style:none;font-size:14px;}
+.box-list li{
+  display:flex;justify-content:space-between;gap:10px;padding:8px 0;
+  border-bottom:1px dashed var(--line);
+}
+.box-list li:last-child{border-bottom:none;}
+.box-list li span:last-child{color:var(--muted);white-space:nowrap;font-family:var(--mono);font-size:12.5px;}
+.box-sum{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:16px 18px;font-size:13px;}
+.box-sum .row{display:flex;justify-content:space-between;padding:4px 0;}
+.box-sum .total{
+  font-family:var(--mono);font-size:27px;font-weight:700;color:var(--red);
+  margin:8px 0 2px;letter-spacing:-.02em;
+}
+.box-sum .disc{color:var(--green);font-weight:700;}
+.box-sum .over{color:var(--red);font-weight:600;}
+.box-ops{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;}
+.box-note{margin-top:14px;font-size:11.5px;color:var(--faint);line-height:1.7;}
+.box-error{margin-top:18px;background:var(--red-t);color:#A32D2D;border-radius:12px;padding:12px 14px;font-size:13px;}
+
+/* ===== 旧版列表组件（保留样式兼容）===== */
+.blindbox{background:var(--paper-2);border:2px solid var(--ink);border-radius:22px;padding:28px 30px;box-shadow:var(--shadow-hard);}
+.bb-head{margin-bottom:16px;}
+.bb-head h2{font-size:22px;font-weight:800;}
+.bb-head .bb-sub{color:var(--body);font-size:13.5px;margin-top:5px;}
+.bb-result{margin-top:20px;border-top:2px dashed var(--line);padding-top:18px;}
+.bb-conclusion{font-size:15px;font-weight:700;margin-bottom:10px;}
+.bb-conclusion .bb-theme{color:var(--red);}
+.bb-tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.bb-tag{
+  font-family:var(--mono);font-size:11px;background:var(--paper-4);color:var(--body);
+  border-radius:999px;padding:5px 12px;
+}
+.bb-tag b{color:var(--ink);}
+.bb-style-switch{display:inline-flex;background:var(--paper-4);border-radius:999px;padding:3px;gap:2px;margin-bottom:16px;}
+.bb-style-switch button{
+  border:none;background:transparent;font-family:inherit;font-size:12.5px;font-weight:600;
+  color:var(--muted);padding:7px 20px;border-radius:999px;cursor:pointer;transition:.15s;
+}
+.bb-style-switch button.active{background:var(--red);color:#FFFBF2;}
+.bb-style-switch button:disabled{opacity:.35;cursor:not-allowed;}
+.bb-body{display:grid;grid-template-columns:1.1fr 1.1fr .9fr;gap:16px;}
+.bb-col{background:var(--paper);border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;}
+.bb-col h3{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--faint);font-weight:700;margin-bottom:10px;}
+.bb-diner{padding:7px 0;border-bottom:1px dashed var(--line);}
+.bb-diner:last-child{border-bottom:none;}
+.bb-diner .bb-diner-name{font-size:13px;font-weight:700;}
+.bb-diner .bb-diner-items{font-size:13px;color:var(--body);}
+.bb-list{list-style:none;font-size:13px;}
+.bb-list li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);}
+.bb-list li:last-child{border-bottom:none;}
+.bb-list li span:last-child{color:var(--muted);white-space:nowrap;font-family:var(--mono);font-size:12px;}
+.bb-sum{font-size:13px;}
+.bb-sum .bb-sum-row{display:flex;justify-content:space-between;padding:4px 0;}
+.bb-sum .bb-sum-total{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--red);margin:6px 0 2px;}
+.bb-sum .bb-sum-discount{color:var(--green);font-weight:700;}
+.bb-sum .bb-sum-over{color:var(--red);font-weight:600;}
+.bb-ops{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+.bb-risk{margin-top:12px;font-family:var(--mono);font-size:11px;color:var(--faint);}
+.bb-mode{
+  display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;
+  padding:3px 9px;border-radius:999px;margin-right:6px;letter-spacing:.06em;
+}
+.bb-mode.demo{background:var(--yellow-t);color:var(--yellow-d);}
+.bb-mode.real{background:var(--green-t);color:#1E7B34;}
+.bb-mode.ai{background:var(--green-t);color:#1E7B34;}
+.bb-notice{margin:0 0 12px;font-size:12px;line-height:1.7;color:var(--yellow-d);background:#FFF8E6;border-radius:10px;padding:9px 12px;}
+.bb-happy{margin-top:18px;background:#FFFBF0;border:1.5px solid #F1E4C3;border-radius:14px;padding:16px;}
+.bb-happy-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;}
+.bb-happy-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--yellow-d);}
+.bb-happy-src{font-family:var(--mono);font-size:10.5px;color:var(--faint);}
+.bb-happy-text{font-family:var(--serif);font-size:16px;line-height:1.8;font-weight:600;}
+.bb-happy-ops{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+.bb-happy .hp-msg{margin-top:8px;}
+.bb-result.bb-error .bb-tags,.bb-result.bb-error .bb-style-switch,
+.bb-result.bb-error .bb-body,.bb-result.bb-error .bb-ops{display:none;}
+.bb-result.bb-error .bb-conclusion{color:var(--body);font-weight:600;}
+
+/* ===== 我的记录 ===== */
+.rec-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px;}
+.rec-toolbar input[type=search],.rec-toolbar input[type=date]{
+  font-family:inherit;font-size:13px;padding:9px 12px;border:1.5px solid var(--line);
+  border-radius:10px;background:var(--paper);outline:none;color:var(--ink);
+}
+.rec-toolbar input[type=search]{flex:1;min-width:180px;}
+.rec-toolbar input:focus{border-color:var(--ink);}
+.rec-btn{
+  border:1.5px solid var(--ink);background:var(--paper-2);color:var(--ink);
+  font-family:inherit;font-size:12.5px;font-weight:700;padding:9px 14px;
+  border-radius:10px;cursor:pointer;transition:.15s;
+}
+.rec-btn:hover{background:var(--paper-4);}
+.rec-count{font-family:var(--mono);font-size:11px;color:var(--faint);margin-left:auto;}
+.rec-empty{color:var(--muted);font-size:13px;padding:28px 0;text-align:center;line-height:1.8;}
+.rec-tree details{margin:0;}
+.rec-tree summary{
+  cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;
+  padding:10px 4px;user-select:none;
+}
+.rec-tree summary::-webkit-details-marker{display:none;}
+.rec-tree summary::before{content:"▸";font-size:11px;color:var(--faint);transition:transform .15s;flex:none;}
+.rec-tree details[open] > summary::before{transform:rotate(90deg);}
+.rec-n{font-family:var(--mono);font-size:10.5px;color:var(--faint);font-weight:400;}
+.rec-year{border-top:1px solid var(--line);padding-top:4px;}
+.rec-year > summary{font-size:16px;font-weight:800;letter-spacing:.02em;}
+.rec-month{margin-left:16px;}
+.rec-month > summary{font-size:13px;font-weight:700;color:var(--ink-2);}
+.rec-day{margin:0 0 10px 24px;background:var(--paper);border:1.5px solid var(--line);border-radius:12px;padding:12px 16px;}
+.rec-day-head{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--yellow-d);margin-bottom:6px;letter-spacing:.08em;}
+.rec-item{padding:9px 0;border-bottom:1px dashed var(--line);}
+.rec-item:last-child{border-bottom:none;padding-bottom:2px;}
+.rec-item-meta{font-family:var(--mono);font-size:10.5px;color:var(--faint);display:flex;gap:8px;flex-wrap:wrap;}
+.rec-item-text{font-size:14px;line-height:1.8;margin:4px 0 6px;font-family:var(--serif);font-weight:500;}
+.rec-item-ops{display:flex;gap:14px;}
+
+/* 兼容旧列表 */
+.hp-saved h3{font-size:14px;margin-bottom:4px;}
+.hp-saved h3 span{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--faint);margin-left:6px;}
+.hp-list{list-style:none;margin-top:8px;}
+.hp-list li{padding:12px 0;border-bottom:1px dashed var(--line);}
+.hp-list li:last-child{border-bottom:none;}
+.hp-item-meta{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-bottom:6px;}
+.hp-item-text{font-size:14px;line-height:1.8;}
+.hp-item-ops{display:flex;gap:14px;margin-top:8px;}
+.hp-empty{font-size:13px;color:var(--muted);padding:8px 0;}
+
+/* ===== 三档方案卡 ===== */
+.steps{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 6px;}
+.step{
+  font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--paper-4);
+  border-radius:999px;padding:6px 13px;display:flex;align-items:center;gap:6px;transition:.2s;
+}
+.step.doing{background:var(--yellow-t);color:var(--yellow-d);font-weight:700;}
+.step.done{background:var(--green-t);color:var(--green);}
+.step.fail{background:var(--red-t);color:var(--red);font-weight:700;}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:18px;}
+.card{
+  background:var(--paper-2);border:2px solid var(--ink);border-radius:18px;padding:22px;
+  box-shadow:var(--shadow-hard);display:flex;flex-direction:column;
+  animation:pop .35s ease;
+}
+@keyframes pop{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.card.econ{border-top:8px solid #A8C256;}
+.card.bal{border-top:8px solid var(--yellow);}
+.card.rich{border-top:8px solid var(--red);}
+.tier{font-size:16px;font-weight:800;margin-bottom:10px;letter-spacing:-.01em;}
+.total{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--ink);letter-spacing:-.02em;}
+.per{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-bottom:12px;}
+.badge{
+  display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;
+  padding:4px 11px;border-radius:999px;margin-bottom:12px;
+}
+.badge.ok{background:var(--green-t);color:var(--green);}
+.badge.over{background:var(--red-t);color:var(--red);}
+.saved{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--green);margin:0 0 8px;}
+.coupon-line{font-family:var(--mono);font-size:11px;color:var(--green);margin-bottom:10px;}
+.items{list-style:none;font-size:13.5px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+.items li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line);}
+.items li:last-child{border-bottom:none;}
+.items li span:last-child{color:var(--muted);font-family:var(--mono);font-size:12px;}
+.items li .tag{font-family:inherit;font-size:10.5px;color:var(--green);}
+
+.realnote{
+  margin-top:18px;background:var(--paper);border:1.5px solid var(--line);border-radius:14px;
+  padding:14px 16px;font-size:12.5px;color:var(--body);line-height:1.75;
+}
+.realnote b{color:var(--yellow-d);}
+.realnote code{background:var(--paper-4);border-radius:5px;padding:1px 6px;font-family:var(--mono);font-size:11.5px;}
+.realnote .err-hint{color:#8A7A5C;}
+.realnote:empty,.aireview:empty{display:none;}
+
+.aireview{
+  margin-top:18px;background:var(--green-t);border:1.5px solid #C6E3D0;border-radius:14px;
+  padding:16px 18px;font-size:13px;color:#2F4B3A;
+}
+.aireview .ai-head{font-weight:800;font-size:14px;margin-bottom:8px;color:var(--green);}
+.aireview .ai-summary{margin-bottom:8px;}
+.aireview .ai-sug{list-style:none;}
+.aireview .ai-sug li{padding:6px 0;border-bottom:1px dashed #CFE6D8;}
+.aireview .ai-sug b{color:var(--green);}
+.aireview .ai-why{color:#6B7A70;font-size:11.5px;}
+.aireview .ai-overall{margin-top:10px;padding:9px 12px;background:var(--paper-2);border-radius:10px;font-weight:700;color:var(--green);}
+.aireview .ai-note{margin-top:8px;color:#8A9A8F;font-size:11.5px;}
+.aireview .ai-err{color:var(--red);}
+.ai-loading{color:#6B7A70;}
+
+/* ===== LLM 配置 ===== */
+.llmbar{border-top:1px dashed var(--line);margin-top:18px;padding-top:16px;display:flex;flex-direction:column;gap:10px;}
+.llm-toggle{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--body);cursor:pointer;user-select:none;}
+.llm-toggle input{width:16px;height:16px;accent-color:var(--green);}
+.llm-config{display:none;flex-wrap:wrap;gap:10px;align-items:flex-end;}
+.llmbar.on .llm-config{display:flex;}
+.llm-config .field{flex:1;min-width:160px;}
+.llm-config .field label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:5px;}
+.llm-config input,.llm-config select{
+  font-family:inherit;font-size:14px;padding:10px 12px;border:1.5px solid var(--line);
+  border-radius:10px;background:var(--paper-2);width:100%;outline:none;color:var(--ink);
+}
+.llm-config input:focus,.llm-config select:focus{border-color:var(--ink);}
+.custom-llm{display:none;gap:10px;flex:2;}
+.llmbar.custom .custom-llm{display:flex;}
+.field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px;}
+
+/* ===== 收尾 CTA ===== */
+.cta-band{
+  background:var(--yellow);border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);
+  padding:48px var(--gutter);display:flex;align-items:center;gap:40px;flex-wrap:wrap;
+}
+.cta-in{max-width:var(--maxw);margin:0 auto;width:100%;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
+.cta-text{flex:1;min-width:260px;}
+.cta-text h2{font-size:clamp(24px,3vw,36px);line-height:1.25;font-weight:800;letter-spacing:-.02em;}
+.cta-text p{font-size:13.5px;color:#6B4E10;margin-top:8px;}
+.cta-btn{
+  flex:none;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;
+  background:var(--red);color:#FFFBF2;border:none;border-radius:13px;padding:16px 30px;
+  box-shadow:0 5px 0 var(--red-dark);transition:.1s;
+}
+.cta-btn:active{transform:translateY(2px);box-shadow:0 3px 0 var(--red-dark);}
+
+/* ===== 页脚 ===== */
+footer{background:var(--ink);color:#C9BBA4;padding:52px var(--gutter) 28px;}
+.foot-in{max-width:var(--maxw);margin:0 auto;}
+.foot-top{display:flex;justify-content:space-between;gap:48px;flex-wrap:wrap;padding-bottom:32px;}
+.foot-brand{max-width:360px;}
+.foot-name{font-size:26px;font-weight:800;color:#FFFBF2;letter-spacing:-.01em;}
+.foot-mono{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:#7A6C58;margin-top:6px;}
+.foot-tag{font-size:13px;line-height:1.8;margin-top:14px;color:#B8A992;}
+.foot-cols{display:flex;gap:56px;flex-wrap:wrap;}
+.foot-col{display:flex;flex-direction:column;gap:10px;}
+.foot-col h4{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:#7A6C58;font-weight:700;}
+.foot-col a,.foot-col button{
+  color:#C9BBA4;font-size:13px;text-decoration:none;background:none;border:none;
+  text-align:left;padding:0;cursor:pointer;font-family:inherit;transition:.15s;
+}
+.foot-col a:hover,.foot-col button:hover{color:#FFFBF2;}
+.foot-rule{height:1px;background:#3A3229;}
+.foot-bottom{
+  display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  padding-top:20px;font-family:var(--mono);font-size:10.5px;color:#8A7B66;line-height:1.8;
+}
+.foot-bottom .tip{
+  background:none;padding:0;display:block;color:#7A6C58;font-family:var(--mono);font-size:10.5px;
+}
+.footnote{display:none;}
+
+/* ===== AI 弹窗 ===== */
+.aimodal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;}
+.aimodal[hidden]{display:none;}
+.aimodal-mask{position:absolute;inset:0;background:rgba(32,26,20,.5);}
+.aimodal-panel{
+  position:relative;width:100%;max-width:520px;max-height:88vh;overflow:auto;
+  background:var(--paper-2);border:2px solid var(--ink);border-radius:22px;
+  padding:28px 28px 22px;box-shadow:0 20px 0 rgba(32,26,20,.35);animation:pop .25s ease;
+}
+.aimodal-x{
+  position:absolute;top:14px;right:16px;border:none;background:none;cursor:pointer;
+  font-size:22px;line-height:1;color:var(--muted);padding:4px 8px;border-radius:8px;
+}
+.aimodal-x:hover{color:var(--ink);background:var(--paper-4);}
+.aimodal-panel h2{font-size:20px;font-weight:800;margin-bottom:8px;}
+.aimodal-sub{font-size:13px;color:var(--body);line-height:1.75;margin-bottom:18px;}
+.aimodal-opts{display:flex;flex-direction:column;gap:10px;}
+.aio{
+  display:flex;flex-direction:column;gap:4px;text-align:left;cursor:pointer;
+  font-family:inherit;border:2px solid var(--ink);background:var(--paper);border-radius:14px;
+  padding:16px 18px;transition:.15s;
+}
+.aio b{font-size:15px;color:var(--ink);}
+.aio span{font-size:12px;color:var(--body);line-height:1.65;}
+.aio:hover{background:var(--yellow-t);}
+.aio.ghost{background:var(--paper-2);}
+.aio.ghost:hover{background:var(--paper-4);}
+.aimodal-form{display:flex;flex-direction:column;gap:12px;margin-top:4px;}
+.aimodal-form .field label{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--faint);
+  display:block;margin-bottom:5px;
+}
+.aimodal-form input,.aimodal-form select{
+  font-family:inherit;font-size:14px;padding:11px 13px;border:1.5px solid var(--line);
+  border-radius:11px;background:var(--paper);width:100%;outline:none;transition:.15s;color:var(--ink);
+}
+.aimodal-form input:focus,.aimodal-form select:focus{border-color:var(--ink);background:var(--paper-2);}
+.ai-custom{display:none;flex-direction:column;gap:12px;}
+.ai-custom.on{display:flex;}
+.aimodal-actions{display:flex;gap:10px;align-items:stretch;margin-top:4px;}
+.aimodal-actions .btn{flex:1;font-size:15px;padding:13px 18px;}
+.aimodal-actions .btn-ghost{padding:0 18px;}
+.ai-msg{font-family:var(--mono);font-size:11.5px;color:var(--red);min-height:16px;}
+.ai-remember{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--body);line-height:1.65;cursor:pointer;}
+.ai-remember input[type=checkbox]{width:auto;flex:none;margin:3px 0 0;accent-color:var(--red);}
+.ai-secure{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--body);
+  background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;
+}
+.ai-secure code{font-family:var(--mono);font-weight:600;}
+.ai-clear{
+  border:1.5px solid var(--ink);background:var(--paper-2);color:var(--red);font-family:inherit;
+  font-size:11.5px;padding:4px 11px;border-radius:999px;cursor:pointer;
+}
+.ai-clear:hover{background:var(--red-t);}
+.ai-warn{font-size:11px;color:var(--faint);line-height:1.75;margin:0;}
+
+/* ===== 来源提示条 ===== */
+.flow-src{
+  font-size:12px;line-height:1.75;color:var(--yellow-d);background:#FFF8E6;
+  border-radius:10px;padding:10px 13px;margin:0 0 14px;
+}
+.foot-col span{color:#C9BBA4;font-size:13px;}
+
+/* ===== 响应式 ===== */
+@media(max-width:1080px){
+  .hero{gap:32px;padding-top:48px;padding-bottom:56px;}
+  .hero-visual{width:400px;height:360px;transform:scale(.92);transform-origin:right top;}
+  .feat-grid{grid-template-columns:1fr;}
+  .feat-wide{flex-direction:column;align-items:flex-start;}
+}
+@media(max-width:860px){
+  .hero{flex-direction:column;align-items:flex-start;}
+  .hero-visual{display:none;}
+  .topbar-in{padding:12px 20px;gap:14px;flex-wrap:wrap;}
+  .tabs{order:3;width:100%;margin:0;overflow:auto;justify-content:flex-start;}
+  .tab{padding:8px 13px;}
+  .wrap{padding:0 20px 24px;}
+  .panel{padding:24px 20px;}
+  .cards{grid-template-columns:1fr;}
+  .box-body,.bb-body{grid-template-columns:1fr;}
+  .foot-top{gap:32px;}
+  .foot-cols{gap:32px;}
+}
+@media(max-width:560px){
+  .hero{padding:36px var(--gutter) 44px;}
+  .hero h1{font-size:38px;}
+  .hero .sub{font-size:15px;}
+  .hero-cta{width:100%;}
+  .hero-cta .btn,.hero-cta .btn-ghost{flex:1;padding:14px 16px;font-size:15px;}
+  .tabs-ai{display:none;}
+  .param-field{flex:1 1 44%;}
+  .param-field.wide{flex:1 1 100%;}
+  .param-go{flex:1 1 100%;}
+  .panel-actions,.hp-actions,.bb-actions{flex-direction:column;}
+  .panel-actions .btn-ghost,.hp-actions .btn-ghost{padding:13px 0;}
+  .hp-head{flex-direction:column;}
+  .hp-account{align-items:stretch;width:100%;}
+  .hp-acct-row{justify-content:space-between;}
+  .hp-auth{width:100%;}
+  .rec-toolbar input[type=search]{flex:1 1 100%;}
+  .rec-count{margin-left:0;flex:1 1 100%;}
+  .rec-month{margin-left:10px;}
+  .rec-day{margin-left:12px;}
+  .feat-card{padding:20px;}
+  .cta-band{padding:36px var(--gutter);}
+  .cta-btn{width:100%;}
+}
+
+/* ===== 节碳家主题覆盖：沿用原页面排版与组件，替换品牌色和信息结构 ===== */
+:root{
+  --paper:#F3F7F3;
+  --paper-2:#FFFFFF;
+  --paper-3:#E6F0E9;
+  --paper-4:#EDF4EF;
+  --ink:#14231D;
+  --ink-2:#263B31;
+  --body:#4C6358;
+  --muted:#70857A;
+  --faint:#8DA095;
+  --line:#D8E5DC;
+  --line-2:#C9DACF;
+  --red:#0E6E5C;
+  --red-dark:#084F42;
+  --red-t:#E4F3EC;
+  --yellow:#CDEB9B;
+  --yellow-t:#EDF8DE;
+  --yellow-d:#456A25;
+  --green:#4B7F34;
+  --green-t:#EAF3E3;
+  --shadow-hard:0 5px 0 rgba(20,35,29,.08);
+  --shadow-card:0 8px 24px rgba(20,35,29,.08);
+}
+body{background:var(--paper);}
+.logo-mark{background:var(--red);border-radius:12px;padding-bottom:0;align-items:center;justify-content:center;}
+.logo-mark svg{width:26px;height:26px;}
+.logo-name{font-weight:700;letter-spacing:.04em;}
+.logo-sub{letter-spacing:.12em;}
+.tabs .tab{font-weight:500;}
+.tabs .tab.active{background:var(--red-t);color:var(--red-dark);}
+.tabs-ai{border-color:var(--line-2);}
+.tabs-ai.on{background:var(--red);color:#fff;border-color:var(--red);}
+.jt-hero{max-width:var(--maxw);margin:0 auto;padding:56px 24px 28px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:48px;align-items:center;}
+.jt-kicker{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--red-dark);background:var(--red-t);border:1px solid #C8E4D8;border-radius:999px;padding:6px 11px;}
+.jt-kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--red);}
+.jt-hero h1{font-size:clamp(38px,5vw,62px);line-height:1.12;letter-spacing:-.04em;margin:18px 0 16px;max-width:700px;}
+.jt-hero h1 em{font-style:normal;color:var(--red);}
+.jt-hero-lead{font-size:17px;color:var(--body);max-width:620px;line-height:1.8;}
+.jt-hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin:26px 0 18px;}
+.jt-hero-actions .btn,.jt-hero-actions .btn-ghost{min-height:48px;padding:0 22px;}
+.jt-principles{display:flex;flex-wrap:wrap;gap:8px;}
+.jt-principle{font-size:12px;color:var(--body);background:var(--paper-2);border:1px solid var(--line);padding:7px 10px;border-radius:8px;}
+.jt-preview{background:var(--paper-2);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow-card);position:relative;overflow:hidden;}
+.jt-preview:before{content:"";position:absolute;inset:0 0 auto;height:6px;background:var(--red);}
+.jt-preview-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:20px;}
+.jt-preview-head b{font-size:15px;}
+.jt-preview-head span{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;}
+.jt-preview-metric{padding:15px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:18px;align-items:baseline;}
+.jt-preview-metric:first-of-type{border-top:0;padding-top:0;}
+.jt-preview-metric span{font-size:13px;color:var(--muted);}
+.jt-preview-metric strong{font-family:var(--mono);font-size:22px;color:var(--ink);font-weight:600;}
+.jt-preview-metric strong small{font-size:11px;color:var(--muted);font-weight:400;margin-left:3px;}
+.jt-preview-note{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2);font-size:11px;color:var(--muted);line-height:1.65;}
+.jt-strip{max-width:var(--maxw);margin:0 auto;padding:0 24px 30px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.jt-strip-item{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+.jt-strip-item b{display:block;font-size:14px;margin-bottom:4px;}
+.jt-strip-item span{font-size:12px;color:var(--muted);line-height:1.6;}
+.jt-shell{max-width:var(--maxw);margin:0 auto;padding:8px 24px 64px;}
+.jt-panel{display:none;}
+.jt-panel.active{display:block;animation:jtIn .22s ease both;}
+@keyframes jtIn{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+.jt-panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding:22px 0 18px;border-top:1px solid var(--line);margin-top:8px;}
+.jt-panel-head h2{font-size:26px;letter-spacing:-.02em;display:flex;align-items:center;gap:10px;}
+.jt-panel-head p{color:var(--muted);font-size:13px;margin-top:6px;max-width:720px;}
+.jt-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.13em;color:var(--red);margin-bottom:6px;}
+.jt-tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);border-radius:999px;padding:5px 9px;font-size:11px;color:var(--body);background:var(--paper-2);white-space:nowrap;}
+.jt-form{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:0 3px 0 rgba(20,35,29,.04);}
+.jt-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+.jt-field{display:flex;flex-direction:column;gap:6px;min-width:0;}
+.jt-field label{font-size:12px;font-weight:500;color:var(--ink-2);}
+.jt-field label small{font-weight:400;color:var(--muted);margin-left:4px;}
+.jt-field input,.jt-field select{width:100%;height:44px;border:1px solid var(--line-2);border-radius:9px;background:#fff;color:var(--ink);padding:0 12px;font-size:14px;outline:none;}
+.jt-field input:focus,.jt-field select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(14,110,92,.09);}
+.jt-field .help{font-size:11px;color:var(--muted);line-height:1.5;}
+.jt-form-foot{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-top:18px;padding-top:16px;border-top:1px solid var(--line);flex-wrap:wrap;}
+.jt-form-foot p{font-size:11px;color:var(--muted);max-width:600px;line-height:1.65;}
+.jt-submit{min-height:46px;padding:0 22px;border:0;border-radius:9px;background:var(--red);color:#fff;font-weight:500;cursor:pointer;white-space:nowrap;}
+.jt-submit:hover{background:var(--red-dark);}
+.jt-submit:disabled{opacity:.55;cursor:wait;}
+.jt-error{display:none;margin-top:14px;padding:11px 13px;border:1px solid #E8B4AA;background:#FDF1EE;color:#8D2F1F;border-radius:8px;font-size:13px;}
+.jt-error.on{display:block;}
+.jt-progress{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:18px 0 0;}
+.jt-progress-item{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--paper-2);font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.jt-progress-item i{width:7px;height:7px;border-radius:50%;background:var(--line-2);flex:none;}
+.jt-progress-item.done{border-color:#BFDCCB;background:var(--green-t);color:var(--green);}
+.jt-progress-item.done i{background:var(--green);}
+.jt-progress-item.active{border-color:#B7D9CC;background:var(--red-t);color:var(--red-dark);}
+.jt-progress-item.active i{background:var(--red);animation:jtPulse 1s infinite;}
+@keyframes jtPulse{50%{opacity:.35}}
+.jt-summary{display:flex;align-items:center;gap:14px 24px;flex-wrap:wrap;margin:22px 0 12px;padding:14px 16px;background:var(--paper-3);border-radius:10px;font-size:12px;color:var(--body);}
+.jt-summary b{color:var(--ink);font-weight:600;}
+.jt-summary .sep{width:1px;height:14px;background:var(--line-2);}
+.jt-ai{margin:14px 0 18px;border:1px solid #B9D9CB;background:#F7FCF9;border-radius:14px;padding:17px 18px;}
+.jt-ai-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:9px;}
+.jt-ai-head b{font-size:14px;}
+.jt-ai-state{font-size:11px;color:var(--muted);text-align:right;line-height:1.6;}
+.jt-ai-stages{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.jt-ai-stages span{font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:4px 7px;background:#fff;}
+.jt-ai-stages span.done{color:var(--green);border-color:#C4DCCB;background:var(--green-t);}
+.jt-ai-body{font-size:12px;color:var(--body);line-height:1.8;}
+.jt-ai-body p{margin:0 0 8px;}
+.jt-ai-body ul{margin:0 0 8px 18px;}
+.jt-ai-body li{margin-bottom:3px;}
+.jt-ai-tier{display:flex;gap:8px;padding:6px 0;border-top:1px solid #E1EEE6;}
+.jt-ai-tier:first-child{border-top:0;}
+.jt-ai-tier b{min-width:72px;color:var(--red-dark);font-weight:500;}
+.jt-ai-note{font-size:10px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed #CADFD4;}
+.jt-ai-placeholder{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;}
+.jt-ai-placeholder i{width:8px;height:8px;border-radius:50%;background:var(--red);animation:jtPulse 1s infinite;}
+.jt-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:14px;}
+.jt-plan{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;min-width:0;box-shadow:0 3px 0 rgba(20,35,29,.04);}
+.jt-plan.recommended{border-color:#8FC4AF;box-shadow:0 0 0 2px rgba(14,110,92,.08),0 3px 0 rgba(20,35,29,.04);}
+.jt-plan-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:6px;}
+.jt-plan-tier{font-family:var(--mono);font-size:10px;color:var(--red);letter-spacing:.08em;}
+.jt-plan h3{font-size:21px;line-height:1.25;margin:2px 0 5px;}
+.jt-plan-tagline{font-size:12px;color:var(--muted);min-height:38px;line-height:1.6;}
+.jt-rec{font-size:10px;background:var(--red-t);color:var(--red-dark);border-radius:999px;padding:4px 7px;white-space:nowrap;}
+.jt-metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:14px 0;}
+.jt-metric{background:var(--paper-2);padding:11px 10px;}
+.jt-metric span{display:block;font-size:10px;color:var(--muted);margin-bottom:2px;}
+.jt-metric strong{font-family:var(--mono);font-size:16px;color:var(--ink);font-weight:600;word-break:break-word;}
+.jt-metric strong small{font-size:10px;font-weight:400;color:var(--muted);margin-left:2px;}
+.jt-action-list{display:flex;flex-direction:column;gap:7px;margin:0 0 14px;}
+.jt-action{border-top:1px solid var(--line);padding-top:8px;}
+.jt-action:first-child{border-top:0;padding-top:0;}
+.jt-action summary{cursor:pointer;font-size:12px;font-weight:500;list-style:none;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
+.jt-action summary::-webkit-details-marker{display:none;}
+.jt-action summary:after{content:"+";font-family:var(--mono);color:var(--muted);font-size:14px;line-height:1;}
+.jt-action[open] summary:after{content:"−";}
+.jt-action-body{font-size:11px;color:var(--muted);line-height:1.7;padding:6px 0 2px;}
+.jt-action-body b{color:var(--body);font-weight:500;}
+.jt-plan-note{font-size:10px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+.jt-plan-btn{margin-top:auto;height:40px;border:1px solid var(--red);background:transparent;color:var(--red-dark);border-radius:8px;font-size:12px;cursor:pointer;font-weight:500;}
+.jt-plan-btn:hover{background:var(--red-t);}
+.jt-subhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin:34px 0 10px;}
+.jt-subhead h3{font-size:19px;}
+.jt-subhead p{font-size:12px;color:var(--muted);margin-top:3px;}
+.jt-policy-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.jt-policy{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0;}
+.jt-policy-head{display:flex;gap:8px;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.jt-policy h4{font-size:15px;line-height:1.4;}
+.jt-status{font-size:10px;padding:3px 7px;border-radius:999px;white-space:nowrap;background:var(--paper-3);color:var(--body);}
+.jt-status.ok{background:var(--green-t);color:var(--green);}
+.jt-status.no{background:#F7EEE7;color:#8A5734;}
+.jt-policy p{font-size:12px;color:var(--body);line-height:1.7;}
+.jt-policy-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.jt-policy-meta span{font-size:10px;background:var(--paper-4);border-radius:5px;padding:3px 6px;color:var(--muted);}
+.jt-policy-reason{margin-top:9px;font-size:11px;color:var(--muted);line-height:1.65;}
+.jt-policy-demo{margin-top:10px;font-size:10px;color:#8A5734;background:#FCF4EA;border:1px solid #EED7BF;border-radius:6px;padding:6px 7px;line-height:1.55;}
+.jt-empty{padding:24px;text-align:center;border:1px dashed var(--line-2);border-radius:10px;color:var(--muted);font-size:12px;background:var(--paper-2);}
+.jt-meta{margin-top:22px;padding:16px;background:var(--paper-3);border-radius:10px;font-size:11px;color:var(--muted);line-height:1.8;}
+.jt-meta b{color:var(--body);}
+.jt-meta ul{margin:5px 0 0 18px;}
+.jt-diary-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start;}
+.jt-card{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:20px;}
+.jt-card-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.jt-card-sub{font-size:12px;color:var(--muted);line-height:1.65;margin-bottom:14px;}
+.jt-diary-aside{display:flex;flex-direction:column;gap:12px;}
+.jt-entry-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 4px;padding:10px 12px;background:var(--paper-4);border:1px solid var(--line);border-radius:9px;}
+.jt-entry-status label{font-size:12px;font-weight:500;color:var(--body);}
+.jt-entry-status select{height:34px;border:1px solid var(--line-2);background:#fff;border-radius:7px;padding:0 9px;font-size:12px;color:var(--ink);}
+.jt-entry-status span{font-size:11px;color:var(--muted);line-height:1.55;}
+.rec-status{display:inline-flex;font-size:10px;border-radius:999px;padding:2px 6px;margin-left:5px;background:var(--paper-3);color:var(--muted);vertical-align:1px;}
+.rec-status.done{background:var(--green-t);color:var(--green);}
+.jt-mini{background:var(--paper-3);border-radius:12px;padding:15px;font-size:12px;color:var(--body);line-height:1.75;}
+.jt-mini b{display:block;color:var(--ink);margin-bottom:3px;}
+.jt-demo-banner{display:flex;gap:9px;align-items:flex-start;background:#FCF4EA;border:1px solid #EED7BF;color:#765032;border-radius:9px;padding:10px 12px;font-size:11px;line-height:1.65;margin-bottom:16px;}
+.jt-demo-banner b{white-space:nowrap;}
+@media(max-width:980px){
+  .jt-hero{grid-template-columns:1fr;gap:28px;padding-top:34px;}
+  .jt-preview{max-width:580px;}
+  .jt-form-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .jt-cards{grid-template-columns:1fr;}
+  .jt-policy-list{grid-template-columns:1fr;}
+  .jt-diary-grid{grid-template-columns:1fr;}
+}
+@media(max-width:640px){
+  .jt-hero{padding:26px 18px 20px;}
+  .jt-hero h1{font-size:38px;}
+  .jt-hero-lead{font-size:15px;}
+  .jt-strip{grid-template-columns:1fr;padding:0 18px 18px;}
+  .jt-shell{padding:6px 18px 48px;}
+  .jt-form{padding:16px;}
+  .jt-form-grid{grid-template-columns:1fr;}
+  .jt-progress{grid-template-columns:1fr;}
+  .jt-panel-head{align-items:flex-start;flex-direction:column;gap:10px;}
+  .jt-summary{align-items:flex-start;flex-direction:column;gap:7px;}
+  .jt-summary .sep{display:none;}
+  .jt-metrics{grid-template-columns:1fr 1fr;}
+  .jt-plan{padding:16px;}
+  .topbar-in{flex-wrap:wrap;gap:8px;padding:10px 14px;}
+  .tabs-ai{display:inline-flex;margin-left:auto;padding:7px 9px;font-size:11px;}
+  .tabs{order:3;flex:1 0 100%;margin:0;overflow-x:auto;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .logo-name{font-size:16px;}
+  .logo-sub{font-size:8px;}
+}
+.jt-policy a{color:var(--red-dark);text-decoration:underline;}
+
+.jt-offline-bar{background:var(--red-dark);color:#fff;text-align:center;padding:8px 18px;font-size:12px;line-height:1.55;}
+.jt-offline-bar b{color:var(--yellow);}
+.offline-pill{cursor:default;background:var(--red-t);color:var(--red-dark);border-color:#B7D9CC;}
+@media(max-width:560px){.jt-offline-bar{text-align:left;padding:8px 14px;font-size:11px}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-in">
+    <a class="logo" href="#plans">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 25V15l9-7 9 7v10h-7v-6h-4v6z" stroke="#EAF8DE" stroke-width="2" stroke-linejoin="round"/><path d="M16 8c0-2.2 1.8-4 4-4" stroke="#CDEB9B" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      <span class="logo-text">
+        <span class="logo-name">节碳家</span>
+        <span class="logo-sub">JIETANJIA · OFFLINE DEMO</span>
+      </span>
+    </a>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="主要功能区">
+      <button type="button" class="tab active" data-tab="plans" role="tab" aria-selected="true" aria-controls="panel-plans">节能方案</button>
+      <button type="button" class="tab" data-tab="diary" role="tab" aria-selected="false" aria-controls="panel-diary">碳迹日记</button>
+      <button type="button" class="tab" data-tab="records" role="tab" aria-selected="false" aria-controls="panel-records">我的碳档案</button>
+    </nav>
+    <span class="tabs-ai offline-pill" title="本文件不连接服务器或 AI 服务">离线演示</span>
+  </div>
+</div>
+<div class="jt-offline-bar"><b>离线体验版</b> · 节能计算与政策规则在本文件内运行，数据保存在当前浏览器；不调用 AI，也不需要安装环境。</div>
+
+<section class="jt-hero">
+  <div>
+    <span class="jt-kicker"><span class="dot"></span>家庭节能 · 离线交互演示</span>
+    <h1>把节能想法，<br><em>变成算得清的方案。</em></h1>
+    <p class="jt-hero-lead">填几项家庭情况，得到轻量、均衡、深度三档节能方案。每项措施都说明投入、节电、节省电费、减碳量和回收周期，再查看相关演示政策依据。</p>
+    <div class="jt-hero-actions">
+      <button type="button" class="btn" data-goto="plans">开始家庭评估</button>
+      <button type="button" class="btn-ghost" data-goto="diary">记录今天减碳</button>
+    </div>
+    <div class="jt-principles">
+      <span class="jt-principle">无需安装，双击打开</span>
+      <span class="jt-principle">不调用服务器</span>
+      <span class="jt-principle">演示数据明确标注</span>
+    </div>
+  </div>
+  <aside class="jt-preview" aria-label="最近一次方案摘要">
+    <div class="jt-preview-head">
+      <div><b>方案摘要</b><div class="jt-preview-sub" id="heroPreviewHint">生成后显示真实计算结果</div></div>
+      <span>LOCAL RULES</span>
+    </div>
+    <div class="jt-preview-metric"><span>月省电费</span><strong id="heroMoney">—<small>元</small></strong></div>
+    <div class="jt-preview-metric"><span>年减碳量</span><strong id="heroCo2">—<small>kg</small></strong></div>
+    <div class="jt-preview-metric"><span>投入回收</span><strong id="heroPayback">—<small>个月</small></strong></div>
+    <p class="jt-preview-note">所有数字均为基于家庭基线和演示参数的估算，不替代电费账单、检测报告或正式补贴审核。</p>
+  </aside>
+</section>
+
+<section class="jt-strip" aria-label="演示说明">
+  <div class="jt-strip-item"><b>完整交互</b><span>可以真实填写、生成、切换和记录，不是静态截图。</span></div>
+  <div class="jt-strip-item"><b>本机保存</b><span>碳迹写入浏览器 localStorage，不会上传到服务器。</span></div>
+  <div class="jt-strip-item"><b>离线模型未接入</b><span>本版本展示规则计算和规则解释，不声称调用 AI。</span></div>
+</section>
+
+<main class="jt-shell">
+  <section class="jt-panel active" id="panel-plans" aria-labelledby="plansTitle">
+    <div class="jt-panel-head">
+      <div>
+        <div class="jt-eyebrow">HOUSEHOLD ASSESSMENT</div>
+        <h2 id="plansTitle">家庭节能评估</h2>
+        <p>只需填写会影响方案的必要信息。月用电量和月电费至少填一项；都不填时会使用明确标注的演示基线。</p>
+      </div>
+      <span class="jt-tag" id="dataVersionTag">正在装载本地规则</span>
+    </div>
+
+    <div class="jt-demo-banner"><b>数据说明</b><span>本页面使用与作品一致的演示措施、排放因子和西安演示政策，用于查看产品效果，不构成节电承诺或申领依据。</span></div>
+
+    <form class="jt-form" id="planForm" novalidate>
+      <div class="jt-form-grid">
+        <div class="jt-field">
+          <label for="cityInput">所在城市</label>
+          <input type="text" id="cityInput" value="西安市" maxlength="30" autocomplete="off" placeholder="例如：西安市">
+          <span class="help">只有西安市演示政策；其他城市仍能生成节能方案。</span>
+        </div>
+        <div class="jt-field">
+          <label for="housingInput">住房情况</label>
+          <select id="housingInput">
+            <option value="own">自有住房</option>
+            <option value="rent">租住</option>
+            <option value="other">其他 / 不便说明</option>
+          </select>
+          <span class="help">租住会排除固定施工和需业主同意的措施。</span>
+        </div>
+        <div class="jt-field">
+          <label for="residentsInput">家庭人口</label>
+          <input type="number" id="residentsInput" min="1" max="20" step="1" value="3" inputmode="numeric">
+          <span class="help">用于在缺少电费数据时建立估算基线。</span>
+        </div>
+        <div class="jt-field">
+          <label for="monthlyKwhInput">月用电量 <small>kWh，可选</small></label>
+          <input type="number" id="monthlyKwhInput" min="1" max="10000" step="0.1" placeholder="例如：260" inputmode="decimal">
+          <span class="help">与月电费同时填写时优先使用本项。</span>
+        </div>
+        <div class="jt-field">
+          <label for="monthlyBillInput">月电费 <small>元，可选</small></label>
+          <input type="number" id="monthlyBillInput" min="1" max="50000" step="0.01" placeholder="例如：150" inputmode="decimal">
+          <span class="help">将按演示电价换算，并明确显示换算过程。</span>
+        </div>
+        <div class="jt-field">
+          <label for="budgetInput">可接受前期投入 <small>元</small></label>
+          <input type="number" id="budgetInput" min="0" max="200000" step="100" value="8000" inputmode="numeric">
+          <span class="help">填 0 时只展示无需前期投入的措施。</span>
+        </div>
+      </div>
+      <div class="jt-form-foot">
+        <div class="jt-principles">
+          <button type="button" class="chip" data-sample="rent">示例：租住小户型</button>
+          <button type="button" class="chip" data-sample="family">示例：三口自住</button>
+          <button type="button" class="chip" data-sample="elder">示例：四人家庭</button>
+        </div>
+        <button type="submit" class="jt-submit" id="genPlansBtn">生成三档方案</button>
+      </div>
+      <div class="jt-error" id="planError" role="alert"></div>
+    </form>
+
+    <div class="jt-progress" id="planProgress" aria-live="polite">
+      <div class="jt-progress-item" data-stage="1"><i></i>校验家庭条件</div>
+      <div class="jt-progress-item" data-stage="2"><i></i>筛选措施并计算</div>
+      <div class="jt-progress-item" data-stage="3"><i></i>匹配政策并整理依据</div>
+    </div>
+
+    <div id="planResult" hidden>
+      <div class="jt-summary" id="baselineSummary"></div>
+      <section class="jt-ai" id="aiExplainBox" hidden aria-live="polite">
+        <div class="jt-ai-head">
+          <b>方案说明（离线规则）</b>
+          <span class="jt-ai-state" id="aiExplainState"></span>
+        </div>
+        <div class="jt-ai-stages" id="aiExplainStages">
+          <span data-ai-stage="1">读取规则计算结果</span>
+          <span data-ai-stage="2">核对演示政策条款</span>
+          <span data-ai-stage="3">生成规则说明</span>
+        </div>
+        <div class="jt-ai-body" id="aiExplainBody"></div>
+        <div class="jt-ai-note" id="aiExplainNote"></div>
+      </section>
+      <div class="jt-cards" id="planCards"></div>
+      <div class="jt-subhead">
+        <div><h3>相关政策依据</h3><p>只展示与当前方案措施有关、同城市的演示政策。</p></div>
+        <span class="jt-tag">规则初筛，不代表获批</span>
+      </div>
+      <div class="jt-policy-list" id="policyList"></div>
+      <div class="jt-meta" id="planMeta"></div>
+    </div>
+  </section>
+
+  <section class="jt-panel" id="panel-diary" aria-labelledby="diaryTitle">
+    <div class="jt-panel-head">
+      <div>
+        <div class="jt-eyebrow">CARBON TRACE</div>
+        <h2 id="diaryTitle">碳迹日记</h2>
+        <p>记下一件已经做过的节能行动，或把方案保存为待执行计划。记录只保存在当前浏览器。</p>
+      </div>
+      <span class="jt-tag">本机保存 · 无需登录</span>
+    </div>
+
+    <div class="jt-diary-grid">
+      <div class="jt-card">
+        <div class="jt-card-title">今天做了什么？</div>
+        <p class="jt-card-sub">写具体行动即可，例如调高空调温度、清洗滤网、替换灯具。<b>只记录已经发生或明确计划执行的事情。</b></p>
+        <textarea class="big-input" id="hpInput" rows="4" maxlength="200" placeholder="比如：今天把空调调到 26℃，并打开了睡眠模式。"></textarea>
+        <div class="jt-entry-status">
+          <label for="entryType">记录类型</label>
+          <select id="entryType">
+            <option value="done">已完成</option>
+            <option value="planned">计划执行</option>
+          </select>
+          <span>计划执行的行动不会被展示成已完成的减碳结果。</span>
+        </div>
+        <div class="chip-row" id="hpChips">
+          <button type="button" class="chip" data-text="今天把空调调到26℃，并打开了睡眠模式">空调 26℃</button>
+          <button type="button" class="chip" data-text="今天清洗了空调滤网">清洗滤网</button>
+          <button type="button" class="chip" data-text="今天把常用灯泡换成了LED灯">更换 LED</button>
+          <button type="button" class="chip" data-text="今天用冷水洗衣并自然晾干">冷水洗衣</button>
+        </div>
+        <div class="panel-actions">
+          <button type="button" class="btn" id="hpGenBtn">生成碳迹反馈</button>
+          <button type="button" class="btn-ghost" id="hpClearBtn">清空</button>
+        </div>
+        <div class="hp-msg" id="hpFlowMsg"></div>
+
+        <div class="hp-card" id="hpResult" hidden>
+          <div class="hp-card-label" id="hpLabel">碳迹反馈</div>
+          <p class="hp-text" id="hpText"></p>
+          <div class="hp-ops">
+            <button type="button" class="bb-op" id="hpCopyBtn">复制</button>
+            <button type="button" class="bb-op" id="hpSaveBtn">保存到碳迹</button>
+            <span class="hp-src" id="hpSrc"></span>
+          </div>
+          <div class="hp-msg" id="hpSaveMsg"></div>
+        </div>
+
+        <div class="hp-save-tip" id="hpSaved">
+          保存后的碳迹在「我的碳档案」中按年 / 月 / 日归档，也可把计划标记为已完成。
+          <button type="button" class="hp-link" id="hpGoRecords">查看碳档案 →</button>
+        </div>
+      </div>
+
+      <aside class="jt-diary-aside">
+        <div class="jt-mini"><b>离线说明</b>这个文件不调用 AI。反馈文字来自本地模板，计算和政策规则也在浏览器内完成。</div>
+        <div class="jt-mini"><b>记录边界</b>碳迹是行动记录，不是经过核查的减排量。方案中的节电和减碳数字均为估算。</div>
+        <div class="jt-mini"><b>隐私</b>无需填写姓名、地址或账号。清理浏览器数据会删除本机碳迹。</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="jt-panel" id="panel-records" aria-labelledby="recordsTitle">
+    <div class="jt-panel-head">
+      <div>
+        <div class="jt-eyebrow">MY CARBON ARCHIVE</div>
+        <h2 id="recordsTitle">我的碳档案</h2>
+        <p>保存过的碳迹按年、月、日归档。计划行动可在这里更新为已完成。</p>
+      </div>
+      <span class="jt-tag">仅当前浏览器</span>
+    </div>
+
+    <div class="rec-toolbar">
+      <input type="search" id="recSearch" placeholder="搜索行动关键词，例如「空调」「LED」" autocomplete="off">
+      <input type="date" id="recDate" aria-label="按日期查找">
+      <button type="button" class="rec-btn" id="recClear">清除筛选</button>
+      <button type="button" class="rec-btn" id="recRefresh">刷新</button>
+      <span class="rec-count" id="recCount"></span>
+    </div>
+
+    <div class="rec-empty" id="recEmpty">还没有保存的碳迹</div>
+    <div class="rec-tree" id="recTree"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <div class="foot-name">节碳家</div>
+        <div class="foot-mono">OFFLINE INTERACTIVE DEMO</div>
+        <p class="foot-tag">把家庭节能变成可执行、可比较、可回看的方案。<br>本文件为离线体验版，不连接服务器或 AI 服务。</p>
+      </div>
+      <div class="foot-cols">
+        <div class="foot-col">
+          <h4>产品</h4>
+          <button type="button" data-goto="plans">节能方案</button>
+          <button type="button" data-goto="diary">碳迹日记</button>
+          <button type="button" data-goto="records">我的碳档案</button>
+        </div>
+        <div class="foot-col">
+          <h4>说明</h4>
+          <span>演示数据与估算边界</span>
+          <span>无需安装和服务器</span>
+          <span>记录保存在本机</span>
+        </div>
+      </div>
+    </div>
+    <div class="foot-rule"></div>
+    <div class="foot-bottom">
+      <div class="tip">所有节能与减碳数字均为估算，演示政策不构成申领依据。</div>
+      <span>2026 · 节碳家离线演示</span>
+    </div>
+    <div class="footnote">完整 AI 解释、账号与云端归档需运行 Flask 完整版。</div>
+  </div>
+</footer>
+
+<script>
+const CATALOG = {"actions":{"version":"demo-1.0","disclaimer":"以下节电参数为产品演示用估算，不代表检测机构结论或节电承诺；正式版应逐项补充可核验来源。","actions":[{"id":"ac_temp_26","name":"空调设为 26℃ 并开启睡眠模式","category":"空调","summary":"在不影响舒适度的前提下减少持续制冷耗电。","difficulty":"easy","upfront_cost":0,"saving_type":"percent","saving_value":0.06,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced","deep"],"assumption":"按制冷季空调用电约占家庭用电 25%、设定调整可节省其中约 24% 估算。"},{"id":"ac_filter_clean","name":"清洗空调滤网","category":"空调","summary":"保持送风顺畅，降低无效运行时间。","difficulty":"easy","upfront_cost":0,"saving_type":"percent","saving_value":0.02,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced"],"assumption":"按定期清洁可减少约 2% 的家庭月度用电估算。"},{"id":"led_bulbs","name":"将常用灯具更换为 LED","category":"照明","summary":"用低功率 LED 替换高频使用的旧灯具。","difficulty":"easy","upfront_cost":120,"saving_type":"fixed","saving_value":110,"min_monthly_kwh":40,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced"],"assumption":"按替换 5 只常用灯、每天使用 4 小时估算年节电约 110 kWh。"},{"id":"standby_strip","name":"用智能插座集中切断待机电源","category":"待机","summary":"减少电视、路由器外设和充电器的持续待机耗电。","difficulty":"easy","upfront_cost":100,"saving_type":"fixed","saving_value":80,"min_monthly_kwh":50,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按常用设备待机功率合计约 15 W、每天闲置 16 小时估算。"},{"id":"cold_wash","name":"洗衣改用冷水并自然晾干","category":"洗衣","summary":"减少加热洗涤水和烘干机使用。","difficulty":"easy","upfront_cost":0,"saving_type":"fixed","saving_value":45,"min_monthly_kwh":40,"requires_owner":false,"needs_installation":false,"tiers":["light"],"assumption":"按每周 3 次洗衣、减少热水与烘干估算。"},{"id":"fridge_seal","name":"检查冰箱门封并调整摆放位置","category":"冰箱","summary":"避免冷气泄漏和散热受阻造成的额外耗电。","difficulty":"easy","upfront_cost":30,"saving_type":"fixed","saving_value":55,"min_monthly_kwh":60,"requires_owner":false,"needs_installation":false,"tiers":["light"],"assumption":"按门封老化和散热空间不足合计增加约 5% 冰箱用电估算。"},{"id":"water_heater_timer","name":"为热水器设置定时与中温模式","category":"热水","summary":"避免全天反复保温，按家庭作息集中加热。","difficulty":"easy","upfront_cost":80,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":80,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按热水器用电约占家庭用电 15%、定时可节省其中约 27% 估算。"},{"id":"water_heater_insulation","name":"为热水管路增加可拆卸保温层","category":"热水","summary":"减少管路散热损失，租房也可采用可拆卸方案。","difficulty":"medium","upfront_cost":150,"saving_type":"percent","saving_value":0.03,"min_monthly_kwh":80,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按热水管路热损失与保温改善幅度综合估算。"},{"id":"window_seal_removable","name":"加装可拆卸门窗密封条","category":"围护","summary":"减少夏季冷气和冬季暖气从缝隙流失。","difficulty":"medium","upfront_cost":180,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["balanced","deep"],"assumption":"按可拆卸密封改善门窗气密性、降低空调负荷估算。"},{"id":"shade_summer","name":"夏季使用遮阳帘或外窗遮阳","category":"围护","summary":"减少太阳直射带来的空调冷负荷。","difficulty":"easy","upfront_cost":220,"saving_type":"percent","saving_value":0.03,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["balanced","deep"],"assumption":"按主要朝西或朝南窗户遮阳后的制冷负荷变化估算。"},{"id":"ac_replace_eff","name":"将老旧空调更换为一级能效机型","category":"家电更新","summary":"适合自有住房且空调使用年限较长的家庭。","difficulty":"hard","upfront_cost":3500,"saving_type":"fixed","saving_value":260,"min_monthly_kwh":150,"requires_owner":true,"needs_installation":true,"tiers":["deep"],"assumption":"按 1.5 匹老旧定频机与一级能效变频机的典型使用差异估算。"},{"id":"fridge_replace_eff","name":"将老旧冰箱更换为一级能效机型","category":"家电更新","summary":"适合自有住房且冰箱使用超过十年的家庭。","difficulty":"hard","upfront_cost":3200,"saving_type":"fixed","saving_value":190,"min_monthly_kwh":100,"requires_owner":true,"needs_installation":true,"tiers":["deep"],"assumption":"按旧冰箱与新一级能效冰箱的典型年耗电差异估算。"}]},"policies":{"version":"demo-1.0","region":"西安市","disclaimer":"以下全部为作品演示政策，不是真实有效的政府补贴文件，不构成申领依据。正式版本将替换为带官方链接、文号和有效期的公开政策。","policies":[{"id":"demo_appliance_trade_in","title":"节能家电以旧换新补助（演示）","region":"西安市","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":true,"source_name":"作品演示数据，非真实政策","source_url":"","benefit":"按成交价约 10% 估算，单件最高 500 元（演示）","action_ids":["ac_replace_eff","fridge_replace_eff"],"requires_owner":true,"requirements":["自有住房","购买一级能效产品","保留发票和旧机回收凭证"],"application":"演示流程：在政策正式渠道提交购买与回收材料。","updated_at":"2026-11-01"},{"id":"demo_energy_kit","title":"绿色照明与待机节能包（演示）","region":"西安市","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":true,"source_name":"作品演示数据，非真实政策","source_url":"","benefit":"节能用品抵扣 50 元（演示）","action_ids":["led_bulbs","standby_strip","ac_temp_26"],"requires_owner":false,"requirements":["居住在本市","领取后完成至少一项节能行动"],"application":"演示流程：在活动页面登记并上传实施记录。","updated_at":"2026-11-01"},{"id":"demo_window_insulation","title":"门窗保温改善材料补助（演示）","region":"西安市","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":true,"source_name":"作品演示数据，非真实政策","source_url":"","benefit":"材料费用约 20%，最高 300 元（演示）","action_ids":["window_seal_removable","shade_summer"],"requires_owner":true,"requirements":["自有住房","保留材料购买凭证"],"application":"演示流程：提交住房与材料凭证进行审核。","updated_at":"2026-11-01"}]},"factors":{"version":"demo-2026.11","is_demo":true,"kg_co2e_per_kwh":0.55,"default_tariff_yuan_per_kwh":0.55,"default_monthly_kwh_per_person":70,"default_upfront_budget":8000,"region":"全国估算示例","source":"演示用排放系数与电价参数，正式版须替换为生态环境部及当地电网公开数据","updated_at":"2026-11-01","disclaimer":"所有金额和减碳量均为估算，不代表实际账单或经核查的减排量。"}};
+const ACTIONS = CATALOG.actions.actions || [];
+const POLICIES = CATALOG.policies.policies || [];
+const FACTORS = CATALOG.factors;
+const TIERS = [
+  { id: 'light', name: '轻量起步', tagline: '低投入、租房友好，先做马上能做的' },
+  { id: 'balanced', name: '均衡优选', tagline: '投入与节电更平衡，适合多数家庭' },
+  { id: 'deep', name: '深度减碳', tagline: '适合自有住房和长期改善' }
+];
+
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
+  c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => '¥' + Number(n || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = (n, d) => Number(n || 0).toLocaleString('zh-CN', { maximumFractionDigits: d == null ? 1 : d });
+const pad = n => String(n).padStart(2, '0');
+const round1 = n => Math.round((Number(n) + Number.EPSILON) * 10) / 10;
+const round2 = n => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+
+function present(obj, keys) {
+  for (const key of keys) {
+    if (obj[key] !== undefined && obj[key] !== null && obj[key] !== '') return obj[key];
+  }
+  return null;
+}
+function parseNumber(value, label, low, high, fallback) {
+  if (value === null || value === '') {
+    if (fallback !== undefined) return fallback;
+    return null;
+  }
+  const n = Number(value);
+  if (!Number.isFinite(n)) throw new Error(label + '必须是数字');
+  if (n < low || n > high) throw new Error(label + '需在 ' + low + ' 到 ' + high + ' 之间');
+  return n;
+}
+function normalizeRegion(value) {
+  return String(value || '').replace(/\s+/g, '').replace(/(特别行政区|自治区|省|市)$/, '');
+}
+function normalizeInput(payload) {
+  const city = String(payload.city || '西安市').trim().slice(0, 30);
+  if (!city) throw new Error('请选择所在城市');
+  const housing = payload.housing === 'own' ? 'own' : (payload.housing === 'rent' ? 'rent' : 'other');
+  const residents = Math.round(parseNumber(payload.residents, '家庭人口', 1, 20, 3));
+  const monthlyKwh = parseNumber(payload.monthlyKwh, '月用电量', 1, 10000);
+  const monthlyBill = parseNumber(payload.monthlyBill, '月电费', 1, 50000);
+  const budget = parseNumber(payload.budget, '前期预算', 0, 200000, Number(FACTORS.default_upfront_budget));
+  return { city, housing, residents, monthlyKwh, monthlyBill, budget };
+}
+function buildBaseline(h) {
+  const tariff = Number(FACTORS.default_tariff_yuan_per_kwh);
+  let monthlyKwh, source, isDefault = false;
+  if (h.monthlyKwh !== null) {
+    monthlyKwh = h.monthlyKwh;
+    source = '按你填写的月用电量计算';
+  } else if (h.monthlyBill !== null) {
+    monthlyKwh = h.monthlyBill / tariff;
+    source = '按你填写的月电费除以 ' + tariff.toFixed(2) + ' 元/kWh 估算';
+  } else {
+    monthlyKwh = h.residents * Number(FACTORS.default_monthly_kwh_per_person);
+    source = '未填用电量，按每人每月 ' + FACTORS.default_monthly_kwh_per_person + ' kWh 的演示基线估算';
+    isDefault = true;
+  }
+  monthlyKwh = round1(monthlyKwh);
+  return {
+    monthlyKwh,
+    annualKwh: round1(monthlyKwh * 12),
+    tariff,
+    monthlyBill: round2(monthlyKwh * tariff),
+    source,
+    isDefault
+  };
+}
+function savingOf(action, baseline) {
+  if (baseline.monthlyKwh < Number(action.min_monthly_kwh || 0)) return 0;
+  return action.saving_type === 'percent'
+    ? baseline.annualKwh * Number(action.saving_value || 0)
+    : Number(action.saving_value || 0);
+}
+function eligible(action, household) {
+  return !(action.requires_owner && household.housing !== 'own');
+}
+function actionCard(action, baseline) {
+  const kwh = savingOf(action, baseline);
+  const money = kwh * baseline.tariff;
+  const upfront = Number(action.upfront_cost || 0);
+  const payback = upfront === 0 ? 0 : (money > 0 ? round1(upfront / (money / 12)) : null);
+  return {
+    id: action.id, name: action.name, category: action.category,
+    difficulty: action.difficulty, upfrontCost: round2(upfront),
+    annualKwhSaved: round1(kwh), annualMoneySaved: round2(money),
+    annualCo2eKg: round1(kwh * Number(FACTORS.kg_co2e_per_kwh)),
+    paybackMonths: payback, requiresOwner: !!action.requires_owner,
+    needsInstallation: !!action.needs_installation, assumption: action.assumption
+  };
+}
+function trimToBudget(list, budget) {
+  const out = list.slice();
+  while (out.length && out.reduce((s, x) => s + Number(x.upfront_cost || 0), 0) > budget) {
+    const paid = out.filter(x => Number(x.upfront_cost || 0) > 0);
+    if (!paid.length) break;
+    paid.sort((a, b) => Number(b.upfront_cost || 0) - Number(a.upfront_cost || 0));
+    out.splice(out.indexOf(paid[0]), 1);
+  }
+  return out;
+}
+function buildPlan(tier, household, baseline) {
+  let candidates = ACTIONS.filter(a => (a.tiers || []).includes(tier.id)
+    && eligible(a, household)
+    && Number(a.upfront_cost || 0) <= household.budget
+    && savingOf(a, baseline) > 0);
+  let selected = candidates.slice(0, 4);
+  if (!selected.length) {
+    selected = ACTIONS.filter(a => eligible(a, household) && savingOf(a, baseline) > 0).slice(0, 2);
+  }
+  selected = trimToBudget(selected, household.budget);
+  const actions = selected.map(a => actionCard(a, baseline));
+  const overlap = actions.length > 1 ? 0.9 : 1;
+  const annualKwh = actions.reduce((s, x) => s + x.annualKwhSaved, 0) * overlap;
+  const annualMoney = annualKwh * baseline.tariff;
+  const upfront = actions.reduce((s, x) => s + x.upfrontCost, 0);
+  const payback = upfront === 0 ? 0 : (annualMoney > 0 ? round1(upfront / (annualMoney / 12)) : null);
+  const notes = [];
+  if (actions.length > 1) notes.push('多项措施可能影响同一部分用电，合计已按 10% 重叠折减。');
+  if (household.housing !== 'own') notes.push('已排除需要自有住房或固定施工的措施。');
+  if (!actions.length) notes.push('当前家庭条件与预算下暂无合适措施，可调整预算或补充用电信息。');
+  return {
+    tier: tier.id, name: tier.name, tagline: tier.tagline, actions,
+    actionIds: actions.map(a => a.id), estimated: true,
+    upfrontCost: round2(upfront), annualKwhSaved: round1(annualKwh),
+    annualMoneySaved: round2(annualMoney), monthlyMoneySaved: round2(annualMoney / 12),
+    annualCo2eKg: round1(annualKwh * Number(FACTORS.kg_co2e_per_kwh)),
+    paybackMonths: payback, withinBudget: upfront <= household.budget, notes
+  };
+}
+function matchPolicies(household, actionIds) {
+  const today = new Date().toISOString().slice(0, 10);
+  const cityKey = normalizeRegion(household.city);
+  const wanted = new Set(actionIds);
+  return POLICIES.flatMap(policy => {
+    if (normalizeRegion(policy.region) !== cityKey) return [];
+    const related = (policy.action_ids || []).filter(id => wanted.has(id));
+    if (!related.length) return [];
+    const reasons = [];
+    let ok = true;
+    if (today < policy.valid_from || today > policy.valid_to) {
+      ok = false; reasons.push('当前日期不在演示有效期内');
+    } else {
+      reasons.push('当前日期在演示有效期内');
+    }
+    if (policy.requires_owner && household.housing !== 'own') {
+      ok = false; reasons.push('该演示政策要求自有住房');
+    } else if (policy.requires_owner) {
+      reasons.push('满足自有住房条件');
+    }
+    return [{
+      id: policy.id, title: policy.title, region: policy.region,
+      status: ok ? 'likely' : 'ineligible', eligible: ok, benefit: policy.benefit,
+      requirements: policy.requirements || [], application: policy.application,
+      actionIds: related, reasons, validFrom: policy.valid_from, validTo: policy.valid_to,
+      isDemo: !!policy.is_demo, sourceName: policy.source_name,
+      sourceUrl: policy.source_url || '', updatedAt: policy.updated_at
+    }];
+  });
+}
+function buildResponse(payload) {
+  const household = normalizeInput(payload);
+  const baseline = buildBaseline(household);
+  const plans = TIERS.map(tier => buildPlan(tier, household, baseline));
+  const allIds = [...new Set(plans.flatMap(p => p.actionIds))].sort();
+  const policies = matchPolicies(household, allIds);
+  plans.forEach(plan => {
+    plan.policyIds = policies.filter(p => p.actionIds.some(id => plan.actionIds.includes(id))).map(p => p.id);
+  });
+  return {
+    household, baseline, budget: household.budget, plans, policies,
+    meta: {
+      actionsVersion: CATALOG.actions.version,
+      policiesVersion: CATALOG.policies.version,
+      factorVersion: FACTORS.version,
+      factorKgCo2ePerKwh: FACTORS.kg_co2e_per_kwh,
+      factorSource: FACTORS.source,
+      assumptions: [FACTORS.disclaimer, CATALOG.actions.disclaimer, CATALOG.policies.disclaimer]
+    }
+  };
+}
+
+let lastPlans = null;
+const planForm = document.getElementById('planForm');
+const planResultEl = document.getElementById('planResult');
+const planCardsEl = document.getElementById('planCards');
+const policyListEl = document.getElementById('policyList');
+const planErrorEl = document.getElementById('planError');
+const genPlansBtn = document.getElementById('genPlansBtn');
+const progressEl = document.getElementById('planProgress');
+const aiExplainBox = document.getElementById('aiExplainBox');
+const aiExplainState = document.getElementById('aiExplainState');
+const aiExplainStages = document.getElementById('aiExplainStages');
+const aiExplainBody = document.getElementById('aiExplainBody');
+const aiExplainNote = document.getElementById('aiExplainNote');
+
+function setPlanError(text) {
+  planErrorEl.textContent = text || '';
+  planErrorEl.classList.toggle('on', !!text);
+}
+function setProgress(stage, done) {
+  progressEl.querySelectorAll('.jt-progress-item').forEach(el => {
+    const n = Number(el.dataset.stage);
+    el.classList.toggle('done', done || n < stage);
+    el.classList.toggle('active', !done && n === stage);
+  });
+}
+function numberOrNull(id) {
+  const raw = document.getElementById(id).value.trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : NaN;
+}
+function paybackText(months) {
+  if (months == null) return '—';
+  return Number(months) === 0 ? '无需投入' : num(months, 1) + ' 个月';
+}
+function planCardHtml(plan, recommended) {
+  const actionsHtml = plan.actions.map(action =>
+    '<details class="jt-action"><summary><span>' + esc(action.name) + '</span><span>' + esc(action.category || '')
+    + '</span></summary><div class="jt-action-body"><b>年节电</b> ' + num(action.annualKwhSaved)
+    + ' kWh · <b>年节省</b> ' + fmt(action.annualMoneySaved) + ' · <b>投入</b> ' + fmt(action.upfrontCost)
+    + ' · <b>回收</b> ' + paybackText(action.paybackMonths) + '<br>' + esc(action.assumption || '') + '</div></details>'
+  ).join('');
+  return '<article class="jt-plan' + (recommended ? ' recommended' : '') + '">'
+    + '<div class="jt-plan-top"><div><div class="jt-plan-tier">' + esc(plan.tier.toUpperCase())
+    + '</div><h3>' + esc(plan.name) + '</h3></div>' + (recommended ? '<span class="jt-rec">均衡参考</span>' : '')
+    + '</div><p class="jt-plan-tagline">' + esc(plan.tagline) + '</p><div class="jt-metrics">'
+    + '<div class="jt-metric"><span>前期投入</span><strong>' + fmt(plan.upfrontCost) + '</strong></div>'
+    + '<div class="jt-metric"><span>月省电费</span><strong>' + fmt(plan.monthlyMoneySaved) + '</strong></div>'
+    + '<div class="jt-metric"><span>年节电</span><strong>' + num(plan.annualKwhSaved) + '<small>kWh</small></strong></div>'
+    + '<div class="jt-metric"><span>年减碳</span><strong>' + num(plan.annualCo2eKg) + '<small>kg CO₂e</small></strong></div>'
+    + '</div><div class="jt-action-list">' + (actionsHtml || '<div class="jt-empty">当前条件下暂无合适措施</div>') + '</div>'
+    + '<p class="jt-plan-note">回收周期 ' + paybackText(plan.paybackMonths) + '。' + esc(plan.notes.join(' ')) + '</p>'
+    + '<button type="button" class="jt-plan-btn" data-record-tier="' + esc(plan.tier) + '"'
+    + (plan.actions.length ? '' : ' disabled') + '>把方案带入碳迹日记</button></article>';
+}
+function policyCardHtml(policy) {
+  const ok = !!policy.eligible;
+  const sourceUrl = /^https?:\/\//i.test(policy.sourceUrl || '') ? policy.sourceUrl : '';
+  return '<article class="jt-policy"><div class="jt-policy-head"><h4>' + esc(policy.title) + '</h4>'
+    + '<span class="jt-status ' + (ok ? 'ok' : 'no') + '">' + (ok ? '初筛符合' : '未通过初筛') + '</span></div>'
+    + '<p>' + esc(policy.benefit || '') + '</p><div class="jt-policy-meta"><span>' + esc(policy.region)
+    + '</span><span>有效期 ' + esc(policy.validFrom + ' 至 ' + policy.validTo) + '</span></div>'
+    + '<div class="jt-policy-reason"><b>判断依据：</b>' + esc(policy.reasons.join('；'))
+    + (policy.requirements.length ? '<br><b>材料条件：</b>' + esc(policy.requirements.join('、')) : '') + '</div>'
+    + '<div class="jt-policy-demo">演示政策，不构成申领依据。' + (sourceUrl
+      ? '<a href="' + esc(sourceUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(policy.sourceName || '政策原文') + '</a>'
+      : esc(policy.sourceName || '')) + '</div></article>';
+}
+function renderLocalExplanation(data) {
+  const eligiblePolicies = data.policies.filter(p => p.eligible);
+  aiExplainBox.hidden = false;
+  aiExplainState.textContent = '离线规则说明 · 未调用 AI';
+  aiExplainStages.querySelectorAll('span').forEach(el => el.classList.add('done'));
+  aiExplainBody.innerHTML = '<p>已根据月用电基线 ' + num(data.baseline.monthlyKwh)
+    + ' kWh 和当前住房、预算条件完成三档计算。' + esc(data.baseline.source) + '</p>'
+    + data.plans.map(p => '<div class="jt-ai-tier"><b>' + esc(p.name) + '</b><span>包含 '
+      + p.actions.length + ' 项措施，预计年节电约 ' + num(p.annualKwhSaved) + ' kWh，前期投入约 '
+      + fmt(p.upfrontCost) + '。</span></div>').join('')
+    + (eligiblePolicies.length ? '<p><b>政策初筛：</b>找到 ' + eligiblePolicies.length + ' 条演示政策，仍需按材料条件进一步确认。</p>' : '')
+    + '<p><b>下一步：</b>比较前期投入和回收周期，选择能实际执行的措施，再记录到碳迹。</p>';
+  aiExplainNote.textContent = '当前为离线演示：不调用 AI，不访问外部政策库。所有数值为估算，政策为演示数据。';
+}
+function renderPlans(data) {
+  lastPlans = data;
+  const base = data.baseline;
+  document.getElementById('baselineSummary').innerHTML =
+    '<span>月用电基线 <b>' + num(base.monthlyKwh) + ' kWh</b></span><span class="sep"></span>'
+    + '<span>年用电基线 <b>' + num(base.annualKwh) + ' kWh</b></span><span class="sep"></span>'
+    + '<span>前期预算 <b>' + fmt(data.budget) + '</b></span><span class="sep"></span><span>'
+    + esc(base.source) + (base.isDefault ? '（演示基线）' : '') + '</span>';
+  planCardsEl.innerHTML = data.plans.map((p, i) => planCardHtml(p, i === 1)).join('');
+  policyListEl.innerHTML = data.policies.length ? data.policies.map(policyCardHtml).join('')
+    : '<div class="jt-empty">当前城市或措施暂无匹配的演示政策。</div>';
+  const meta = data.meta;
+  document.getElementById('planMeta').innerHTML = '<b>数据版本：</b>措施 ' + esc(meta.actionsVersion)
+    + ' · 政策 ' + esc(meta.policiesVersion) + ' · 排放因子 ' + esc(meta.factorVersion) + '（'
+    + esc(meta.factorKgCo2ePerKwh) + ' kg CO₂e/kWh）<br><b>因子来源：</b>' + esc(meta.factorSource || '未提供')
+    + '<br><b>计算与展示边界：</b><ul>' + meta.assumptions.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+  planResultEl.hidden = false;
+  const balanced = data.plans[1] || data.plans[0];
+  if (balanced) {
+    document.getElementById('heroMoney').innerHTML = fmt(balanced.monthlyMoneySaved) + '<small>元</small>';
+    document.getElementById('heroCo2').innerHTML = num(balanced.annualCo2eKg) + '<small>kg</small>';
+    const heroPayback = paybackText(balanced.paybackMonths);
+    document.getElementById('heroPayback').innerHTML = heroPayback === '无需投入'
+      ? '无需投入' : heroPayback.replace(' 个月', '') + '<small>个月</small>';
+    document.getElementById('heroPreviewHint').textContent = '最近一次：' + balanced.name;
+  }
+  renderLocalExplanation(data);
+}
+planForm.addEventListener('submit', ev => {
+  ev.preventDefault();
+  setPlanError('');
+  const payload = {
+    city: document.getElementById('cityInput').value.trim(),
+    housing: document.getElementById('housingInput').value,
+    residents: numberOrNull('residentsInput'),
+    monthlyKwh: numberOrNull('monthlyKwhInput'),
+    monthlyBill: numberOrNull('monthlyBillInput'),
+    budget: numberOrNull('budgetInput')
+  };
+  if ([payload.residents, payload.monthlyKwh, payload.monthlyBill, payload.budget]
+      .some(v => Number.isNaN(v))) { setPlanError('数字字段格式不正确，请检查后重试。'); return; }
+  genPlansBtn.disabled = true; genPlansBtn.textContent = '正在计算…';
+  planResultEl.hidden = true;
+  setProgress(2, false);
+  try {
+    const data = buildResponse(payload);
+    setProgress(3, true);
+    renderPlans(data);
+  } catch (err) {
+    setPlanError(err.message || '方案生成失败。');
+  } finally {
+    genPlansBtn.disabled = false; genPlansBtn.textContent = '生成三档方案';
+  }
+});
+planCardsEl.addEventListener('click', ev => {
+  const btn = ev.target.closest('[data-record-tier]');
+  if (!btn || !lastPlans) return;
+  const plan = lastPlans.plans.find(p => p.tier === btn.dataset.recordTier);
+  if (!plan) return;
+  const text = ['计划采用「' + plan.name + '」节能方案：']
+    .concat(plan.actions.map(a => '· ' + a.name))
+    .concat(['预计年节电 ' + num(plan.annualKwhSaved) + ' kWh，年节省电费 ' + fmt(plan.annualMoneySaved)
+      + '，年减碳约 ' + num(plan.annualCo2eKg) + ' kg CO₂e（估算）。']).join('\n');
+  document.getElementById('hpInput').value = text;
+  document.getElementById('entryType').value = 'planned';
+  document.getElementById('hpFlowMsg').textContent = '方案摘要已按「计划执行」带入；完成后可在碳档案中标记为已完成。';
+  switchTab('diary');
+});
+document.querySelectorAll('[data-sample]').forEach(btn => {
+  btn.onclick = () => {
+    const samples = {
+      rent: ['租住', 2, 170, '', 1200],
+      family: ['own', 3, 280, '', 8000],
+      elder: ['own', 4, 360, '', 12000]
+    };
+    const s = samples[btn.dataset.sample];
+    document.getElementById('cityInput').value = '西安市';
+    document.getElementById('housingInput').value = s[0];
+    document.getElementById('residentsInput').value = s[1];
+    document.getElementById('monthlyKwhInput').value = s[2];
+    document.getElementById('monthlyBillInput').value = s[3];
+    document.getElementById('budgetInput').value = s[4];
+    setPlanError('');
+  };
+});
+
+const STORE_KEY = 'jtc_offline_entries_v1';
+let hpCurrent = null;
+let hpEntries = [];
+const hpInputEl = document.getElementById('hpInput');
+const hpResultEl = document.getElementById('hpResult');
+const hpTextEl = document.getElementById('hpText');
+const hpLabelEl = document.getElementById('hpLabel');
+const hpSrcEl = document.getElementById('hpSrc');
+const hpSaveMsgEl = document.getElementById('hpSaveMsg');
+const hpFlowMsgEl = document.getElementById('hpFlowMsg');
+const recTreeEl = document.getElementById('recTree');
+const recEmptyEl = document.getElementById('recEmpty');
+const recCountEl = document.getElementById('recCount');
+const recSearchEl = document.getElementById('recSearch');
+const recDateEl = document.getElementById('recDate');
+const REC_WD = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+function loadEntries() {
+  try {
+    const value = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+    return Array.isArray(value) ? value.filter(x => x && x.id && x.content) : [];
+  } catch (_) { return []; }
+}
+function saveEntries() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(hpEntries)); } catch (_) {}
+}
+function composeFeedback(text, type) {
+  const action = text.replace(/[。！!，,、；;：:？?～~\s]+$/g, '').trim().slice(0, 80);
+  const done = [
+    '今天你完成了「' + action + '」。这不是一句口号，而是一个已经发生的行动。把它留在这里，下一次评估时你会更清楚哪些改变真正适合自己。',
+    '「' + action + '」已经写进今天的碳迹。单次行动看起来很小，但可回看的记录会帮你判断哪些习惯值得继续。',
+    '今天的行动是「' + action + '」。先做能做的，再根据账单和实际体验调整，比追求一次到位更可靠。'
+  ];
+  const planned = [
+    '你把「' + action + '」列入了下一步计划。先确认执行条件和时间，完成后再回来把状态改为已完成。',
+    '「' + action + '」已作为计划行动保存。计划不等于已经产生的减碳结果，完成后记得补上实际执行记录。',
+    '下一步计划是「' + action + '」。从一项能真正执行的措施开始，之后再用账单和体验复盘。'
+  ];
+  const arr = type === 'planned' ? planned : done;
+  const idx = [...text].reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % arr.length;
+  return arr[idx];
+}
+function hpShow(content, source, inputText, type) {
+  hpCurrent = { input: inputText, content, scene: type };
+  hpLabelEl.textContent = type === 'planned' ? '碳迹计划 · 待执行' : '今日碳迹 · 已完成';
+  hpTextEl.textContent = content;
+  hpSrcEl.textContent = source;
+  hpResultEl.hidden = false;
+  hpSaveMsgEl.textContent = '';
+}
+function renderRecords() {
+  const kw = recSearchEl.value.trim();
+  const day = recDateEl.value.trim();
+  let list = hpEntries.slice().sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  if (kw) list = list.filter(x => String(x.content).includes(kw) || String(x.inputText).includes(kw));
+  if (day) list = list.filter(x => {
+    const d = new Date(x.createdAt);
+    return !isNaN(d) && d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) === day;
+  });
+  recCountEl.textContent = hpEntries.length ? '共 ' + hpEntries.length + ' 条'
+    + ((kw || day) ? '，筛出 ' + list.length + ' 条' : '') : '';
+  if (!list.length) {
+    recEmptyEl.hidden = false;
+    recEmptyEl.textContent = hpEntries.length ? '没有匹配的碳迹，换个关键词或日期试试。' : '还没有保存的碳迹';
+    recTreeEl.innerHTML = ''; return;
+  }
+  recEmptyEl.hidden = true;
+  const years = new Map();
+  list.forEach(item => {
+    const d = new Date(item.createdAt); if (isNaN(d)) return;
+    const y = d.getFullYear(), m = d.getMonth() + 1, dd = d.getDate();
+    if (!years.has(y)) years.set(y, { y, count: 0, months: new Map() });
+    const yn = years.get(y); yn.count++;
+    if (!yn.months.has(m)) yn.months.set(m, { m, count: 0, days: new Map() });
+    const mn = yn.months.get(m); mn.count++;
+    if (!mn.days.has(dd)) mn.days.set(dd, { dd, wd: d.getDay(), items: [] });
+    mn.days.get(dd).items.push({ item, d });
+  });
+  const expand = !!(kw || day), now = new Date();
+  recTreeEl.innerHTML = [...years.values()].sort((a, b) => b.y - a.y).map(yn => {
+    const months = [...yn.months.values()].sort((a, b) => b.m - a.m).map(mn => {
+      const days = [...mn.days.values()].sort((a, b) => b.dd - a.dd).map(dn => {
+        const items = dn.items.sort((a, b) => b.d - a.d).map(({ item, d }) => {
+          const done = item.scene !== 'planned';
+          const mark = done ? '' : '<button type="button" class="hp-link" data-act="done" data-id="'
+            + esc(item.id) + '">标为已完成</button>';
+          return '<div class="rec-item"><div class="rec-item-meta"><span>' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+            + '</span><span><span class="rec-status ' + (done ? 'done' : '') + '">' + (done ? '已完成' : '计划执行')
+            + '</span>「' + esc(item.inputText).slice(0, 90) + '」</span></div><div class="rec-item-text">'
+            + esc(item.content) + '</div><div class="rec-item-ops">' + mark
+            + '<button type="button" class="hp-link" data-act="copy" data-id="' + esc(item.id) + '">复制</button>'
+            + '<button type="button" class="hp-link" data-act="del" data-id="' + esc(item.id) + '">删除</button>'
+            + '</div></div>';
+        }).join('');
+        return '<div class="rec-day"><div class="rec-day-head">' + mn.m + ' 月 ' + dn.dd + ' 日 · '
+          + REC_WD[dn.wd] + '</div>' + items + '</div>';
+      }).join('');
+      return '<details class="rec-month"' + (expand || (yn.y === now.getFullYear() && mn.m === now.getMonth() + 1) ? ' open' : '')
+        + '><summary>' + mn.m + ' 月 <span class="rec-n">' + mn.count + ' 条</span></summary>' + days + '</details>';
+    }).join('');
+    return '<details class="rec-year"' + (expand || yn.y === now.getFullYear() ? ' open' : '')
+      + '><summary>' + yn.y + ' 年 <span class="rec-n">' + yn.count + ' 条</span></summary>' + months + '</details>';
+  }).join('');
+}
+function loadAndRender() {
+  hpEntries = loadEntries();
+  renderRecords();
+}
+document.querySelectorAll('#hpChips .chip').forEach(chip => {
+  chip.onclick = () => { hpInputEl.value = chip.dataset.text || ''; hpInputEl.focus(); };
+});
+document.getElementById('hpGenBtn').onclick = () => {
+  const text = hpInputEl.value.trim();
+  if (!text) { hpFlowMsgEl.textContent = '先写下一件已经完成或准备执行的节能行动。'; hpInputEl.focus(); return; }
+  const type = document.getElementById('entryType').value;
+  hpFlowMsgEl.textContent = '';
+  hpShow(composeFeedback(text, type), '离线模板 · 未调用 AI', text, type);
+};
+document.getElementById('hpCopyBtn').onclick = async ev => {
+  if (!hpCurrent) return;
+  try {
+    await navigator.clipboard.writeText(hpCurrent.content);
+  } catch (_) {
+    const ta = document.createElement('textarea'); ta.value = hpCurrent.content; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); ta.remove();
+  }
+  ev.currentTarget.textContent = '已复制';
+  setTimeout(() => { ev.currentTarget.textContent = '复制'; }, 1400);
+};
+document.getElementById('hpSaveBtn').onclick = () => {
+  if (!hpCurrent) return;
+  const item = {
+    id: 'local-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+    inputText: hpCurrent.input.slice(0, 200), content: hpCurrent.content,
+    scene: hpCurrent.scene, createdAt: new Date().toISOString()
+  };
+  hpEntries.unshift(item); saveEntries(); renderRecords();
+  hpSaveMsgEl.textContent = '已保存到本机碳档案。';
+  hpSaveMsgEl.classList.add('ok');
+};
+document.getElementById('hpClearBtn').onclick = () => {
+  hpInputEl.value = ''; hpCurrent = null; hpResultEl.hidden = true;
+  hpFlowMsgEl.textContent = ''; hpSaveMsgEl.textContent = '';
+};
+document.getElementById('hpGoRecords').onclick = () => switchTab('records');
+recSearchEl.oninput = renderRecords;
+recDateEl.onchange = renderRecords;
+document.getElementById('recClear').onclick = () => { recSearchEl.value = ''; recDateEl.value = ''; renderRecords(); };
+document.getElementById('recRefresh').onclick = loadAndRender;
+recTreeEl.onclick = ev => {
+  const btn = ev.target.closest('button[data-act]'); if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.act === 'del') {
+    if (!confirm('删除这条碳迹？')) return;
+    hpEntries = hpEntries.filter(x => x.id !== id); saveEntries(); renderRecords(); return;
+  }
+  if (btn.dataset.act === 'done') {
+    hpEntries = hpEntries.map(x => x.id === id ? { ...x, scene: 'done' } : x);
+    saveEntries(); renderRecords(); return;
+  }
+  const text = btn.closest('.rec-item').querySelector('.rec-item-text');
+  if (!text) return;
+  Promise.resolve(navigator.clipboard ? navigator.clipboard.writeText(text.textContent) : Promise.reject())
+    .catch(() => { const ta = document.createElement('textarea'); ta.value = text.textContent; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); })
+    .then(() => { btn.textContent = '已复制'; setTimeout(() => { btn.textContent = '复制'; }, 1400); });
+};
+
+const TAB_NAMES = ['plans', 'diary', 'records'];
+const tabsEl = document.getElementById('tabs');
+function switchTab(name, opts) {
+  if (!TAB_NAMES.includes(name)) name = 'plans';
+  TAB_NAMES.forEach(t => {
+    document.getElementById('panel-' + t).classList.toggle('active', t === name);
+    const btn = tabsEl.querySelector('[data-tab="' + t + '"]');
+    btn.classList.toggle('active', t === name);
+    btn.setAttribute('aria-selected', t === name ? 'true' : 'false');
+  });
+  if (!(opts && opts.silent)) {
+    try { history.replaceState(null, '', '#' + name); } catch (_) {}
+  }
+  if (!(opts && opts.noScroll)) {
+    const target = document.getElementById('panel-' + name);
+    window.scrollTo({ top: target.offsetTop - 76, behavior: 'smooth' });
+  }
+}
+tabsEl.querySelectorAll('.tab').forEach(btn => { btn.onclick = () => switchTab(btn.dataset.tab); });
+document.querySelectorAll('[data-goto]').forEach(el => {
+  el.addEventListener('click', ev => { ev.preventDefault(); switchTab(el.dataset.goto); });
+});
+document.getElementById('dataVersionTag').textContent = ACTIONS.length + ' 项措施 · ' + POLICIES.length + ' 条演示政策';
+loadAndRender();
+switchTab((location.hash || '#plans').slice(1), { noScroll: true, silent: true });
+
+</script>
+</body>
+</html>

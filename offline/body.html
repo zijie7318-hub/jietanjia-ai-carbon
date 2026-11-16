@@ -1,0 +1,267 @@
+<body>
+<div class="topbar">
+  <div class="topbar-in">
+    <a class="logo" href="#plans">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 25V15l9-7 9 7v10h-7v-6h-4v6z" stroke="#EAF8DE" stroke-width="2" stroke-linejoin="round"/><path d="M16 8c0-2.2 1.8-4 4-4" stroke="#CDEB9B" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
+      <span class="logo-text">
+        <span class="logo-name">节碳家</span>
+        <span class="logo-sub">JIETANJIA · OFFLINE DEMO</span>
+      </span>
+    </a>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="主要功能区">
+      <button type="button" class="tab active" data-tab="plans" role="tab" aria-selected="true" aria-controls="panel-plans">节能方案</button>
+      <button type="button" class="tab" data-tab="diary" role="tab" aria-selected="false" aria-controls="panel-diary">碳迹日记</button>
+      <button type="button" class="tab" data-tab="records" role="tab" aria-selected="false" aria-controls="panel-records">我的碳档案</button>
+    </nav>
+    <span class="tabs-ai offline-pill" title="本文件不连接服务器或 AI 服务">离线演示</span>
+  </div>
+</div>
+<div class="jt-offline-bar"><b>离线体验版</b> · 节能计算与政策规则在本文件内运行，数据保存在当前浏览器；不调用 AI，也不需要安装环境。</div>
+
+<section class="jt-hero">
+  <div>
+    <span class="jt-kicker"><span class="dot"></span>家庭节能 · 离线交互演示</span>
+    <h1>把节能想法，<br><em>变成算得清的方案。</em></h1>
+    <p class="jt-hero-lead">填几项家庭情况，得到轻量、均衡、深度三档节能方案。每项措施都说明投入、节电、节省电费、减碳量和回收周期，再查看相关演示政策依据。</p>
+    <div class="jt-hero-actions">
+      <button type="button" class="btn" data-goto="plans">开始家庭评估</button>
+      <button type="button" class="btn-ghost" data-goto="diary">记录今天减碳</button>
+    </div>
+    <div class="jt-principles">
+      <span class="jt-principle">无需安装，双击打开</span>
+      <span class="jt-principle">不调用服务器</span>
+      <span class="jt-principle">演示数据明确标注</span>
+    </div>
+  </div>
+  <aside class="jt-preview" aria-label="最近一次方案摘要">
+    <div class="jt-preview-head">
+      <div><b>方案摘要</b><div class="jt-preview-sub" id="heroPreviewHint">生成后显示真实计算结果</div></div>
+      <span>LOCAL RULES</span>
+    </div>
+    <div class="jt-preview-metric"><span>月省电费</span><strong id="heroMoney">—<small>元</small></strong></div>
+    <div class="jt-preview-metric"><span>年减碳量</span><strong id="heroCo2">—<small>kg</small></strong></div>
+    <div class="jt-preview-metric"><span>投入回收</span><strong id="heroPayback">—<small>个月</small></strong></div>
+    <p class="jt-preview-note">所有数字均为基于家庭基线和演示参数的估算，不替代电费账单、检测报告或正式补贴审核。</p>
+  </aside>
+</section>
+
+<section class="jt-strip" aria-label="演示说明">
+  <div class="jt-strip-item"><b>完整交互</b><span>可以真实填写、生成、切换和记录，不是静态截图。</span></div>
+  <div class="jt-strip-item"><b>本机保存</b><span>碳迹写入浏览器 localStorage，不会上传到服务器。</span></div>
+  <div class="jt-strip-item"><b>离线模型未接入</b><span>本版本展示规则计算和规则解释，不声称调用 AI。</span></div>
+</section>
+
+<main class="jt-shell">
+  <section class="jt-panel active" id="panel-plans" aria-labelledby="plansTitle">
+    <div class="jt-panel-head">
+      <div>
+        <div class="jt-eyebrow">HOUSEHOLD ASSESSMENT</div>
+        <h2 id="plansTitle">家庭节能评估</h2>
+        <p>只需填写会影响方案的必要信息。月用电量和月电费至少填一项；都不填时会使用明确标注的演示基线。</p>
+      </div>
+      <span class="jt-tag" id="dataVersionTag">正在装载本地规则</span>
+    </div>
+
+    <div class="jt-demo-banner"><b>数据说明</b><span>本页面使用与作品一致的演示措施、排放因子和西安演示政策，用于查看产品效果，不构成节电承诺或申领依据。</span></div>
+
+    <form class="jt-form" id="planForm" novalidate>
+      <div class="jt-form-grid">
+        <div class="jt-field">
+          <label for="cityInput">所在城市</label>
+          <input type="text" id="cityInput" value="西安市" maxlength="30" autocomplete="off" placeholder="例如：西安市">
+          <span class="help">只有西安市演示政策；其他城市仍能生成节能方案。</span>
+        </div>
+        <div class="jt-field">
+          <label for="housingInput">住房情况</label>
+          <select id="housingInput">
+            <option value="own">自有住房</option>
+            <option value="rent">租住</option>
+            <option value="other">其他 / 不便说明</option>
+          </select>
+          <span class="help">租住会排除固定施工和需业主同意的措施。</span>
+        </div>
+        <div class="jt-field">
+          <label for="residentsInput">家庭人口</label>
+          <input type="number" id="residentsInput" min="1" max="20" step="1" value="3" inputmode="numeric">
+          <span class="help">用于在缺少电费数据时建立估算基线。</span>
+        </div>
+        <div class="jt-field">
+          <label for="monthlyKwhInput">月用电量 <small>kWh，可选</small></label>
+          <input type="number" id="monthlyKwhInput" min="1" max="10000" step="0.1" placeholder="例如：260" inputmode="decimal">
+          <span class="help">与月电费同时填写时优先使用本项。</span>
+        </div>
+        <div class="jt-field">
+          <label for="monthlyBillInput">月电费 <small>元，可选</small></label>
+          <input type="number" id="monthlyBillInput" min="1" max="50000" step="0.01" placeholder="例如：150" inputmode="decimal">
+          <span class="help">将按演示电价换算，并明确显示换算过程。</span>
+        </div>
+        <div class="jt-field">
+          <label for="budgetInput">可接受前期投入 <small>元</small></label>
+          <input type="number" id="budgetInput" min="0" max="200000" step="100" value="8000" inputmode="numeric">
+          <span class="help">填 0 时只展示无需前期投入的措施。</span>
+        </div>
+      </div>
+      <div class="jt-form-foot">
+        <div class="jt-principles">
+          <button type="button" class="chip" data-sample="rent">示例：租住小户型</button>
+          <button type="button" class="chip" data-sample="family">示例：三口自住</button>
+          <button type="button" class="chip" data-sample="elder">示例：四人家庭</button>
+        </div>
+        <button type="submit" class="jt-submit" id="genPlansBtn">生成三档方案</button>
+      </div>
+      <div class="jt-error" id="planError" role="alert"></div>
+    </form>
+
+    <div class="jt-progress" id="planProgress" aria-live="polite">
+      <div class="jt-progress-item" data-stage="1"><i></i>校验家庭条件</div>
+      <div class="jt-progress-item" data-stage="2"><i></i>筛选措施并计算</div>
+      <div class="jt-progress-item" data-stage="3"><i></i>匹配政策并整理依据</div>
+    </div>
+
+    <div id="planResult" hidden>
+      <div class="jt-summary" id="baselineSummary"></div>
+      <section class="jt-ai" id="aiExplainBox" hidden aria-live="polite">
+        <div class="jt-ai-head">
+          <b>方案说明（离线规则）</b>
+          <span class="jt-ai-state" id="aiExplainState"></span>
+        </div>
+        <div class="jt-ai-stages" id="aiExplainStages">
+          <span data-ai-stage="1">读取规则计算结果</span>
+          <span data-ai-stage="2">核对演示政策条款</span>
+          <span data-ai-stage="3">生成规则说明</span>
+        </div>
+        <div class="jt-ai-body" id="aiExplainBody"></div>
+        <div class="jt-ai-note" id="aiExplainNote"></div>
+      </section>
+      <div class="jt-cards" id="planCards"></div>
+      <div class="jt-subhead">
+        <div><h3>相关政策依据</h3><p>只展示与当前方案措施有关、同城市的演示政策。</p></div>
+        <span class="jt-tag">规则初筛，不代表获批</span>
+      </div>
+      <div class="jt-policy-list" id="policyList"></div>
+      <div class="jt-meta" id="planMeta"></div>
+    </div>
+  </section>
+
+  <section class="jt-panel" id="panel-diary" aria-labelledby="diaryTitle">
+    <div class="jt-panel-head">
+      <div>
+        <div class="jt-eyebrow">CARBON TRACE</div>
+        <h2 id="diaryTitle">碳迹日记</h2>
+        <p>记下一件已经做过的节能行动，或把方案保存为待执行计划。记录只保存在当前浏览器。</p>
+      </div>
+      <span class="jt-tag">本机保存 · 无需登录</span>
+    </div>
+
+    <div class="jt-diary-grid">
+      <div class="jt-card">
+        <div class="jt-card-title">今天做了什么？</div>
+        <p class="jt-card-sub">写具体行动即可，例如调高空调温度、清洗滤网、替换灯具。<b>只记录已经发生或明确计划执行的事情。</b></p>
+        <textarea class="big-input" id="hpInput" rows="4" maxlength="200" placeholder="比如：今天把空调调到 26℃，并打开了睡眠模式。"></textarea>
+        <div class="jt-entry-status">
+          <label for="entryType">记录类型</label>
+          <select id="entryType">
+            <option value="done">已完成</option>
+            <option value="planned">计划执行</option>
+          </select>
+          <span>计划执行的行动不会被展示成已完成的减碳结果。</span>
+        </div>
+        <div class="chip-row" id="hpChips">
+          <button type="button" class="chip" data-text="今天把空调调到26℃，并打开了睡眠模式">空调 26℃</button>
+          <button type="button" class="chip" data-text="今天清洗了空调滤网">清洗滤网</button>
+          <button type="button" class="chip" data-text="今天把常用灯泡换成了LED灯">更换 LED</button>
+          <button type="button" class="chip" data-text="今天用冷水洗衣并自然晾干">冷水洗衣</button>
+        </div>
+        <div class="panel-actions">
+          <button type="button" class="btn" id="hpGenBtn">生成碳迹反馈</button>
+          <button type="button" class="btn-ghost" id="hpClearBtn">清空</button>
+        </div>
+        <div class="hp-msg" id="hpFlowMsg"></div>
+
+        <div class="hp-card" id="hpResult" hidden>
+          <div class="hp-card-label" id="hpLabel">碳迹反馈</div>
+          <p class="hp-text" id="hpText"></p>
+          <div class="hp-ops">
+            <button type="button" class="bb-op" id="hpCopyBtn">复制</button>
+            <button type="button" class="bb-op" id="hpSaveBtn">保存到碳迹</button>
+            <span class="hp-src" id="hpSrc"></span>
+          </div>
+          <div class="hp-msg" id="hpSaveMsg"></div>
+        </div>
+
+        <div class="hp-save-tip" id="hpSaved">
+          保存后的碳迹在「我的碳档案」中按年 / 月 / 日归档，也可把计划标记为已完成。
+          <button type="button" class="hp-link" id="hpGoRecords">查看碳档案 →</button>
+        </div>
+      </div>
+
+      <aside class="jt-diary-aside">
+        <div class="jt-mini"><b>离线说明</b>这个文件不调用 AI。反馈文字来自本地模板，计算和政策规则也在浏览器内完成。</div>
+        <div class="jt-mini"><b>记录边界</b>碳迹是行动记录，不是经过核查的减排量。方案中的节电和减碳数字均为估算。</div>
+        <div class="jt-mini"><b>隐私</b>无需填写姓名、地址或账号。清理浏览器数据会删除本机碳迹。</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="jt-panel" id="panel-records" aria-labelledby="recordsTitle">
+    <div class="jt-panel-head">
+      <div>
+        <div class="jt-eyebrow">MY CARBON ARCHIVE</div>
+        <h2 id="recordsTitle">我的碳档案</h2>
+        <p>保存过的碳迹按年、月、日归档。计划行动可在这里更新为已完成。</p>
+      </div>
+      <span class="jt-tag">仅当前浏览器</span>
+    </div>
+
+    <div class="rec-toolbar">
+      <input type="search" id="recSearch" placeholder="搜索行动关键词，例如「空调」「LED」" autocomplete="off">
+      <input type="date" id="recDate" aria-label="按日期查找">
+      <button type="button" class="rec-btn" id="recClear">清除筛选</button>
+      <button type="button" class="rec-btn" id="recRefresh">刷新</button>
+      <span class="rec-count" id="recCount"></span>
+    </div>
+
+    <div class="rec-empty" id="recEmpty">还没有保存的碳迹</div>
+    <div class="rec-tree" id="recTree"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <div class="foot-name">节碳家</div>
+        <div class="foot-mono">OFFLINE INTERACTIVE DEMO</div>
+        <p class="foot-tag">把家庭节能变成可执行、可比较、可回看的方案。<br>本文件为离线体验版，不连接服务器或 AI 服务。</p>
+      </div>
+      <div class="foot-cols">
+        <div class="foot-col">
+          <h4>产品</h4>
+          <button type="button" data-goto="plans">节能方案</button>
+          <button type="button" data-goto="diary">碳迹日记</button>
+          <button type="button" data-goto="records">我的碳档案</button>
+        </div>
+        <div class="foot-col">
+          <h4>说明</h4>
+          <span>演示数据与估算边界</span>
+          <span>无需安装和服务器</span>
+          <span>记录保存在本机</span>
+        </div>
+      </div>
+    </div>
+    <div class="foot-rule"></div>
+    <div class="foot-bottom">
+      <div class="tip">所有节能与减碳数字均为估算，演示政策不构成申领依据。</div>
+      <span>2026 · 节碳家离线演示</span>
+    </div>
+    <div class="footnote">完整 AI 解释、账号与云端归档需运行 Flask 完整版。</div>
+  </div>
+</footer>
+
+<script>
+__OFFLINE_APP__
+</script>
+</body>
+</html>
