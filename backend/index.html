@@ -968,6 +968,9 @@ body{background:var(--paper);}
   .logo-sub{font-size:8px;}
 }
 .jt-policy a{color:var(--red-dark);text-decoration:underline;}
+.jt-action-evidence{margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);font-size:10px;line-height:1.65;color:var(--muted);}
+.jt-action-evidence b{color:var(--body);font-weight:500;}
+.jt-action-evidence a{color:var(--red-dark);text-decoration:underline;}
 </style>
 </head>
 <body>
@@ -1002,7 +1005,7 @@ body{background:var(--paper);}
     </div>
     <div class="jt-principles">
       <span class="jt-principle">数值由本地规则计算</span>
-      <span class="jt-principle">政策标注演示状态</span>
+      <span class="jt-principle">政策原文可核验</span>
       <span class="jt-principle">无 AI 也能完整使用</span>
     </div>
   </div>
@@ -1030,19 +1033,22 @@ body{background:var(--paper);}
       <div>
         <div class="jt-eyebrow">HOUSEHOLD ASSESSMENT</div>
         <h2 id="plansTitle">家庭节能评估</h2>
-        <p>只需填写会影响方案的必要信息。月用电量和月电费至少填一项；都不填时会使用明确标注的演示基线。</p>
+        <p>只需填写会影响方案的必要信息。月用电量和月电费至少填一项；都不填时会使用明确标注的工程基线。</p>
       </div>
       <span class="jt-tag" id="dataVersionTag">规则引擎加载中</span>
     </div>
 
-    <div class="jt-demo-banner"><b>数据说明</b><span>当前措施参数、排放因子和补贴政策均为演示数据，用于展示完整产品流程，不构成节电承诺或申领依据。</span></div>
+    <div class="jt-demo-banner"><b>数据说明</b><span>电力碳足迹因子来自生态环境部 2024 年公开数据，电价按陕西居民阶梯电价估算，西安政策链接可点击核验。措施节电参数分为公开资料折算、国标参数计算和工程估算，不能替代家庭实测。</span></div>
 
     <form class="jt-form" id="planForm" novalidate>
       <div class="jt-form-grid">
         <div class="jt-field">
           <label for="cityInput">所在城市</label>
-          <input type="text" id="cityInput" value="西安市" maxlength="30" autocomplete="off" placeholder="例如：西安市">
-          <span class="help">首批演示政策覆盖西安市；其他城市仍可生成节能方案。</span>
+          <select id="cityInput">
+            <option value="西安市">西安市（政策与阶梯电价试点）</option>
+            <option value="陕西省其他城市">陕西省其他城市（仅电价估算）</option>
+          </select>
+          <span class="help">仅接入西安市 2026 年家电政策；陕西其他城市不展示地方补贴，榆林电价口径暂未覆盖。</span>
         </div>
         <div class="jt-field">
           <label for="housingInput">住房情况</label>
@@ -1066,7 +1072,7 @@ body{background:var(--paper);}
         <div class="jt-field">
           <label for="monthlyBillInput">月电费 <small>元，可选</small></label>
           <input type="number" id="monthlyBillInput" min="1" max="50000" step="0.01" placeholder="例如：150" inputmode="decimal">
-          <span class="help">将按演示电价换算用电量，并明确展示换算过程。</span>
+          <span class="help">与用电量同时填写时，按实际平均单价计算；只有电费时按陕西阶梯电价近似。</span>
         </div>
         <div class="jt-field">
           <label for="budgetInput">可接受前期投入 <small>元</small></label>
@@ -1108,8 +1114,8 @@ body{background:var(--paper);}
       </section>
       <div class="jt-cards" id="planCards"></div>
       <div class="jt-subhead">
-        <div><h3>相关政策依据</h3><p>只展示与当前方案措施有关、同城市的演示政策。</p></div>
-        <span class="jt-tag">规则初筛，不代表获批</span>
+        <div><h3>相关政策依据</h3><p>仅显示已接入的西安市政策，并按措施与有效期做候选匹配。</p></div>
+        <span class="jt-tag">条件待确认，不代表获批</span>
       </div>
       <div class="jt-policy-list" id="policyList"></div>
       <div class="jt-meta" id="planMeta"></div>
@@ -1242,7 +1248,7 @@ body{background:var(--paper);}
     </div>
     <div class="foot-rule"></div>
     <div class="foot-bottom">
-      <div class="tip">所有节能与减碳数字均为估算，演示政策不构成申领依据。</div>
+      <div class="tip">节能与减碳数字为估算；政策候选匹配不构成获批或申领依据。</div>
       <span>2026 · 节碳家</span>
     </div>
     <div class="footnote">当前版本为竞赛演示，不提供自动申领、支付或设备控制。</div>
@@ -1499,7 +1505,7 @@ body{background:var(--paper);}
         + (aiData.nextStep ? '<p><b>下一步：</b>' + esc(aiData.nextStep) + '</p>' : '');
       const retrieval = data.retrieval || {};
       aiExplainNote.textContent = (data.aiNote || '')
-        + (retrieval.clauseCount ? ' 已检索 ' + retrieval.clauseCount + ' 个政策条款片段，仅使用演示政策。' : '');
+        + (retrieval.clauseCount ? ' 已检索 ' + retrieval.clauseCount + ' 个政策条款片段，仅使用已接入的西安政策。' : '');
     } catch (err) {
       if (requestId !== aiRequestSeq) return;
       markAiStages(1);
@@ -1554,12 +1560,23 @@ body{background:var(--paper);}
   }
   function planCardHtml(plan, recommended) {
     const actions = (plan.actions || []).map(action => {
+      const range = Array.isArray(action.annualKwhRange) && action.annualKwhRange.length === 2
+        ? '，参考区间 ' + num(action.annualKwhRange[0]) + '–' + num(action.annualKwhRange[1]) + ' kWh'
+        : '';
+      const sourceUrl = /^https?:\/\//i.test(action.sourceUrl || '') ? action.sourceUrl : '';
+      const source = sourceUrl
+        ? '<a href="' + esc(sourceUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(action.sourceName || '查看来源') + '</a>'
+        : esc(action.sourceName || '工程假设');
       return '<details class="jt-action"><summary><span>' + esc(action.name)
         + '</span><span>' + esc(action.category || '') + '</span></summary>'
         + '<div class="jt-action-body"><b>年节电</b> ' + num(action.annualKwhSaved) + ' kWh · '
         + '<b>年节省</b> ' + fmt(action.annualMoneySaved) + ' · <b>投入</b> ' + fmt(action.upfrontCost)
         + ' · <b>回收</b> ' + paybackText(action.paybackMonths)
-        + '<br>' + esc(action.assumption || '估算参数见数据说明。') + '</div></details>';
+        + '<br>' + esc(action.assumption || '估算参数见数据说明。')
+        + '<div class="jt-action-evidence"><b>依据等级：</b>' + esc(action.evidenceLabel || '工程估算')
+        + range + '<br><b>依据：</b>' + source
+        + (action.sourceNote ? '<br>' + esc(action.sourceNote) : '')
+        + (action.costNote ? '<br><b>成本口径：</b>' + esc(action.costNote) : '') + '</div></div></details>';
     }).join('');
     return '<article class="jt-plan' + (recommended ? ' recommended' : '') + '">'
       + '<div class="jt-plan-top"><div><div class="jt-plan-tier">' + esc(plan.tier.toUpperCase()) + '</div>'
@@ -1582,22 +1599,28 @@ body{background:var(--paper);}
   function policyCardHtml(policy) {
     const ok = !!policy.eligible;
     const sourceUrl = /^https?:\/\//i.test(policy.sourceUrl || '') ? policy.sourceUrl : '';
+    const secondaryUrl = /^https?:\/\//i.test(policy.sourceSecondaryUrl || '') ? policy.sourceSecondaryUrl : '';
     const meta = [
       policy.validFrom && policy.validTo ? ('有效期 ' + policy.validFrom + ' 至 ' + policy.validTo) : '',
-      policy.updatedAt ? ('更新 ' + policy.updatedAt) : ''
+      policy.updatedAt ? ('核验 ' + policy.updatedAt) : ''
     ].filter(Boolean).map(t => '<span>' + esc(t) + '</span>').join('');
     return '<article class="jt-policy"><div class="jt-policy-head"><h4>' + esc(policy.title) + '</h4>'
-      + '<span class="jt-status ' + (ok ? 'ok' : 'no') + '">' + (ok ? '初筛符合' : '未通过初筛') + '</span></div>'
+      + '<span class="jt-status ' + (ok ? 'ok' : 'no') + '">'
+      + esc(policy.statusLabel || (ok ? '条件待确认' : '当前不适用')) + '</span></div>'
       + '<p>' + esc(policy.benefit || '') + '</p>'
       + '<div class="jt-policy-meta"><span>' + esc(policy.region) + '</span>' + meta + '</div>'
-      + '<div class="jt-policy-reason"><b>判断依据：</b>' + esc((policy.reasons || []).join('；'))
+      + '<div class="jt-policy-reason"><b>自动初筛：</b>' + esc((policy.reasons || []).join('；'))
+      + (policy.manualChecks && policy.manualChecks.length ? '<br><b>仍需人工确认：</b>' + esc(policy.manualChecks.join('、')) : '')
       + (policy.requirements && policy.requirements.length ? '<br><b>材料条件：</b>' + esc(policy.requirements.join('、')) : '')
+      + '<br><b>边界：</b>' + esc(policy.disclaimer || '不代表已获批或可申领。')
       + '</div>'
-      + '<div class="jt-policy-demo">' + (policy.isDemo ? '演示政策，不构成申领依据。' : '')
+      + '<div class="jt-policy-demo">' + (policy.isDemo ? '演示政策。' : '政策来源：')
       + (sourceUrl
         ? '<a href="' + esc(sourceUrl) + '" target="_blank" rel="noopener noreferrer">'
           + esc(policy.sourceName || '查看政策原文') + '</a>'
-        : esc(policy.sourceName || ''))
+        : esc(policy.sourceName || '未提供链接'))
+      + (secondaryUrl ? ' · <a href="' + esc(secondaryUrl) + '" target="_blank" rel="noopener noreferrer">实施公告</a>' : '')
+      + (policy.sourceRetrievedAt ? ' · 检索于 ' + esc(policy.sourceRetrievedAt) : '')
       + '</div></article>';
   }
   function renderPlans(data) {
@@ -1606,18 +1629,29 @@ body{background:var(--paper);}
     document.getElementById('baselineSummary').innerHTML =
       '<span>月用电基线 <b>' + num(base.monthlyKwh) + ' kWh</b></span><span class="sep"></span>'
       + '<span>年用电基线 <b>' + num(base.annualKwh) + ' kWh</b></span><span class="sep"></span>'
+      + '<span>综合电价 <b>' + Number(base.tariff || 0).toFixed(4) + ' 元/kWh</b></span><span class="sep"></span>'
       + '<span>前期预算 <b>' + fmt(data.budget) + '</b></span><span class="sep"></span>'
-      + '<span>' + esc(base.source) + (base.isDefault ? '（演示基线）' : '') + '</span>';
+      + '<span>' + esc(base.source) + (base.isDefault ? '（工程基线）' : '') + '</span>';
     planCardsEl.innerHTML = (data.plans || []).map((plan, index) =>
       planCardHtml(plan, index === 1)).join('');
+    const coverage = data.coverage || {};
     policyListEl.innerHTML = (data.policies || []).length
       ? data.policies.map(policyCardHtml).join('')
-      : '<div class="jt-empty">当前城市或措施暂无匹配的演示政策。</div>';
+      : '<div class="jt-empty">' + esc(coverage.message || '当前方案没有匹配的已接入政策。') + '</div>';
     const meta = data.meta || {};
+    const factorUrl = /^https?:\/\//i.test(meta.factorUrl || '') ? meta.factorUrl : '';
+    const tariffUrl = /^https?:\/\//i.test(meta.tariffUrl || '') ? meta.tariffUrl : '';
     document.getElementById('planMeta').innerHTML =
       '<b>数据版本：</b>措施 ' + esc(meta.actionsVersion) + ' · 政策 ' + esc(meta.policiesVersion)
-      + ' · 排放因子 ' + esc(meta.factorVersion) + '（' + esc(meta.factorKgCo2ePerKwh) + ' kg CO₂e/kWh）<br>'
-      + '<b>因子来源：</b>' + esc(meta.factorSource || '未提供') + '<br>'
+      + ' · 电力因子 ' + esc(meta.factorVersion) + '（' + esc(meta.factorKgCo2ePerKwh) + ' kg CO₂e/kWh）<br>'
+      + '<b>电力因子：</b>' + esc(meta.factorScope || '') + '；'
+      + (factorUrl ? '<a href="' + esc(factorUrl) + '" target="_blank" rel="noopener noreferrer">生态环境部公开附件</a>'
+        : esc(meta.factorSource || '未提供')) + '<br>'
+      + '<b>电价口径：</b>' + esc(base.tariffSource || '') + '；'
+      + (tariffUrl ? '<a href="' + esc(tariffUrl) + '" target="_blank" rel="noopener noreferrer">陕西阶梯电价来源</a>'
+        : '未提供来源') + '<br>'
+      + '<b>政策覆盖：</b>' + esc((meta.policyCoverage || []).join('、') || '未接入地方政策')
+      + '；' + esc(coverage.message || '') + '<br>'
       + '<b>计算与展示边界：</b><ul>' + (meta.assumptions || []).map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
     planResultEl.hidden = false;
     const balanced = (data.plans || [])[1] || (data.plans || [])[0];
@@ -2049,7 +2083,7 @@ body{background:var(--paper);}
     try {
       const data = await requestJson('/api/energy/meta', {}, 10000);
       document.getElementById('dataVersionTag').textContent =
-        data.actionCount + ' 项措施 · ' + data.policyCount + ' 条演示政策';
+        data.actionCount + ' 项措施 · ' + data.policyCount + ' 条已接入政策';
     } catch (_) {
       document.getElementById('dataVersionTag').textContent = '规则数据暂时不可用';
     }

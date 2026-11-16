@@ -5,7 +5,7 @@
 边界：
 - 所有数值由版本化 JSON 参数和确定性公式计算；
 - 不调用模型、不访问网络；
-- 政策结果只代表“按演示规则初筛”，不代表获批或真实有效政策。
+- 政策结果只代表“已接入政策的候选匹配”，不代表获批或已具备申领资格。
 """
 
 from __future__ import annotations
@@ -95,6 +95,33 @@ def _first_present(mapping: dict, *keys: str):
     return None
 
 
+def _annual_tier_estimate(annual_kwh: float, profile: dict) -> dict:
+    """按陕西年阶梯电价估算年电费、平均电价和最高所处档位。"""
+    remaining = max(0.0, annual_kwh)
+    lower = 0.0
+    total = 0.0
+    highest = None
+    for tier in profile.get("tiers") or []:
+        limit = tier.get("limit_kwh")
+        rate = float(tier.get("rate_yuan_per_kwh") or 0)
+        upper = float(limit) if limit is not None else remaining + lower
+        band = min(remaining, max(0.0, upper - lower))
+        if band > 0:
+            total += band * rate
+            highest = tier
+            remaining -= band
+        lower = upper
+        if remaining <= 0:
+            break
+    effective = total / annual_kwh if annual_kwh > 0 else float(
+        profile.get("reference_rate_yuan_per_kwh") or 0)
+    return {
+        "annualCost": round(total, 2),
+        "effectiveRate": round(effective, 4),
+        "tierLabel": (highest or {}).get("label") or "第一档",
+    }
+
+
 def normalize_input(payload: dict) -> dict:
     body = payload if isinstance(payload, dict) else {}
     household = body.get("household") if isinstance(body.get("household"), dict) else body
@@ -126,26 +153,70 @@ def normalize_input(payload: dict) -> dict:
 
 
 def _baseline(household: dict, factors: dict) -> dict:
-    default_tariff = float(factors["default_tariff_yuan_per_kwh"])
-    tariff = household.get("tariff") or default_tariff
-    if household.get("monthlyKwh"):
-        monthly_kwh = float(household["monthlyKwh"])
-        source = "按你填写的月用电量计算"
-    elif household.get("monthlyBill"):
-        monthly_kwh = float(household["monthlyBill"]) / tariff
-        source = "按你填写的月电费除以 %.2f 元/kWh 估算" % tariff
+    profile = factors.get("tariff_profile") or {}
+    reference_rate = float(profile.get("reference_rate_yuan_per_kwh") or 0.5483)
+    kwh_input = household.get("monthlyKwh")
+    bill_input = household.get("monthlyBill")
+    tariff_manual = household.get("tariff")
+
+    if tariff_manual is not None and kwh_input is not None:
+        monthly_kwh = float(kwh_input)
+        tariff = float(tariff_manual)
+        tariff_source = "按请求中提供的综合电价计算"
+        estimated = False
+    elif kwh_input is not None and bill_input is not None:
+        monthly_kwh = float(kwh_input)
+        tariff = float(bill_input) / monthly_kwh
+        if not 0.1 <= tariff <= 2.0:
+            raise EnergyInputError("月电费与月用电量比例异常，请检查账单或改用其中一项")
+        tariff_source = "按你填写的月电费 ÷ 月用电量计算实际平均单价"
+        estimated = False
+    elif kwh_input is not None:
+        monthly_kwh = float(kwh_input)
+        tier = _annual_tier_estimate(monthly_kwh * 12, profile)
+        tariff = tier["effectiveRate"]
+        tariff_source = "按陕西居民年阶梯电价估算（年化后所处%s）" % tier["tierLabel"]
+        estimated = True
+    elif bill_input is not None and tariff_manual is not None:
+        monthly_kwh = float(bill_input) / float(tariff_manual)
+        tariff = float(tariff_manual)
+        tariff_source = "按请求中提供的综合电价换算电量"
+        estimated = False
+    elif bill_input is not None:
+        monthly_kwh = float(bill_input) / reference_rate
+        tariff = reference_rate
+        tariff_source = "仅有月电费，按陕西第二档 %.4f 元/kWh 近似反推用电量" % reference_rate
+        estimated = True
     else:
         monthly_kwh = float(household["residents"]) * float(factors["default_monthly_kwh_per_person"])
-        source = "未填用电量，按每人每月 %.0f kWh 的演示基线估算" % float(
+        tier = _annual_tier_estimate(monthly_kwh * 12, profile)
+        tariff = tier["effectiveRate"]
+        tariff_source = "无账单数据，按每人每月 %.0f kWh 工程基线及陕西年阶梯电价估算" % float(
             factors["default_monthly_kwh_per_person"])
+        estimated = True
+
     monthly_kwh = round(monthly_kwh, 1)
+    annual_kwh = round(monthly_kwh * 12, 1)
+    annual_bill = round(float(bill_input), 2) if bill_input is not None else round(monthly_kwh * tariff * 12, 2)
+    if kwh_input is not None:
+        source = "按你填写的月用电量计算"
+    elif bill_input is not None:
+        source = "按你填写的月电费反推用电量"
+    else:
+        source = "未填用电量，按每人每月 %.0f kWh 的工程基线估算" % float(
+            factors["default_monthly_kwh_per_person"])
     return {
         "monthlyKwh": monthly_kwh,
-        "annualKwh": round(monthly_kwh * 12, 1),
-        "tariff": round(tariff, 2),
-        "monthlyBill": round(monthly_kwh * tariff, 2),
+        "annualKwh": annual_kwh,
+        "tariff": round(tariff, 4),
+        "monthlyBill": round(float(bill_input), 2) if bill_input is not None else round(monthly_kwh * tariff, 2),
+        "annualBill": annual_bill,
         "source": source,
-        "isDefault": not bool(household.get("monthlyKwh") or household.get("monthlyBill")),
+        "tariffSource": tariff_source,
+        "tariffEstimated": estimated,
+        "tariffRegion": profile.get("region") or "陕西省",
+        "tariffCaveat": profile.get("caveat") or "",
+        "isDefault": kwh_input is None and bill_input is None,
     }
 
 
@@ -169,6 +240,14 @@ def _action_card(action: dict, household: dict, baseline: dict, factors: dict) -
     upfront = float(action.get("upfront_cost") or 0)
     payback = round(upfront / (annual_money / 12), 1) if annual_money > 0 and upfront > 0 else (
         0.0 if upfront == 0 else None)
+    saving_range = action.get("saving_range")
+    annual_range = None
+    if isinstance(saving_range, list) and len(saving_range) == 2:
+        if action.get("saving_type") == "percent":
+            annual_range = [round(baseline["annualKwh"] * float(saving_range[0]), 1),
+                            round(baseline["annualKwh"] * float(saving_range[1]), 1)]
+        else:
+            annual_range = [round(float(saving_range[0]), 1), round(float(saving_range[1]), 1)]
     return {
         "id": action["id"],
         "name": action["name"],
@@ -183,6 +262,13 @@ def _action_card(action: dict, household: dict, baseline: dict, factors: dict) -
         "requiresOwner": bool(action.get("requires_owner")),
         "needsInstallation": bool(action.get("needs_installation")),
         "assumption": action.get("assumption"),
+        "annualKwhRange": annual_range,
+        "evidenceLevel": action.get("evidence_level"),
+        "evidenceLabel": action.get("evidence_label"),
+        "sourceName": action.get("source_name"),
+        "sourceUrl": action.get("source_url") or "",
+        "sourceNote": action.get("source_note") or action.get("assumption"),
+        "costNote": action.get("cost_note"),
     }
 
 
@@ -271,13 +357,13 @@ def match_policies(city: str, housing: str, action_ids: list[str],
             reasons.append("政策尚未到生效日期")
         elif today > end:
             eligible = False
-            reasons.append("政策已过演示有效期")
+            reasons.append("当前日期不在政策有效期内")
         else:
-            reasons.append("当前日期在演示有效期内")
+            reasons.append("当前日期在政策有效期内")
 
         if policy.get("requires_owner") and housing != "own":
             eligible = False
-            reasons.append("该演示政策要求自有住房")
+            reasons.append("该政策要求自有住房")
         elif policy.get("requires_owner"):
             reasons.append("满足自有住房条件")
 
@@ -285,10 +371,13 @@ def match_policies(city: str, housing: str, action_ids: list[str],
             "id": policy.get("id"),
             "title": policy.get("title"),
             "region": region,
-            "status": "likely" if eligible else "ineligible",
+            "status": "candidate" if eligible else "ineligible",
+            "statusLabel": "涉及此政策 · 条件待确认" if eligible else "当前不适用",
             "eligible": eligible,
             "benefit": policy.get("benefit"),
+            "benefitRule": deepcopy(policy.get("benefit_rule") or {}),
             "requirements": deepcopy(policy.get("requirements") or []),
+            "manualChecks": deepcopy(policy.get("manual_checks") or []),
             "application": policy.get("application"),
             "actionIds": related,
             "reasons": reasons,
@@ -297,8 +386,10 @@ def match_policies(city: str, housing: str, action_ids: list[str],
             "isDemo": bool(policy.get("is_demo")),
             "sourceName": policy.get("source_name"),
             "sourceUrl": policy.get("source_url") or "",
+            "sourceSecondaryUrl": policy.get("source_secondary_url") or "",
+            "sourceRetrievedAt": policy.get("source_retrieved_at"),
             "updatedAt": policy.get("updated_at"),
-            "disclaimer": "演示政策初筛结果，不代表真实有效或已获批。",
+            "disclaimer": policy.get("disclaimer") or "政策条件仍需用户核实，不代表已获批或可申领。",
         })
     return out
 
@@ -323,6 +414,16 @@ def build_energy_response(payload: dict, as_of: date | None = None) -> dict:
             if set(policy["actionIds"]) & set(plan["actionIds"])
         ]
 
+    tariff_profile = factors.get("tariff_profile") or {}
+    supported_regions = list(factors.get("policy_coverage") or [])
+    city_supported = any(_norm_region(region) == _norm_region(household["city"])
+                         for region in supported_regions)
+    if city_supported:
+        coverage_message = ("已接入西安市地方政策。政策卡只做候选匹配，能效等级、活动门店和材料条件仍需用户确认。"
+                            if policies else "已接入西安市地方政策，但当前方案的措施不属于已收录政策范围。")
+    else:
+        coverage_message = ("当前仅接入西安市地方政策。该城市不展示地方补贴；未提供实际电费时，电价按陕西参考阶梯估算。")
+
     return {
         "success": True,
         "mode": "rules",
@@ -331,17 +432,30 @@ def build_energy_response(payload: dict, as_of: date | None = None) -> dict:
         "budget": budget,
         "plans": plans,
         "policies": policies,
+        "coverage": {
+            "citySupported": city_supported,
+            "supportedRegions": supported_regions,
+            "message": coverage_message,
+        },
         "meta": {
             "actionsVersion": actions_doc.get("version"),
             "policiesVersion": policies_doc.get("version"),
             "factorVersion": factors.get("version"),
             "factorKgCo2ePerKwh": factors.get("kg_co2e_per_kwh"),
             "factorSource": factors.get("source"),
-            "isDemo": True,
+            "factorUrl": factors.get("source_url"),
+            "factorScope": factors.get("factor_scope"),
+            "tariffSource": tariff_profile.get("source"),
+            "tariffUrl": tariff_profile.get("source_url"),
+            "tariffCaveat": tariff_profile.get("caveat"),
+            "policyCoverage": supported_regions,
+            "dataClass": factors.get("data_class"),
+            "isDemo": False,
             "assumptions": [
                 factors.get("disclaimer"),
                 actions_doc.get("disclaimer"),
                 policies_doc.get("disclaimer"),
+                tariff_profile.get("caveat"),
             ],
         },
     }
@@ -361,38 +475,48 @@ def build_rule_explanation(result: dict) -> dict:
     } for plan in plans]
     policy_notes = [{
         "policyId": item.get("id"),
-        "note": "%s；当前仅通过演示规则初筛，仍需按材料条件进一步确认。"
-                % (item.get("benefit") or item.get("title") or "演示政策"),
+        "note": "%s；当前仅完成城市、日期和措施匹配，能效等级、活动门店和材料条件仍需人工确认。"
+                % (item.get("benefit") or item.get("title") or "已接入政策"),
     } for item in eligible]
     return {
         "mode": "rules",
-        "intro": "已根据月用电基线 %.1f kWh 和当前住房、预算条件完成三档计算。%s"
-                 % (float(baseline.get("monthlyKwh") or 0), baseline.get("source") or ""),
+        "intro": "已根据月用电基线 %.1f kWh 和当前住房、预算条件完成三档计算。%s；电价口径：%s。"
+                 % (float(baseline.get("monthlyKwh") or 0), baseline.get("source") or "",
+                    baseline.get("tariffSource") or ""),
         "tierNotes": tier_notes,
         "policyNotes": policy_notes,
         "nextStep": "先比较三档方案的前期投入和回收周期，选择能实际执行的措施，再记录到碳迹日记。",
         "cautions": [
             "节电、费用和减碳量均为估算，不代表实际账单或经核查的减排量。",
-            "演示政策初筛不代表真实有效、获批或可申领。",
+            "政策卡只表示可能相关，不代表已获批或可申领。",
         ],
     }
 
 
 def get_meta() -> dict:
     actions_doc, policies_doc, factors, _ = _load_catalog()
+    tariff_profile = factors.get("tariff_profile") or {}
     return {
         "actionsVersion": actions_doc.get("version"),
         "actionCount": len(actions_doc.get("actions") or []),
+        "evidenceLevels": sorted({str(item.get("evidence_label")) for item in actions_doc.get("actions") or []}),
         "policiesVersion": policies_doc.get("version"),
         "policyCount": len(policies_doc.get("policies") or []),
-        "policyRegion": policies_doc.get("region"),
+        "policyRegion": policies_doc.get("region_scope"),
+        "policyCoverage": factors.get("policy_coverage") or [],
         "factorVersion": factors.get("version"),
         "factorKgCo2ePerKwh": factors.get("kg_co2e_per_kwh"),
-        "tariffYuanPerKwh": factors.get("default_tariff_yuan_per_kwh"),
-        "isDemo": True,
+        "factorSource": factors.get("source"),
+        "factorUrl": factors.get("source_url"),
+        "tariffRegion": tariff_profile.get("region"),
+        "tariffSource": tariff_profile.get("source"),
+        "tariffUrl": tariff_profile.get("source_url"),
+        "tariffTiers": tariff_profile.get("tiers") or [],
+        "isDemo": False,
         "disclaimers": [
             actions_doc.get("disclaimer"),
             policies_doc.get("disclaimer"),
             factors.get("disclaimer"),
+            tariff_profile.get("caveat"),
         ],
     }

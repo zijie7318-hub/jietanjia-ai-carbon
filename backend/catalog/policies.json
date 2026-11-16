@@ -1,55 +1,42 @@
 {
-  "version": "demo-1.0",
-  "region": "西安市",
-  "disclaimer": "以下全部为作品演示政策，不是真实有效的政府补贴文件，不构成申领依据。正式版本将替换为带官方链接、文号和有效期的公开政策。",
+  "version": "2026.11-xian-official",
+  "region_scope": "西安市",
+  "coverage_note": "当前仅接入西安市地方政策。陕西省其他城市及其他省份不展示地方补贴，节能方案仍可使用通用估算。",
+  "disclaimer": "政策卡仅按城市、日期和关联措施做候选匹配，不代表已确认资格、已获批或可申领；购买能效等级、活动门店、实名信息和材料条件仍需用户核实。",
   "policies": [
     {
-      "id": "demo_appliance_trade_in",
-      "title": "节能家电以旧换新补助（演示）",
+      "id": "xa_appliance_trade_in_2026",
+      "title": "2026年西安市家电以旧换新补贴",
       "region": "西安市",
+      "region_level": "city",
       "valid_from": "2026-01-01",
       "valid_to": "2026-12-31",
-      "is_demo": true,
-      "source_name": "作品演示数据，非真实政策",
-      "source_url": "",
-      "benefit": "按成交价约 10% 估算，单件最高 500 元（演示）",
+      "is_demo": false,
+      "source_name": "西安市商务局",
+      "source_url": "https://xasswj.xa.gov.cn/xwzx/tzgg/2019352127281319938.html",
+      "source_secondary_url": "https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html",
+      "source_retrieved_at": "2026-11-16",
+      "benefit": "购买冰箱、洗衣机、电视、空调、电脑、热水器6类中1级能效或水效产品，按最终销售价格15%补贴，单件最高1500元；每人每类可补贴1件。",
       "action_ids": ["ac_replace_eff", "fridge_replace_eff"],
-      "requires_owner": true,
-      "requirements": ["自有住房", "购买一级能效产品", "保留发票和旧机回收凭证"],
-      "application": "演示流程：在政策正式渠道提交购买与回收材料。",
-      "updated_at": "2026-11-01"
-    },
-    {
-      "id": "demo_energy_kit",
-      "title": "绿色照明与待机节能包（演示）",
-      "region": "西安市",
-      "valid_from": "2026-01-01",
-      "valid_to": "2026-12-31",
-      "is_demo": true,
-      "source_name": "作品演示数据，非真实政策",
-      "source_url": "",
-      "benefit": "节能用品抵扣 50 元（演示）",
-      "action_ids": ["led_bulbs", "standby_strip", "ac_temp_26"],
       "requires_owner": false,
-      "requirements": ["居住在本市", "领取后完成至少一项节能行动"],
-      "application": "演示流程：在活动页面登记并上传实施记录。",
-      "updated_at": "2026-11-01"
-    },
-    {
-      "id": "demo_window_insulation",
-      "title": "门窗保温改善材料补助（演示）",
-      "region": "西安市",
-      "valid_from": "2026-01-01",
-      "valid_to": "2026-12-31",
-      "is_demo": true,
-      "source_name": "作品演示数据，非真实政策",
-      "source_url": "",
-      "benefit": "材料费用约 20%，最高 300 元（演示）",
-      "action_ids": ["window_seal_removable", "shade_summer"],
-      "requires_owner": true,
-      "requirements": ["自有住房", "保留材料购买凭证"],
-      "application": "演示流程：提交住房与材料凭证进行审核。",
-      "updated_at": "2026-11-01"
+      "requirements": [
+        "个人消费者购买6类家电中1级能效或水效产品",
+        "在西安市参与活动的零售实体门店购买",
+        "在云闪付完成实名授权并领取当日消费折扣券",
+        "申领人、付款人和补贴确认书签订人为同一人",
+        "每人每类产品限补贴1件，单件补贴不超过1500元",
+        "保留发票、能效或水效标识、SN码和补贴确认书"
+      ],
+      "application": "在参与活动门店选购后，通过云闪付领取消费折扣券并支付，补贴在支付环节直接减免；具体参与门店和资金进度以西安市商务局及云闪付公布为准。",
+      "benefit_rule": {
+        "type": "percent_capped",
+        "rate": 0.15,
+        "cap_yuan": 1500
+      },
+      "automatic_checks": ["城市为西安市", "当前日期在2026年度内", "方案包含家电更新措施"],
+      "manual_checks": ["1级能效或水效", "参与活动门店", "云闪付实名与领券", "每类限1件"],
+      "updated_at": "2026-11-16",
+      "disclaimer": "城市、日期和措施仅用于候选匹配；未核验能效等级、活动门店、补贴资金余额和实名材料，不代表已具备领取资格。"
     }
   ]
 }

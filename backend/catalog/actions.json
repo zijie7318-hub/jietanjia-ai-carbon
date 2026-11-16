@@ -1,6 +1,6 @@
 {
-  "version": "demo-1.0",
-  "disclaimer": "以下节电参数为产品演示用估算，不代表检测机构结论或节电承诺；正式版应逐项补充可核验来源。",
+  "version": "2026.11-xian-evidence",
+  "disclaimer": "措施节电参数包含公开资料折算、国标参数计算和工程估算三类。没有实测数据的措施已标记为工程估算，结果不构成检测结论或节电承诺。",
   "actions": [
     {
       "id": "ac_temp_26",
@@ -10,12 +10,26 @@
       "difficulty": "easy",
       "upfront_cost": 0,
       "saving_type": "percent",
-      "saving_value": 0.06,
+      "saving_value": 0.02,
       "min_monthly_kwh": 100,
       "requires_owner": false,
       "needs_installation": false,
-      "tiers": ["light", "balanced", "deep"],
-      "assumption": "按制冷季空调用电约占家庭用电 25%、设定调整可节省其中约 24% 估算。"
+      "tiers": [
+        "light",
+        "balanced",
+        "deep"
+      ],
+      "assumption": "按制冷季空调用电约占家庭用电 25%、设定调整可节省其中约 24% 估算。",
+      "saving_range": [
+        0.018,
+        0.025
+      ],
+      "evidence_level": "public_reference_calculation",
+      "evidence_label": "公开资料折算",
+      "source_name": "央广网：空调温度上调1℃的节电报道",
+      "source_url": "https://news.cnr.cn/native/gd/20230711/t20230711_526324689.shtml",
+      "source_note": "公开报道提出空调每上调1℃可节电，结合空调约占家庭用电25%的工程假设，折算到家庭总用电约1.8%—2.5%，本工具取2%；需以实际设备和用电结构校准。",
+      "cost_note": "无需新增设备投入。"
     },
     {
       "id": "ac_filter_clean",
@@ -25,12 +39,25 @@
       "difficulty": "easy",
       "upfront_cost": 0,
       "saving_type": "percent",
-      "saving_value": 0.02,
+      "saving_value": 0.04,
       "min_monthly_kwh": 100,
       "requires_owner": false,
       "needs_installation": false,
-      "tiers": ["light", "balanced"],
-      "assumption": "按定期清洁可减少约 2% 的家庭月度用电估算。"
+      "tiers": [
+        "light",
+        "balanced"
+      ],
+      "assumption": "按定期清洁可减少约 2% 的家庭月度用电估算。",
+      "saving_range": [
+        0.03,
+        0.05
+      ],
+      "evidence_level": "engineering_estimate",
+      "evidence_label": "工程估算",
+      "source_name": "空调滤网清洁与风阻关系的一般工程口径",
+      "source_url": "",
+      "source_note": "按滤网积尘降低换热效率、折算到家庭总用电约3%—5%，取4%；不同污染程度差异较大，需实测。",
+      "cost_note": "自行清洗无材料费；上门清洗费用因城市而异。"
     },
     {
       "id": "led_bulbs",
@@ -44,8 +71,21 @@
       "min_monthly_kwh": 40,
       "requires_owner": false,
       "needs_installation": false,
-      "tiers": ["light", "balanced"],
-      "assumption": "按替换 5 只常用灯、每天使用 4 小时估算年节电约 110 kWh。"
+      "tiers": [
+        "light",
+        "balanced"
+      ],
+      "assumption": "按替换 5 只常用灯、每天使用 4 小时估算年节电约 110 kWh。",
+      "saving_range": [
+        80,
+        220
+      ],
+      "evidence_level": "standard_calculation",
+      "evidence_label": "国标参数 + 计算",
+      "source_name": "GB 30255-2019 普通照明用非定向自镇流LED灯能效限定值及能效等级",
+      "source_url": "",
+      "source_note": "按5只常用灯、每天4小时、旧灯20—40W替换为9W LED计算，年节电约80—226 kWh；取110 kWh对应较低使用强度。",
+      "cost_note": "按5只LED灯及可能的灯具更换估算80—200元，取120元。"
     },
     {
       "id": "standby_strip",
@@ -59,8 +99,20 @@
       "min_monthly_kwh": 50,
       "requires_owner": false,
       "needs_installation": false,
-      "tiers": ["balanced"],
-      "assumption": "按常用设备待机功率合计约 15 W、每天闲置 16 小时估算。"
+      "tiers": [
+        "balanced"
+      ],
+      "assumption": "按常用设备待机功率合计约 15 W、每天闲置 16 小时估算。",
+      "saving_range": [
+        40,
+        120
+      ],
+      "evidence_level": "engineering_estimate",
+      "evidence_label": "工程估算",
+      "source_name": "按待机功率 × 闲置时间计算",
+      "source_url": "",
+      "source_note": "按家庭常用设备待机功率合计约10—20W、每日闲置16小时估算，年节电约58—117 kWh；取80 kWh。",
+      "cost_note": "智能插座市场价约50—150元，取100元。"
     },
     {
       "id": "cold_wash",
@@ -74,8 +126,20 @@
       "min_monthly_kwh": 40,
       "requires_owner": false,
       "needs_installation": false,
-      "tiers": ["light"],
-      "assumption": "按每周 3 次洗衣、减少热水与烘干估算。"
+      "tiers": [
+        "light"
+      ],
+      "assumption": "按每周 3 次洗衣、减少热水与烘干估算。",
+      "saving_range": [
+        20,
+        80
+      ],
+      "evidence_level": "engineering_estimate",
+      "evidence_label": "工程估算",
+      "source_name": "按洗衣机电加热与烘干使用频率估算",
+      "source_url": "",
+      "source_note": "按每周3次洗衣、减少热水加热和烘干估算，受机型、进水温度和晾晒条件影响，需实测。",
+      "cost_note": "无需新增设备投入。"
     },
     {
       "id": "fridge_seal",
@@ -89,8 +153,20 @@
       "min_monthly_kwh": 60,
       "requires_owner": false,
       "needs_installation": false,
-      "tiers": ["light"],
-      "assumption": "按门封老化和散热空间不足合计增加约 5% 冰箱用电估算。"
+      "tiers": [
+        "light"
+      ],
+      "assumption": "按门封老化和散热空间不足合计增加约 5% 冰箱用电估算。",
+      "saving_range": [
+        30,
+        80
+      ],
+      "evidence_level": "engineering_estimate",
+      "evidence_label": "工程估算",
+      "source_name": "按冰箱门封漏冷与摆放散热条件估算",
+      "source_url": "",
+      "source_note": "按密封条老化、冰箱贴墙或散热空间不足导致能耗增加估算，实际效果需检查门封和测温。",
+      "cost_note": "密封条或调整位置的材料费约20—50元，取30元。"
     },
     {
       "id": "water_heater_timer",
@@ -104,8 +180,20 @@
       "min_monthly_kwh": 80,
       "requires_owner": false,
       "needs_installation": false,
-      "tiers": ["balanced"],
-      "assumption": "按热水器用电约占家庭用电 15%、定时可节省其中约 27% 估算。"
+      "tiers": [
+        "balanced"
+      ],
+      "assumption": "按热水器用电约占家庭用电 15%、定时可节省其中约 27% 估算。",
+      "saving_range": [
+        0.02,
+        0.06
+      ],
+      "evidence_level": "engineering_estimate",
+      "evidence_label": "工程估算",
+      "source_name": "按储水式热水器保温与定时使用估算",
+      "source_url": "",
+      "source_note": "按减少无人时段反复加热估算，占家庭总用电2%—6%；与保温性能、设定温度和使用时段有关。",
+      "cost_note": "定时插座或控制器约50—120元，取80元。"
     },
     {
       "id": "water_heater_insulation",
@@ -119,8 +207,20 @@
       "min_monthly_kwh": 80,
       "requires_owner": false,
       "needs_installation": false,
-      "tiers": ["balanced"],
-      "assumption": "按热水管路热损失与保温改善幅度综合估算。"
+      "tiers": [
+        "balanced"
+      ],
+      "assumption": "按热水管路热损失与保温改善幅度综合估算。",
+      "saving_range": [
+        0.01,
+        0.04
+      ],
+      "evidence_level": "engineering_estimate",
+      "evidence_label": "工程估算",
+      "source_name": "按热水管路散热损失估算",
+      "source_url": "",
+      "source_note": "按可触及热水管路的热损失估算，占家庭总用电1%—4%；管路长度和保温现状影响较大。",
+      "cost_note": "可拆卸保温材料约100—250元，取150元。"
     },
     {
       "id": "window_seal_removable",
@@ -134,8 +234,21 @@
       "min_monthly_kwh": 100,
       "requires_owner": false,
       "needs_installation": false,
-      "tiers": ["balanced", "deep"],
-      "assumption": "按可拆卸密封改善门窗气密性、降低空调负荷估算。"
+      "tiers": [
+        "balanced",
+        "deep"
+      ],
+      "assumption": "按可拆卸密封改善门窗气密性、降低空调负荷估算。",
+      "saving_range": [
+        0.02,
+        0.06
+      ],
+      "evidence_level": "engineering_estimate",
+      "evidence_label": "工程估算",
+      "source_name": "按门窗缝隙渗透风与空调负荷估算",
+      "source_url": "",
+      "source_note": "按密封条改善门窗气密性、减少冷热负荷估算，占家庭总用电2%—6%；效果取决于缝隙面积、风压和空调使用时长。",
+      "cost_note": "可拆卸密封材料约100—300元，取180元。"
     },
     {
       "id": "shade_summer",
@@ -149,8 +262,21 @@
       "min_monthly_kwh": 100,
       "requires_owner": false,
       "needs_installation": false,
-      "tiers": ["balanced", "deep"],
-      "assumption": "按主要朝西或朝南窗户遮阳后的制冷负荷变化估算。"
+      "tiers": [
+        "balanced",
+        "deep"
+      ],
+      "assumption": "按主要朝西或朝南窗户遮阳后的制冷负荷变化估算。",
+      "saving_range": [
+        0.02,
+        0.05
+      ],
+      "evidence_level": "engineering_estimate",
+      "evidence_label": "工程估算",
+      "source_name": "按外窗太阳得热与空调负荷估算",
+      "source_url": "",
+      "source_note": "按夏季遮阳降低窗户太阳得热估算，占家庭总用电2%—5%；朝向、窗墙比和遮阳方式影响较大。",
+      "cost_note": "遮阳帘或外遮阳材料约150—400元，取220元。"
     },
     {
       "id": "ac_replace_eff",
@@ -162,10 +288,22 @@
       "saving_type": "fixed",
       "saving_value": 260,
       "min_monthly_kwh": 150,
-      "requires_owner": true,
+      "requires_owner": false,
       "needs_installation": true,
-      "tiers": ["deep"],
-      "assumption": "按 1.5 匹老旧定频机与一级能效变频机的典型使用差异估算。"
+      "tiers": [
+        "deep"
+      ],
+      "assumption": "按 1.5 匹老旧定频机与一级能效变频机的典型使用差异估算。",
+      "saving_range": [
+        180,
+        350
+      ],
+      "evidence_level": "engineering_estimate",
+      "evidence_label": "能效参数估算",
+      "source_name": "按旧机与新一级能效机型的额定能效和年使用小时估算",
+      "source_url": "",
+      "source_note": "以旧机能效衰减、匹数和年制冷/制热小时为假设，年节电约180—350 kWh；必须按具体机型铭牌和APF值核算。 购买家电本身不要求自有住房，租户也可申请。",
+      "cost_note": "按一级能效挂机含安装的示例预算3500元，具体以门店报价为准。"
     },
     {
       "id": "fridge_replace_eff",
@@ -177,10 +315,22 @@
       "saving_type": "fixed",
       "saving_value": 190,
       "min_monthly_kwh": 100,
-      "requires_owner": true,
+      "requires_owner": false,
       "needs_installation": true,
-      "tiers": ["deep"],
-      "assumption": "按旧冰箱与新一级能效冰箱的典型年耗电差异估算。"
+      "tiers": [
+        "deep"
+      ],
+      "assumption": "按旧冰箱与新一级能效冰箱的典型年耗电差异估算。",
+      "saving_range": [
+        120,
+        260
+      ],
+      "evidence_level": "engineering_estimate",
+      "evidence_label": "能效参数估算",
+      "source_name": "按旧冰箱与新一级能效冰箱的铭牌耗电量估算",
+      "source_url": "",
+      "source_note": "按旧机老化、容积和使用习惯估算，年节电约120—260 kWh；应以旧机和目标机型铭牌耗电量计算。 购买家电本身不要求自有住房，租户也可申请。",
+      "cost_note": "按一级能效冰箱示例预算3200元，具体以门店报价为准。"
     }
   ]
 }

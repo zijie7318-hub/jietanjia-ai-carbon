@@ -194,7 +194,7 @@ def energy_meta():
 
 @app.route("/api/energy/plans", methods=["POST"])
 def energy_plans():
-    """家庭条件 → 三档确定性方案 → 演示政策初筛。"""
+    """家庭条件 → 三档确定性方案 → 已接入政策候选匹配。"""
     body = request.get_json(silent=True) or {}
     try:
         return jsonify(energy_service.build_energy_response(body))
@@ -225,7 +225,7 @@ def energy_explain():
         "mode": "metadata-filter + local-lexical",
         "clauseCount": len(evidence),
         "policyCount": len({item.get("policyId") for item in evidence}),
-        "demoOnly": True,
+        "coverage": "西安市已接入政策",
     }
     try:
         ai = llm_steps.explain_energy_plan(result, evidence, *llm)
