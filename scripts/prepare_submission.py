@@ -7,6 +7,7 @@
 
 用法：
     .venv\\Scripts\\python.exe scripts\\prepare_submission.py
+    .venv\\Scripts\\python.exe scripts\\prepare_submission.py --skip-docx   # 只重建 ZIP 与测试
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import glob
 import sys
 import zipfile
 from pathlib import Path
@@ -23,6 +25,7 @@ PROJECT = ROOT.parents[1]                        # 项目根目录
 HANDOFF = PROJECT / "output" / "handoff"
 PY = sys.executable
 ZIP_NAME = "第九届传智杯-AI-Web网页赛道-节碳家-源码.zip"
+DOCX_NAME = "节碳家_技术报告_数据来源版.docx"
 
 
 def run(cmd: list[str], cwd: Path, env: dict | None = None) -> str:
@@ -52,6 +55,13 @@ def build_source_zip(target: Path) -> int:
     return len(files)
 
 
+def find_converter() -> Path | None:
+    pattern = os.path.expanduser(
+        "~/.workbuddy/plugins/cache/workbuddy-builtin/workbuddy-docx/*/skills/html-to-doc/scripts/convert_doc.py")
+    hits = sorted(glob.glob(pattern))
+    return Path(hits[-1]) if hits else None
+
+
 def suite(label: str, cmd: list[str], cwd: Path) -> str:
     out = run(cmd, cwd)
     match = re.search(r"(\d+)/(\d+) passed", out)
@@ -75,12 +85,23 @@ def main() -> int:
     run([PY, str(builder)], PROJECT, env)
     report_html = PROJECT / "output" / "jietanjia-docx-20261116" / "stage2" / "formatted-节碳家技术报告.html"
 
-    print("[3/4] 打包源码 ZIP")
+    docx_out = ROOT / "docs" / DOCX_NAME
+    if "--skip-docx" not in sys.argv:
+        print("[3/5] 转换报告 DOCX")
+        converter = find_converter()
+        if converter:
+            run([PY, str(converter), "--html", str(report_html), "--output", str(docx_out),
+                 "--no-preflight", "--no-verify"], PROJECT)
+            print("  %s（%.1f KB）" % (docx_out.name, docx_out.stat().st_size / 1024))
+        else:
+            print("  未找到转换器，跳过。请手动把报告 HTML 转成 DOCX。")
+
+    print("[4/5] 打包源码 ZIP")
     zip_path = HANDOFF / ZIP_NAME
     count = build_source_zip(zip_path)
     print("  %s（%d 个文件，%.1f KB）" % (zip_path.name, count, zip_path.stat().st_size / 1024))
 
-    print("[4/4] 运行全部离线测试")
+    print("[5/5] 运行全部离线测试")
     a = suite("smoke_api", [PY, "tests/smoke_api.py"], ROOT)
     b = suite("test_energy", [PY, "tests/test_energy.py"], ROOT)
     c = suite("test_ai", [PY, "tests/test_ai.py"], ROOT)
@@ -94,9 +115,8 @@ def main() -> int:
           % ((ROOT / "docs" / "节碳家_离线演示.html").stat().st_size / 1024))
     print("  报告 HTML %s" % report_html)
     print("  源码 ZIP  %s" % zip_path)
-    print("\n还剩一件机器做不了的事：把报告 HTML 转成 DOCX，覆盖")
-    print("  docs/节碳家_技术报告_数据来源版.docx")
-    print("  deliverables/节碳家_技术报告_数据来源版.docx")
+    print("  DOCX      docs/%s（%.1f KB）" % (DOCX_NAME, docx_out.stat().st_size / 1024))
+    print("\n下一步只剩分发：把 DOCX 与 ZIP 复制到 deliverables/，再按需发布。")
     return 0 if passed == total else 1
 
 
