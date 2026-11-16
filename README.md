@@ -140,10 +140,10 @@ docs/
 python tests/smoke_api.py    # 39 项
 python tests/test_energy.py  # 50 项
 python tests/test_ai.py      # 26 项
-node tests/smoke_ui.js       # 40 项
+node tests/smoke_ui.js       # 44 项
 ```
 
-当前结果：**155/155 通过**。
+当前结果：**159/159 通过**。
 
 测试覆盖重点：
 

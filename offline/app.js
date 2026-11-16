@@ -384,6 +384,8 @@ function renderPlans(data) {
       ? '无需投入' : heroPayback.replace(' 个月', '') + '<small>个月</small>';
     document.getElementById('heroPreviewHint').textContent = '最近一次：' + balanced.name;
   }
+  document.getElementById('heroPreview').hidden = false;
+  document.getElementById('jtHero').classList.remove('no-preview');
   renderLocalExplanation(data);
 }
 planForm.addEventListener('submit', ev => {
@@ -401,6 +403,8 @@ planForm.addEventListener('submit', ev => {
       .some(v => Number.isNaN(v))) { setPlanError('数字字段格式不正确，请检查后重试。'); return; }
   genPlansBtn.disabled = true; genPlansBtn.textContent = '正在计算…';
   planResultEl.hidden = true;
+  document.getElementById('heroPreview').hidden = true;
+  document.getElementById('jtHero').classList.add('no-preview');
   setProgress(2, false);
   try {
     const data = buildResponse(payload);

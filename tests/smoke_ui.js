@@ -45,6 +45,11 @@ check('页面明确标注政策候选边界', /不代表获批/.test(html) && /�
 check('页面明确标注数值为估算', /不能替代家庭实测/.test(html) && /估算/.test(html));
 check('页面说明仅接入西安市地方政策', /仅接入西安市/.test(html) && /不展示地方补贴/.test(html));
 check('页面展示官方来源入口', /生态环境部/.test(html) && /陕西阶梯电价来源/.test(html));
+check('措施分类使用固定列', /grid-template-columns:minmax\(0,1fr\) 56px 14px/.test(html));
+check('必选字段带红色星号', (html.match(/class="req"/g) || []).length >= 3 && /为必选字段/.test(html));
+check('方案摘要初始隐藏', /class="jt-hero no-preview" id="jtHero"/.test(html)
+  && /id="heroPreview"[^>]*hidden/.test(html));
+check('生成成功后才展示摘要', /heroPreview'\)\.hidden = false/.test(script));
 
 const requiredEndpoints = ['/api/energy/plans', '/api/energy/meta', '/api/energy/explain', '/api/auth/login', '/api/carbon-entries'];
 requiredEndpoints.forEach(api => check('包含接口 ' + api, script.includes(api)));

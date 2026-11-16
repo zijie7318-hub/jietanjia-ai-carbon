@@ -803,6 +803,8 @@ body{background:var(--paper);}
 .tabs-ai{border-color:var(--line-2);}
 .tabs-ai.on{background:var(--red);color:#fff;border-color:var(--red);}
 .jt-hero{max-width:var(--maxw);margin:0 auto;padding:56px 24px 28px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr);gap:48px;align-items:center;}
+.jt-hero.no-preview{grid-template-columns:minmax(0,760px);justify-content:start;}
+.jt-hero.no-preview>div{max-width:760px;}
 .jt-kicker{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--red-dark);background:var(--red-t);border:1px solid #C8E4D8;border-radius:999px;padding:6px 11px;}
 .jt-kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--red);}
 .jt-hero h1{font-size:clamp(38px,5vw,62px);line-height:1.12;letter-spacing:-.04em;margin:18px 0 16px;max-width:700px;}
@@ -895,9 +897,11 @@ body{background:var(--paper);}
 .jt-action-list{display:flex;flex-direction:column;gap:7px;margin:0 0 14px;}
 .jt-action{border-top:1px solid var(--line);padding-top:8px;}
 .jt-action:first-child{border-top:0;padding-top:0;}
-.jt-action summary{cursor:pointer;font-size:12px;font-weight:500;list-style:none;display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
+.jt-action summary{cursor:pointer;font-size:12px;font-weight:500;list-style:none;display:grid;grid-template-columns:minmax(0,1fr) 56px 14px;column-gap:8px;align-items:center;text-align:left;}
 .jt-action summary::-webkit-details-marker{display:none;}
-.jt-action summary:after{content:"+";font-family:var(--mono);color:var(--muted);font-size:14px;line-height:1;}
+.jt-action summary>span:first-child{min-width:0;}
+.jt-action summary>span:nth-child(2){text-align:right;white-space:nowrap;color:var(--muted);font-weight:400;font-size:11px;}
+.jt-action summary:after{content:"+";font-family:var(--mono);color:var(--muted);font-size:14px;line-height:1;text-align:right;}
 .jt-action[open] summary:after{content:"−";}
 .jt-action-body{font-size:11px;color:var(--muted);line-height:1.7;padding:6px 0 2px;}
 .jt-action-body b{color:var(--body);font-weight:500;}
@@ -938,6 +942,10 @@ body{background:var(--paper);}
 .jt-mini b{display:block;color:var(--ink);margin-bottom:3px;}
 .jt-demo-banner{display:flex;gap:9px;align-items:flex-start;background:#FCF4EA;border:1px solid #EED7BF;color:#765032;border-radius:9px;padding:10px 12px;font-size:11px;line-height:1.65;margin-bottom:16px;}
 .jt-demo-banner b{white-space:nowrap;}
+.req{color:var(--red);font-weight:700;margin-left:3px;}
+.jt-form-legend{font-size:11px;color:var(--muted);line-height:1.65;margin:0 0 12px;}
+.jt-form-legend .req{font-size:13px;}
+.jt-optional{font-weight:400;color:var(--muted);font-size:10px;margin-left:3px;}
 @media(max-width:980px){
   .jt-hero{grid-template-columns:1fr;gap:28px;padding-top:34px;}
   .jt-preview{max-width:580px;}
@@ -994,7 +1002,7 @@ body{background:var(--paper);}
   </div>
 </div>
 
-<section class="jt-hero">
+<section class="jt-hero no-preview" id="jtHero">
   <div>
     <span class="jt-kicker"><span class="dot"></span>AI 家庭减碳与补贴助手</span>
     <h1>把节能想法，<br><em>变成算得清的方案。</em></h1>
@@ -1009,7 +1017,7 @@ body{background:var(--paper);}
       <span class="jt-principle">无 AI 也能完整使用</span>
     </div>
   </div>
-  <aside class="jt-preview" aria-label="最近一次方案摘要">
+  <aside class="jt-preview" id="heroPreview" aria-label="最近一次方案摘要" hidden>
     <div class="jt-preview-head">
       <div><b>方案摘要</b><div class="jt-preview-sub" id="heroPreviewHint">生成后显示真实计算结果</div></div>
       <span>RULES / ESTIMATE</span>
@@ -1033,7 +1041,7 @@ body{background:var(--paper);}
       <div>
         <div class="jt-eyebrow">HOUSEHOLD ASSESSMENT</div>
         <h2 id="plansTitle">家庭节能评估</h2>
-        <p>只需填写会影响方案的必要信息。月用电量和月电费至少填一项；都不填时会使用明确标注的工程基线。</p>
+        <p>填写会影响方案的必要信息。建议至少填写月用电量或月电费中的一项；两项都不填时使用工程基线。</p>
       </div>
       <span class="jt-tag" id="dataVersionTag">规则引擎加载中</span>
     </div>
@@ -1041,9 +1049,10 @@ body{background:var(--paper);}
     <div class="jt-demo-banner"><b>数据说明</b><span>电力碳足迹因子来自生态环境部 2024 年公开数据，电价按陕西居民阶梯电价估算，西安政策链接可点击核验。措施节电参数分为公开资料折算、国标参数计算和工程估算，不能替代家庭实测。</span></div>
 
     <form class="jt-form" id="planForm" novalidate>
+      <div class="jt-form-legend"><span class="req" aria-hidden="true">*</span> 为必选字段；月用电量和月电费均可不填，但填写后结果更接近实际账单。</div>
       <div class="jt-form-grid">
         <div class="jt-field">
-          <label for="cityInput">所在城市</label>
+          <label for="cityInput">所在城市<span class="req" aria-hidden="true">*</span></label>
           <select id="cityInput">
             <option value="西安市">西安市（政策与阶梯电价试点）</option>
             <option value="陕西省其他城市">陕西省其他城市（仅电价估算）</option>
@@ -1051,7 +1060,7 @@ body{background:var(--paper);}
           <span class="help">仅接入西安市 2026 年家电政策；陕西其他城市不展示地方补贴，榆林电价口径暂未覆盖。</span>
         </div>
         <div class="jt-field">
-          <label for="housingInput">住房情况</label>
+          <label for="housingInput">住房情况<span class="req" aria-hidden="true">*</span></label>
           <select id="housingInput">
             <option value="own">自有住房</option>
             <option value="rent">租住</option>
@@ -1060,7 +1069,7 @@ body{background:var(--paper);}
           <span class="help">租住会自动排除固定施工和需业主同意的措施。</span>
         </div>
         <div class="jt-field">
-          <label for="residentsInput">家庭人口</label>
+          <label for="residentsInput">家庭人口<span class="req" aria-hidden="true">*</span></label>
           <input type="number" id="residentsInput" min="1" max="20" step="1" value="3" inputmode="numeric">
           <span class="help">用于在缺少电费数据时建立估算基线。</span>
         </div>
@@ -1075,7 +1084,7 @@ body{background:var(--paper);}
           <span class="help">与用电量同时填写时，按实际平均单价计算；只有电费时按陕西阶梯电价近似。</span>
         </div>
         <div class="jt-field">
-          <label for="budgetInput">可接受前期投入 <small>元</small></label>
+          <label for="budgetInput">可接受前期投入 <small class="jt-optional">元，可选</small></label>
           <input type="number" id="budgetInput" min="0" max="200000" step="100" value="8000" inputmode="numeric">
           <span class="help">只筛选单项投入不超过该预算的措施。</span>
         </div>
@@ -1663,6 +1672,8 @@ body{background:var(--paper);}
         ? '无需投入' : heroPayback.replace(' 个月', '') + '<small>个月</small>';
       document.getElementById('heroPreviewHint').textContent = '最近一次：' + balanced.name;
     }
+    document.getElementById('heroPreview').hidden = false;
+    document.getElementById('jtHero').classList.remove('no-preview');
   }
   planForm.addEventListener('submit', async ev => {
     ev.preventDefault();
@@ -1681,6 +1692,8 @@ body{background:var(--paper);}
     genPlansBtn.disabled = true;
     genPlansBtn.textContent = '正在计算…';
     planResultEl.hidden = true;
+    document.getElementById('heroPreview').hidden = true;
+    document.getElementById('jtHero').classList.add('no-preview');
     resetAiExplain();
     setProgress(2, false);
     try {

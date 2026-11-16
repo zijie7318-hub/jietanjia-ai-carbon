@@ -20,7 +20,7 @@
 </div>
 <div class="jt-offline-bar"><b>离线体验版</b> · 节能计算与政策规则在本文件内运行；电力因子和西安政策附公开来源，碳迹保存在当前浏览器，不调用 AI。</div>
 
-<section class="jt-hero">
+<section class="jt-hero no-preview" id="jtHero">
   <div>
     <span class="jt-kicker"><span class="dot"></span>家庭节能 · 离线交互演示</span>
     <h1>把节能想法，<br><em>变成算得清的方案。</em></h1>
@@ -35,7 +35,7 @@
       <span class="jt-principle">政策与因子可核验</span>
     </div>
   </div>
-  <aside class="jt-preview" aria-label="最近一次方案摘要">
+  <aside class="jt-preview" id="heroPreview" aria-label="最近一次方案摘要" hidden>
     <div class="jt-preview-head">
       <div><b>方案摘要</b><div class="jt-preview-sub" id="heroPreviewHint">生成后显示真实计算结果</div></div>
       <span>LOCAL RULES</span>
@@ -59,7 +59,7 @@
       <div>
         <div class="jt-eyebrow">HOUSEHOLD ASSESSMENT</div>
         <h2 id="plansTitle">家庭节能评估</h2>
-        <p>只需填写会影响方案的必要信息。月用电量和月电费至少填一项；都不填时会使用明确标注的工程基线。</p>
+        <p>填写会影响方案的必要信息。建议至少填写月用电量或月电费中的一项；两项都不填时使用工程基线。</p>
       </div>
       <span class="jt-tag" id="dataVersionTag">正在装载本地规则</span>
     </div>
@@ -67,9 +67,10 @@
     <div class="jt-demo-banner"><b>数据说明</b><span>电力碳足迹因子来自生态环境部公开数据，电价按陕西居民阶梯电价估算，西安政策附官方链接。措施节电参数包含公开资料折算和工程估算，不能替代家庭实测。</span></div>
 
     <form class="jt-form" id="planForm" novalidate>
+      <div class="jt-form-legend"><span class="req" aria-hidden="true">*</span> 为必选字段；月用电量和月电费均可不填，但填写后结果更接近实际账单。</div>
       <div class="jt-form-grid">
         <div class="jt-field">
-          <label for="cityInput">所在城市</label>
+          <label for="cityInput">所在城市<span class="req" aria-hidden="true">*</span></label>
           <select id="cityInput">
             <option value="西安市">西安市（政策与阶梯电价试点）</option>
             <option value="陕西省其他城市">陕西省其他城市（仅电价估算）</option>
@@ -77,7 +78,7 @@
           <span class="help">仅接入西安市 2026 年家电政策；陕西其他城市不展示地方补贴，榆林电价口径暂未覆盖。</span>
         </div>
         <div class="jt-field">
-          <label for="housingInput">住房情况</label>
+          <label for="housingInput">住房情况<span class="req" aria-hidden="true">*</span></label>
           <select id="housingInput">
             <option value="own">自有住房</option>
             <option value="rent">租住</option>
@@ -86,7 +87,7 @@
           <span class="help">租住会排除固定施工和需业主同意的措施。</span>
         </div>
         <div class="jt-field">
-          <label for="residentsInput">家庭人口</label>
+          <label for="residentsInput">家庭人口<span class="req" aria-hidden="true">*</span></label>
           <input type="number" id="residentsInput" min="1" max="20" step="1" value="3" inputmode="numeric">
           <span class="help">用于在缺少电费数据时建立估算基线。</span>
         </div>
@@ -101,7 +102,7 @@
           <span class="help">两者同时填写时按实际平均单价计算；只有电费时按陕西阶梯电价近似。</span>
         </div>
         <div class="jt-field">
-          <label for="budgetInput">可接受前期投入 <small>元</small></label>
+          <label for="budgetInput">可接受前期投入 <small class="jt-optional">元，可选</small></label>
           <input type="number" id="budgetInput" min="0" max="200000" step="100" value="8000" inputmode="numeric">
           <span class="help">填 0 时只展示无需前期投入的措施。</span>
         </div>
