@@ -177,3 +177,120 @@ def call_llm(base_url: str, model: str, api_key: str, system: str, user: str,
     except (KeyError, IndexError, TypeError):
         raise LlmError(f"大模型返回结构异常：{raw[:300]}")
     return content if isinstance(content, str) else json.dumps(content, ensure_ascii=False)
+
+
+def call_llm_tools(base_url: str, model: str, api_key: str, messages: list,
+                   tools: list, temperature: float = 0.1, timeout: int = 40) -> dict:
+    """OpenAI 兼容 Function Calling：传 tools 定义，返回 message（含 tool_calls）。
+
+    返回结构：{"content": str|None, "tool_calls": [{"name":..,"arguments":dict,"id":..}]}
+    协议异常统一抛 LlmError，由上层降级。
+    """
+    if not (api_key or "").strip() or not (model or "").strip():
+        raise LlmError("缺少大模型 API Key 或 model 名称")
+    payload = {
+        "model": model.strip(),
+        "messages": messages,
+        "tools": tools,
+        "tool_choice": "auto",
+        "temperature": temperature,
+        "stream": False,
+    }
+    req = urllib.request.Request(
+        _endpoint(base_url),
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": "Bearer " + api_key.strip(),
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", errors="replace")[:300]
+        raise LlmError(f"大模型接口 HTTP {e.code}：{detail}") from e
+    except urllib.error.URLError as e:
+        raise LlmError(f"大模型网络错误：{e.reason}") from e
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        raise LlmError(f"大模型返回非 JSON：{raw[:200]}")
+    if isinstance(data, dict) and data.get("error"):
+        raise LlmError(f"大模型接口报错：{json.dumps(data['error'], ensure_ascii=False)[:300]}")
+    try:
+        msg = data["choices"][0]["message"]
+    except (KeyError, IndexError, TypeError):
+        raise LlmError(f"大模型返回结构异常：{raw[:300]}")
+
+    calls = []
+    for tc in (msg.get("tool_calls") or []):
+        fn = (tc.get("function") or {}) if isinstance(tc, dict) else {}
+        name = str(fn.get("name") or "")
+        args = fn.get("arguments") or {}
+        if isinstance(args, str):
+            try:
+                args = json.loads(args)
+            except json.JSONDecodeError:
+                args = {}
+        if not isinstance(args, dict):
+            args = {}
+        calls.append({"id": tc.get("id") or "", "name": name, "arguments": args})
+    return {"content": msg.get("content"), "tool_calls": calls}
+
+
+def call_llm_vision(base_url: str, model: str, api_key: str, prompt: str,
+                    image_b64: str, mime: str = "image/jpeg",
+                    temperature: float = 0.0, timeout: int = 45) -> str:
+    """OpenAI 兼容视觉识别：image_url data URI 传图，返回模型文本。
+
+    用于把电费账单照片识别成结构化数据；Key 仅单次内存使用。
+    """
+    if not (api_key or "").strip() or not (model or "").strip():
+        raise LlmError("缺少大模型 API Key 或 model 名称")
+    if not image_b64:
+        raise LlmError("缺少图片数据")
+    payload = {
+        "model": model.strip(),
+        "messages": [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {
+                    "url": "data:%s;base64,%s" % (mime, image_b64)}},
+            ],
+        }],
+        "temperature": temperature,
+        "stream": False,
+    }
+    req = urllib.request.Request(
+        _endpoint(base_url),
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": "Bearer " + api_key.strip(),
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", errors="replace")[:300]
+        raise LlmError(f"视觉模型 HTTP {e.code}：{detail}") from e
+    except urllib.error.URLError as e:
+        raise LlmError(f"视觉模型网络错误：{e.reason}") from e
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        raise LlmError(f"视觉模型返回非 JSON：{raw[:200]}")
+    if isinstance(data, dict) and data.get("error"):
+        raise LlmError(f"视觉模型报错：{json.dumps(data['error'], ensure_ascii=False)[:300]}")
+    try:
+        content = data["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError):
+        raise LlmError(f"视觉模型返回结构异常：{raw[:300]}")
+    return content if isinstance(content, str) else json.dumps(content, ensure_ascii=False)

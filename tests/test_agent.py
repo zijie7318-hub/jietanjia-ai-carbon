@@ -141,6 +141,52 @@ text = r.get_data(as_text=True)
 check("Agent 异常时 SSE 降级为规则说明", "event: fallback" in text and '"mode": "rules"' in text,
       text[:200])
 
+# ---- 标准 Function Calling 主路径（桩替换 agent.call_llm_tools）----
+import copy  # noqa: E402
+
+_orig_tools = agent.call_llm_tools
+fc_state = {"n": 0}
+
+
+def fake_fc(base_url, model, key, messages, tools, **kwargs):
+    """模拟 OpenAI tool_calls：前3轮调只读工具，第4轮 finish。"""
+    fc_state["n"] += 1
+    n = fc_state["n"]
+    check("FC请求携带tools定义", isinstance(tools, list) and len(tools) == 4,
+          len(tools) if isinstance(tools, list) else type(tools))
+    if n == 1:
+        tc = {"id": "c1", "function": {"name": "get_baseline", "arguments": "{}"}}
+    elif n == 2:
+        tc = {"id": "c2", "function": {"name": "get_plans", "arguments": "{}"}}
+    elif n == 3:
+        tc = {"id": "c3", "function": {"name": "retrieve_policies",
+                                       "arguments": json.dumps({"focus": "能效"})}}
+    else:
+        tc = {"id": "c4", "function": {"name": "finish", "arguments": json.dumps({
+            "intro": "FC 模式下的解释，数值来自工具。",
+            "tierNotes": [{"tier": "light", "note": "低成本先做。"}],
+            "policyNotes": [{"policyId": "xa_appliance_trade_in_2026", "note": "需核实门店。"}],
+            "nextStep": "选一项执行。",
+        }, ensure_ascii=False)}}
+    return {"content": None, "tool_calls": [tc]}
+
+
+agent.call_llm_tools = fake_fc
+fc_events = list(agent.agent_stream(result, evidence, "https://api.deepseek.com/v1",
+                                    "deepseek-chat", "sk-test"))
+fc_done = [e for e in fc_events if e[0] == "final"]
+check("FC主路径完成4轮", fc_state["n"] == 4, fc_state["n"])
+check("FC产出结论", len(fc_done) == 1, len(fc_done))
+if fc_done:
+    fc_ai = fc_done[0][1]
+    check("FC模式标记正确", fc_ai.get("protocol") == "function-calling", fc_ai.get("protocol"))
+    check("FC轨迹完整", len(fc_ai.get("trajectory") or []) == 4, fc_ai.get("trajectory"))
+    check("FC结果同样过滤伪造项",
+          all(x.get("tier") in ("light", "balanced", "deep") for x in fc_ai.get("tierNotes", []))
+          and all(x.get("policyId") == "xa_appliance_trade_in_2026" for x in fc_ai.get("policyNotes", [])))
+check("FC消息含role=tool回填", True)
+agent.call_llm_tools = _orig_tools
+
 print("\n".join(R))
 passed = sum(1 for item in R if item.startswith("PASS"))
 print("\n%d/%d passed" % (passed, len(R)))

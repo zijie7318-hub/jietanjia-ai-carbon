@@ -62,11 +62,18 @@ python scripts/build_offline_demo.py
 get_baseline（用电基线）→ get_plans（三档数值）→ retrieve_policies（RAG 政策条款）→ finish（提交解释）
 ```
 
+- 采用标准 **Function Calling**（`tools` + `tool_calls`），模型不支持时自动降级到 JSON 文本协议。
 - 工具全部在服务端 `agent.py` 白名单内，未知工具一律拒绝；每轮最多 6 步，防死循环。
 - 工具返回的数值全部来自规则引擎与政策检索，模型不能计算或改写任何金额、节电量、减碳量与资格。
 - 最终解释仍经过与基础解释相同的 ID 白名单、长度截断与承诺/数字拦截。
 - SSE 实时推送「思考 → 调用工具 → 工具结果 → 结论」轨迹；任何异常降级为规则说明，规则方案不受影响。
 - 关闭 Agent 模式时完全走原有 `/api/energy/explain` 链路，行为与历史版本一致。
+
+### 账单照片识别（多模态）
+
+在碳迹日记的"添加照片"处选择电费账单，点击「识别并填入」，服务端 `bill_ocr.py` 调用视觉模型
+读取本期用电量与电费，填入评估表单。图片只在点击识别时随请求发送，识别结果需用户核对后使用。
+详见 `POST /api/energy/ocr-bill`。
 
 ## 快速启动
 
@@ -160,6 +167,8 @@ core → ai-config → nav → ai-explain → plans → diary → account → ai
 | `GET` | `/api/energy/meta` | 数据版本、措施/政策数量和免责声明 |
 | `POST` | `/api/energy/plans` | 家庭条件 → 三档方案 + 政策初筛 |
 | `POST` | `/api/energy/explain` | 重算方案 → 条款检索 → 可选 AI 解释；`stream=1` 时返回 SSE |
+| `POST` | `/api/energy/agent` | Function Calling 工具型 Agent；`stream=1` 时返回轨迹 SSE |
+| `POST` | `/api/energy/ocr-bill` | 账单照片识别（base64 图片 → 用电量/电费，需视觉模型） |
 | `POST` | `/api/auth/register` | 注册 |
 | `POST` | `/api/auth/login` | 登录 |
 | `POST` | `/api/auth/logout` | 登出并吊销令牌 |
@@ -178,11 +187,12 @@ core → ai-config → nav → ai-explain → plans → diary → account → ai
 python tests/smoke_api.py    # 43 项
 python tests/test_energy.py  # 52 项
 python tests/test_ai.py      # 32 项
-python tests/test_agent.py   # 18 项：工具型 Agent 规划/调用/校验/降级
+python tests/test_agent.py   # 28 项：Function Calling 工具循环 + JSON 降级
+python tests/test_ocr.py     # 12 项：账单识别、数值校验、越界过滤、接口
 node tests/smoke_ui.js       # 52 项
 ```
 
-当前结果：**197/197 通过**。
+当前结果：**219/219 通过**。
 
 另有两项不改变计数的门禁：
 

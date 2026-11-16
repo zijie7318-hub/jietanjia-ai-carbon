@@ -46,6 +46,7 @@ import ht_api  # noqa: E402
 from llm_review import LlmError, MODEL_PRESETS  # noqa: E402
 import llm_steps  # noqa: E402
 import agent  # noqa: E402  工具型 Agent（新增，原 explain 端点不受影响）
+import bill_ocr  # noqa: E402  电费账单照片识别（新增）
 
 app = Flask(__name__)
 app.register_blueprint(ht_bp)
@@ -353,6 +354,37 @@ def _agent_stream(result, evidence, retrieval, llm):
             "retrieval": retrieval,
         })
     yield _sse("end", {})
+
+
+@app.route("/api/energy/ocr-bill", methods=["POST"])
+def energy_ocr_bill():
+    """电费账单照片识别：视觉模型读图，返回用电量/电费供用户确认后填表。"""
+    body = request.get_json(silent=True) or {}
+    llm = _llm_args(body)
+    if not llm:
+        return jsonify({
+            "success": False,
+            "error": "缺少或不受支持的大模型配置，请检查 AI 服务地址后重试",
+        }), 400
+
+    image = str(body.get("image") or "")
+    mime = str(body.get("mime") or "image/jpeg").strip()
+    if not image:
+        return jsonify({"success": False, "error": "缺少图片数据"}), 400
+    if mime not in ("image/jpeg", "image/png", "image/webp"):
+        return jsonify({"success": False, "error": "不支持的图片格式"}), 400
+    # base64 体积粗估：4MB 上限，避免超大请求
+    if len(image) > 6_000_000:
+        return jsonify({"success": False, "error": "图片过大，请压缩后再试（上限约 4MB）"}), 400
+
+    try:
+        data = bill_ocr.recognize_bill(image, mime, *llm)
+        return jsonify({"success": True, **data})
+    except LlmError as exc:
+        return jsonify({"success": False, "error": str(exc)[:200]}), 502
+    except Exception:
+        app.logger.exception("bill ocr failure")
+        return jsonify({"success": False, "error": "账单识别暂不可用，请手动填写"}), 502
 
 
 @app.route("/api/energy/agent", methods=["POST"])

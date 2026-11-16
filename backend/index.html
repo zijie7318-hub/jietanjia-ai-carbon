@@ -1334,6 +1334,18 @@ body{background:var(--paper);}
 .mm-shot-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .mm-shot-meta span{font-size:11px;color:var(--muted);}
 .mm-shot-remove{border:none;background:none;color:var(--red);font-family:inherit;font-size:11px;cursor:pointer;text-decoration:underline;}
+.mm-shot-ocr{
+  border:1px solid var(--red);background:var(--red);color:#fff;font-family:inherit;
+  font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;cursor:pointer;
+  transition:transform var(--dur-fast) var(--ease-bounce),background-color var(--dur-quick);
+}
+.mm-shot-ocr:hover{background:var(--red-dark);}
+.mm-shot-ocr:active{transform:scale(.95);}
+.mm-shot-ocr:disabled{opacity:.55;cursor:wait;}
+.mm-ocr-msg{font-size:11.5px;line-height:1.6;margin-top:6px;color:var(--muted);}
+.mm-ocr-msg:empty{display:none;}
+.mm-ocr-msg.ok{color:var(--green);}
+.mm-ocr-msg.err{color:var(--red);}
 
 /* 朗读按钮（AI 解释区、碳迹反馈区通用） */
 .mm-speak{
@@ -1624,7 +1636,8 @@ body{background:var(--paper);}
         <div class="mm-live" id="mmLive" aria-live="polite"></div>
         <div class="mm-shot" id="mmShot" hidden>
           <img id="mmShotImg" alt="所选照片的本地预览">
-          <div class="mm-shot-meta"><span id="mmShotName">照片仅在本地预览，不会上传或保存</span><button type="button" class="mm-shot-remove" id="mmShotRemove">移除</button></div>
+          <div class="mm-shot-meta"><span id="mmShotName">照片仅在本地预览，不会上传或保存</span><button type="button" class="mm-shot-ocr" id="mmShotOcr">识别并填入</button><button type="button" class="mm-shot-remove" id="mmShotRemove">移除</button></div>
+          <div class="mm-ocr-msg" id="mmOcrMsg" role="status"></div>
         </div>
         <div class="mm-note">浏览器原生能力：无 Web Speech 支持时按钮自动禁用，文字输入不受影响。</div>
         <div class="jt-entry-status">
@@ -2054,22 +2067,90 @@ body{background:var(--paper);}
       if (voiceLabel) voiceLabel.textContent = '语音输入';
     }
 
-    // ---- 照片本地预览（不上传，仅在内存 object URL） ----
+    // ---- 照片：本地预览 + AI 识别填入表单（图片只在点击识别时随请求发送） ----
     var lastObjectUrl = null;
+    var currentFile = null;
+    var ocrBtn = document.getElementById('mmShotOcr');
+    var ocrMsg = document.getElementById('mmOcrMsg');
     if (photoBtn && photoInput) {
       photoBtn.addEventListener('click', function () { photoInput.click(); });
       photoInput.addEventListener('change', function () {
         var f = photoInput.files && photoInput.files[0];
         if (!f) return;
+        currentFile = f;
         if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl);
         lastObjectUrl = URL.createObjectURL(f);
         shotImg.src = lastObjectUrl;
-        shotName.textContent = '本地预览：' + f.name + '（不会上传或保存）';
+        shotName.textContent = '已选择：' + f.name + '（识别时才会发送）';
+        if (ocrMsg) { ocrMsg.textContent = ''; ocrMsg.className = 'mm-ocr-msg'; }
         shot.hidden = false;
       });
       shotRemove.addEventListener('click', function () {
         shot.hidden = true; shotImg.removeAttribute('src'); photoInput.value = '';
+        currentFile = null;
+        if (ocrMsg) { ocrMsg.textContent = ''; ocrMsg.className = 'mm-ocr-msg'; }
         if (lastObjectUrl) { URL.revokeObjectURL(lastObjectUrl); lastObjectUrl = null; }
+      });
+
+      if (ocrBtn) ocrBtn.addEventListener('click', function () {
+        if (!currentFile) return;
+        // 需要已配置 AI（视觉模型）——用隐藏的 AI 配置读取当前模型
+        var baseUrl = '', model = '', key = '';
+        try {
+          if (typeof currentLlm === 'function') {
+            var c = currentLlm(); baseUrl = c.baseUrl || ''; model = c.model || '';
+          }
+          if (typeof aiPair === 'function') {
+            var p = aiPair(); baseUrl = p.baseUrl || baseUrl; model = p.model || model;
+          }
+          if (typeof readKey === 'function') key = readKey() || '';
+          if (!key && typeof getKey === 'function') key = getKey() || '';
+        } catch (e) {}
+        if (!baseUrl || !model || !key) {
+          if (ocrMsg) { ocrMsg.textContent = '请先在右上角「开启 AI」配置模型（视觉识别需要 AI 服务）；也可手动填写用电量。'; ocrMsg.className = 'mm-ocr-msg err'; }
+          return;
+        }
+        ocrBtn.disabled = true;
+        if (ocrMsg) { ocrMsg.textContent = '正在识别账单…'; ocrMsg.className = 'mm-ocr-msg'; }
+        var reader = new FileReader();
+        reader.onload = function () {
+          var b64 = String(reader.result || '').split(',')[1] || '';
+          fetch(apiUrl('/api/energy/ocr-bill'), {
+            method: 'POST',
+            headers: Object.assign({}, aiJsonHeaders()),
+            body: JSON.stringify({
+              image: b64,
+              mime: currentFile.type || 'image/jpeg',
+              baseUrl: baseUrl, model: model
+            })
+          }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+            .then(function (res) {
+              var j = res.j || {};
+              if (!res.ok || !j.success) throw new Error(j.error || '识别失败');
+              var filled = [];
+              if (j.monthlyKwh != null) {
+                var kEl = document.getElementById('monthlyKwhInput');
+                if (kEl) { kEl.value = j.monthlyKwh; filled.push('用电量 ' + j.monthlyKwh + ' kWh'); }
+              }
+              if (j.monthlyBill != null) {
+                var bEl = document.getElementById('monthlyBillInput');
+                if (bEl) { bEl.value = j.monthlyBill; filled.push('电费 ' + j.monthlyBill + ' 元'); }
+              }
+              if (ocrMsg) {
+                ocrMsg.textContent = (filled.length ? '已填入：' + filled.join('、') + '。请核对后生成方案。' : '未识别到明确数字，请手动填写。') + (j.note ? '（' + j.note + '）' : '');
+                ocrMsg.className = 'mm-ocr-msg ' + (filled.length ? 'ok' : 'err');
+              }
+            })
+            .catch(function (err) {
+              if (ocrMsg) { ocrMsg.textContent = '识别失败：' + (err.message || '请重试') + '。可手动填写用电量。'; ocrMsg.className = 'mm-ocr-msg err'; }
+            })
+            .finally(function () { ocrBtn.disabled = false; });
+        };
+        reader.onerror = function () {
+          ocrBtn.disabled = false;
+          if (ocrMsg) { ocrMsg.textContent = '读取图片失败，请重试。'; ocrMsg.className = 'mm-ocr-msg err'; }
+        };
+        reader.readAsDataURL(currentFile);
       });
     }
 
