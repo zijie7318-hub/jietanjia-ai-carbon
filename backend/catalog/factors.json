@@ -12,7 +12,7 @@
   "tariff_profile": {
     "region": "陕西省（不含榆林）",
     "customer_type": "一户一表居民用户",
-    "annual_cycle": "7月1日至次年6月30日按年累计",
+    "annual_cycle": "按年累计（具体周期以当地供电部门公布为准）",
     "tiers": [
       { "label": "第一档", "limit_kwh": 2160, "rate_yuan_per_kwh": 0.4983 },
       { "label": "第二档", "limit_kwh": 4200, "rate_yuan_per_kwh": 0.5483 },

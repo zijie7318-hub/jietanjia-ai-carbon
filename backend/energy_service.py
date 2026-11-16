@@ -197,7 +197,8 @@ def _baseline(household: dict, factors: dict) -> dict:
 
     monthly_kwh = round(monthly_kwh, 1)
     annual_kwh = round(monthly_kwh * 12, 1)
-    annual_bill = round(float(bill_input), 2) if bill_input is not None else round(monthly_kwh * tariff * 12, 2)
+    # 月电费需乘 12 才是年费；原实现少乘 12，导致"只填月电费"时年账单偏小
+    annual_bill = round(float(bill_input) * 12, 2) if bill_input is not None else round(monthly_kwh * tariff * 12, 2)
     if kwh_input is not None:
         source = "按你填写的月用电量计算"
     elif bill_input is not None:
