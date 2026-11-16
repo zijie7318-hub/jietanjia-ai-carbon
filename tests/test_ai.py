@@ -135,6 +135,21 @@ except llm_steps.LlmError:
     rejected = True
 check("碳迹反馈拒绝把 JSON 当作日记正文", rejected)
 
+llm_steps.call_llm = lambda *a, **k: "你保证领取补贴，而且一年可以省下 500 元。"
+r = client.post("/api/energy/explain", json=PAYLOAD, headers=LLM)
+forbidden = r.get_json() or {}
+check("保证补贴/数字承诺触发降级", r.status_code == 200
+      and forbidden.get("ai", {}).get("mode") == "rules", forbidden.get("ai"))
+
+llm_steps.call_llm = lambda *a, **k: "你已经完成这项节能行动，实际减碳效果很好。"
+try:
+    llm_steps.gen_carbon_feedback("测试计划", "计划执行",
+                                  "https://api.deepseek.com/v1", "m", "sk-x")
+    planned_done_rejected = False
+except llm_steps.LlmError:
+    planned_done_rejected = True
+check("计划行动不能被写成已完成", planned_done_rejected)
+
 print("\n".join(R))
 passed = sum(1 for item in R if item.startswith("PASS"))
 print("\n%d/%d passed" % (passed, len(R)))

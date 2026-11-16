@@ -80,6 +80,17 @@ check("用户记录互相隔离", other == [], other)
 client.delete("/api/carbon-entries/%s" % record_id, headers=headers(beta_token))
 still_there = client.get("/api/carbon-entries", headers=headers(alpha_token)).get_json().get("items", [])
 check("不能删除其他用户的记录", len(still_there) == 1, still_there)
+check("不能修改其他用户的记录", client.patch(
+    "/api/carbon-entries/%s" % record_id, json={"status": "done"},
+    headers=headers(beta_token)).status_code == 404)
+check("非法状态被拒绝", client.patch(
+    "/api/carbon-entries/%s" % record_id, json={"status": "approved"},
+    headers=headers(alpha_token)).status_code == 400)
+r = client.patch("/api/carbon-entries/%s" % record_id, json={"status": "done"},
+                 headers=headers(alpha_token))
+check("计划可标记为已完成", r.status_code == 200 and r.get_json().get("status") == "done", r.get_json())
+updated = client.get("/api/carbon-entries", headers=headers(alpha_token)).get_json().get("items", [])
+check("更新后状态持久化", updated and updated[0].get("scene") == "done", updated)
 client.delete("/api/carbon-entries/%s" % record_id, headers=headers(alpha_token))
 check("本人可删除记录", client.get("/api/carbon-entries", headers=headers(alpha_token)).get_json().get("items") == [])
 

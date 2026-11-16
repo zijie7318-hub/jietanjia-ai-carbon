@@ -92,6 +92,13 @@ check("低预算时方案不超预算", all(
     p["upfrontCost"] <= 50 and p["withinBudget"] for p in low_body["plans"]),
     [(p["tier"], p["upfrontCost"], p["withinBudget"]) for p in low_body["plans"]])
 
+zero_budget = dict(own_payload, budget=0)
+zero_body = client.post("/api/energy/plans", json=zero_budget).get_json()
+check("零预算被原样保留", zero_body["budget"] == 0, zero_body["budget"])
+check("零预算不产生付费措施", all(
+    p["upfrontCost"] == 0 and p["withinBudget"] for p in zero_body["plans"]),
+    [(p["tier"], p["upfrontCost"], p["withinBudget"]) for p in zero_body["plans"]])
+
 bill_payload = {"city": "西安市", "housing": "rent", "residents": 2, "monthlyBill": 110, "tariff": 0.5}
 bill_body = client.post("/api/energy/plans", json=bill_payload).get_json()
 check("月电费可按电价换算用电量", bill_body["baseline"]["monthlyKwh"] == 220.0, bill_body["baseline"])
@@ -103,7 +110,8 @@ check("缺省用电量时明确使用默认基线", default_body["baseline"]["is
       default_body["baseline"])
 check("默认基线按人口计算", default_body["baseline"]["monthlyKwh"] == 140.0, default_body["baseline"])
 
-for field, value in (("residents", 0), ("residents", "abc"), ("monthlyKwh", -1), ("budget", -10)):
+for field, value in (("residents", 0), ("residents", "abc"), ("monthlyKwh", 0),
+                     ("monthlyKwh", -1), ("budget", -10)):
     bad = dict(own_payload)
     bad[field] = value
     response = client.post("/api/energy/plans", json=bad)
