@@ -45,6 +45,7 @@ from ht_api import ht_bp  # noqa: E402
 import ht_api  # noqa: E402
 from llm_review import LlmError, MODEL_PRESETS  # noqa: E402
 import llm_steps  # noqa: E402
+import agent  # noqa: E402  工具型 Agent（新增，原 explain 端点不受影响）
 
 app = Flask(__name__)
 app.register_blueprint(ht_bp)
@@ -323,6 +324,81 @@ def energy_explain():
         "aiNote": note,
         "retrieval": retrieval,
     })
+
+
+def _agent_stream(result, evidence, retrieval, llm):
+    """Agent SSE：实时逐条推送思考/工具轨迹，结束时给出校验后的解释。"""
+    yield _sse("start", {"retrieval": retrieval, "tools": list(agent.TOOL_NAMES)})
+    try:
+        for kind, payload in agent.agent_stream(result, evidence, *llm):
+            if kind == "final":
+                yield _sse("done", {
+                    "ai": payload,
+                    "aiNote": "AI Agent 已调用工具完成分析；全部数值来自规则计算与政策检索，模型未参与计算。",
+                    "retrieval": retrieval,
+                })
+            elif kind == "error":
+                yield _sse("fallback", {
+                    "ai": energy_service.build_rule_explanation(result),
+                    "aiNote": "Agent 暂不可用，已使用规则说明：%s" % str(payload)[:160],
+                    "retrieval": retrieval,
+                })
+            else:
+                yield _sse(kind, payload)
+    except Exception:
+        app.logger.exception("agent stream failure")
+        yield _sse("fallback", {
+            "ai": energy_service.build_rule_explanation(result),
+            "aiNote": "Agent 暂不可用，已使用规则说明。",
+            "retrieval": retrieval,
+        })
+    yield _sse("end", {})
+
+
+@app.route("/api/energy/agent", methods=["POST"])
+def energy_agent():
+    """工具型 Agent：模型多轮调用只读工具，数值由规则与 RAG 权威产出。
+
+    与 /api/energy/explain 并存；失败同样降级为规则说明。
+    """
+    body = request.get_json(silent=True) or {}
+    llm = _llm_args(body)
+    if not llm:
+        return jsonify({
+            "success": False,
+            "error": "缺少或不受支持的大模型配置，请检查 AI 服务地址后重试",
+        }), 400
+    try:
+        result = energy_service.build_energy_response(body)
+    except energy_service.EnergyInputError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+
+    evidence = policy_retriever.retrieve(result.get("policies") or [], result.get("plans") or [])
+    retrieval = {
+        "mode": "agent-tools + metadata-filter + local-lexical",
+        "clauseCount": len(evidence),
+        "policyCount": len({item.get("policyId") for item in evidence}),
+        "coverage": "西安市已接入政策",
+    }
+    if body.get("stream"):
+        return Response(
+            _agent_stream(result, evidence, retrieval, llm),
+            mimetype="text/event-stream",
+            headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"},
+        )
+
+    try:
+        ai = agent.run_agent(result, evidence, *llm)
+        note = "AI Agent 已调用工具完成分析；数值与资格未由模型决定。"
+    except LlmError as exc:
+        ai = energy_service.build_rule_explanation(result)
+        note = "Agent 暂不可用，已使用规则说明：%s" % str(exc)[:160]
+    except Exception:
+        app.logger.exception("agent failure")
+        ai = energy_service.build_rule_explanation(result)
+        note = "Agent 暂不可用，已使用规则说明。"
+
+    return jsonify({"success": True, "ai": ai, "aiNote": note, "retrieval": retrieval})
 
 
 @app.route("/api/llm/carbon-feedback", methods=["POST"])
