@@ -45,28 +45,67 @@ function normalizeInput(payload) {
   const budget = parseNumber(payload.budget, '前期预算', 0, 200000, Number(FACTORS.default_upfront_budget));
   return { city, housing, residents, monthlyKwh, monthlyBill, budget };
 }
+function tierEstimate(annualKwh, profile) {
+  let remaining = Math.max(0, annualKwh), lower = 0, total = 0, highest = null;
+  for (const tier of profile.tiers || []) {
+    const upper = tier.limit_kwh == null ? Infinity : Number(tier.limit_kwh);
+    const band = Math.min(remaining, Math.max(0, upper - lower));
+    if (band > 0) {
+      total += band * Number(tier.rate_yuan_per_kwh || 0);
+      highest = tier;
+      remaining -= band;
+    }
+    lower = upper;
+    if (remaining <= 0) break;
+  }
+  return {
+    annualCost: round2(total),
+    effectiveRate: annualKwh > 0 ? total / annualKwh : Number(profile.reference_rate_yuan_per_kwh || 0),
+    tierLabel: (highest && highest.label) || '第一档'
+  };
+}
 function buildBaseline(h) {
-  const tariff = Number(FACTORS.default_tariff_yuan_per_kwh);
-  let monthlyKwh, source, isDefault = false;
-  if (h.monthlyKwh !== null) {
+  const profile = FACTORS.tariff_profile || {};
+  const reference = Number(profile.reference_rate_yuan_per_kwh || 0.5483);
+  let monthlyKwh, tariff, source, tariffSource, estimated = true;
+  if (h.monthlyKwh !== null && h.monthlyBill !== null) {
     monthlyKwh = h.monthlyKwh;
+    tariff = h.monthlyBill / monthlyKwh;
+    if (tariff < 0.1 || tariff > 2.0) throw new Error('月电费与月用电量比例异常，请检查账单或只填其中一项');
     source = '按你填写的月用电量计算';
+    tariffSource = '按你填写的月电费 ÷ 月用电量计算实际平均单价';
+    estimated = false;
+  } else if (h.monthlyKwh !== null) {
+    monthlyKwh = h.monthlyKwh;
+    const tier = tierEstimate(monthlyKwh * 12, profile);
+    tariff = tier.effectiveRate;
+    source = '按你填写的月用电量计算';
+    tariffSource = '按陕西居民年阶梯电价估算（年化后所处' + tier.tierLabel + '）';
   } else if (h.monthlyBill !== null) {
-    monthlyKwh = h.monthlyBill / tariff;
-    source = '按你填写的月电费除以 ' + tariff.toFixed(2) + ' 元/kWh 估算';
+    monthlyKwh = h.monthlyBill / reference;
+    tariff = reference;
+    source = '按你填写的月电费反推用电量';
+    tariffSource = '仅有月电费，按陕西第二档 ' + reference.toFixed(4) + ' 元/kWh 近似反推';
   } else {
     monthlyKwh = h.residents * Number(FACTORS.default_monthly_kwh_per_person);
-    source = '未填用电量，按每人每月 ' + FACTORS.default_monthly_kwh_per_person + ' kWh 的演示基线估算';
-    isDefault = true;
+    const tier = tierEstimate(monthlyKwh * 12, profile);
+    tariff = tier.effectiveRate;
+    source = '未填用电量，按每人每月 ' + FACTORS.default_monthly_kwh_per_person + ' kWh 的工程基线估算';
+    tariffSource = '无账单数据，按工程基线及陕西年阶梯电价估算';
   }
   monthlyKwh = round1(monthlyKwh);
   return {
     monthlyKwh,
     annualKwh: round1(monthlyKwh * 12),
-    tariff,
-    monthlyBill: round2(monthlyKwh * tariff),
+    tariff: round2(tariff * 10000) / 10000,
+    monthlyBill: h.monthlyBill !== null ? round2(h.monthlyBill) : round2(monthlyKwh * tariff),
+    annualBill: h.monthlyBill !== null ? round2(h.monthlyBill * 12) : round2(monthlyKwh * tariff * 12),
     source,
-    isDefault
+    tariffSource,
+    tariffEstimated: estimated,
+    tariffRegion: profile.region || '陕西省',
+    tariffCaveat: profile.caveat || '',
+    isDefault: h.monthlyKwh === null && h.monthlyBill === null
   };
 }
 function savingOf(action, baseline) {
@@ -83,13 +122,23 @@ function actionCard(action, baseline) {
   const money = kwh * baseline.tariff;
   const upfront = Number(action.upfront_cost || 0);
   const payback = upfront === 0 ? 0 : (money > 0 ? round1(upfront / (money / 12)) : null);
+  let annualKwhRange = null;
+  if (Array.isArray(action.saving_range) && action.saving_range.length === 2) {
+    annualKwhRange = action.saving_type === 'percent'
+      ? [round1(baseline.annualKwh * Number(action.saving_range[0])),
+         round1(baseline.annualKwh * Number(action.saving_range[1]))]
+      : [round1(Number(action.saving_range[0])), round1(Number(action.saving_range[1]))];
+  }
   return {
     id: action.id, name: action.name, category: action.category,
     difficulty: action.difficulty, upfrontCost: round2(upfront),
     annualKwhSaved: round1(kwh), annualMoneySaved: round2(money),
     annualCo2eKg: round1(kwh * Number(FACTORS.kg_co2e_per_kwh)),
     paybackMonths: payback, requiresOwner: !!action.requires_owner,
-    needsInstallation: !!action.needs_installation, assumption: action.assumption
+    needsInstallation: !!action.needs_installation, assumption: action.assumption,
+    annualKwhRange, evidenceLabel: action.evidence_label,
+    sourceName: action.source_name, sourceUrl: action.source_url || '',
+    sourceNote: action.source_note || action.assumption, costNote: action.cost_note
   };
 }
 function trimToBudget(list, budget) {
@@ -142,22 +191,27 @@ function matchPolicies(household, actionIds) {
     const reasons = [];
     let ok = true;
     if (today < policy.valid_from || today > policy.valid_to) {
-      ok = false; reasons.push('当前日期不在演示有效期内');
+      ok = false; reasons.push('当前日期不在政策有效期内');
     } else {
-      reasons.push('当前日期在演示有效期内');
+      reasons.push('当前日期在政策有效期内');
     }
     if (policy.requires_owner && household.housing !== 'own') {
-      ok = false; reasons.push('该演示政策要求自有住房');
+      ok = false; reasons.push('该政策要求自有住房');
     } else if (policy.requires_owner) {
       reasons.push('满足自有住房条件');
     }
     return [{
       id: policy.id, title: policy.title, region: policy.region,
-      status: ok ? 'likely' : 'ineligible', eligible: ok, benefit: policy.benefit,
-      requirements: policy.requirements || [], application: policy.application,
-      actionIds: related, reasons, validFrom: policy.valid_from, validTo: policy.valid_to,
+      status: ok ? 'candidate' : 'ineligible',
+      statusLabel: ok ? '涉及此政策 · 条件待确认' : '当前不适用',
+      eligible: ok, benefit: policy.benefit,
+      requirements: policy.requirements || [], manualChecks: policy.manual_checks || [],
+      application: policy.application, actionIds: related, reasons,
+      validFrom: policy.valid_from, validTo: policy.valid_to,
       isDemo: !!policy.is_demo, sourceName: policy.source_name,
-      sourceUrl: policy.source_url || '', updatedAt: policy.updated_at
+      sourceUrl: policy.source_url || '', sourceSecondaryUrl: policy.source_secondary_url || '',
+      sourceRetrievedAt: policy.source_retrieved_at, updatedAt: policy.updated_at,
+      disclaimer: policy.disclaimer
     }];
   });
 }
@@ -170,15 +224,28 @@ function buildResponse(payload) {
   plans.forEach(plan => {
     plan.policyIds = policies.filter(p => p.actionIds.some(id => plan.actionIds.includes(id))).map(p => p.id);
   });
+  const coverageItems = FACTORS.policy_coverage || [];
+  const citySupported = coverageItems.some(region => normalizeRegion(region) === normalizeRegion(household.city));
+  const coverageMessage = citySupported
+    ? (policies.length ? '已接入西安市地方政策。政策卡只做候选匹配，能效等级、活动门店和材料条件仍需用户确认。'
+      : '已接入西安市地方政策，但当前方案的措施不属于已收录政策范围。')
+    : '当前仅接入西安市地方政策。该城市不展示地方补贴；未提供实际电费时，电价按陕西参考阶梯估算。';
   return {
     household, baseline, budget: household.budget, plans, policies,
+    coverage: { citySupported, supportedRegions: coverageItems, message: coverageMessage },
     meta: {
       actionsVersion: CATALOG.actions.version,
       policiesVersion: CATALOG.policies.version,
       factorVersion: FACTORS.version,
       factorKgCo2ePerKwh: FACTORS.kg_co2e_per_kwh,
       factorSource: FACTORS.source,
-      assumptions: [FACTORS.disclaimer, CATALOG.actions.disclaimer, CATALOG.policies.disclaimer]
+      factorUrl: FACTORS.source_url,
+      factorScope: FACTORS.factor_scope,
+      tariffSource: (FACTORS.tariff_profile || {}).source,
+      tariffUrl: (FACTORS.tariff_profile || {}).source_url,
+      policyCoverage: coverageItems,
+      assumptions: [FACTORS.disclaimer, CATALOG.actions.disclaimer, CATALOG.policies.disclaimer,
+        (FACTORS.tariff_profile || {}).caveat]
     }
   };
 }
@@ -219,12 +286,21 @@ function paybackText(months) {
   return Number(months) === 0 ? '无需投入' : num(months, 1) + ' 个月';
 }
 function planCardHtml(plan, recommended) {
-  const actionsHtml = plan.actions.map(action =>
-    '<details class="jt-action"><summary><span>' + esc(action.name) + '</span><span>' + esc(action.category || '')
-    + '</span></summary><div class="jt-action-body"><b>年节电</b> ' + num(action.annualKwhSaved)
-    + ' kWh · <b>年节省</b> ' + fmt(action.annualMoneySaved) + ' · <b>投入</b> ' + fmt(action.upfrontCost)
-    + ' · <b>回收</b> ' + paybackText(action.paybackMonths) + '<br>' + esc(action.assumption || '') + '</div></details>'
-  ).join('');
+  const actionsHtml = plan.actions.map(action => {
+    const range = Array.isArray(action.annualKwhRange) && action.annualKwhRange.length === 2
+      ? '，参考区间 ' + num(action.annualKwhRange[0]) + '–' + num(action.annualKwhRange[1]) + ' kWh' : '';
+    const sourceUrl = /^https?:\/\//i.test(action.sourceUrl || '') ? action.sourceUrl : '';
+    const source = sourceUrl
+      ? '<a href="' + esc(sourceUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(action.sourceName || '查看来源') + '</a>'
+      : esc(action.sourceName || '工程假设');
+    return '<details class="jt-action"><summary><span>' + esc(action.name) + '</span><span>' + esc(action.category || '')
+      + '</span></summary><div class="jt-action-body"><b>年节电</b> ' + num(action.annualKwhSaved)
+      + ' kWh · <b>年节省</b> ' + fmt(action.annualMoneySaved) + ' · <b>投入</b> ' + fmt(action.upfrontCost)
+      + ' · <b>回收</b> ' + paybackText(action.paybackMonths) + '<br>' + esc(action.assumption || '')
+      + '<div class="jt-action-evidence"><b>依据等级：</b>' + esc(action.evidenceLabel || '工程估算') + range
+      + '<br><b>依据：</b>' + source + (action.sourceNote ? '<br>' + esc(action.sourceNote) : '')
+      + (action.costNote ? '<br><b>成本口径：</b>' + esc(action.costNote) : '') + '</div></div></details>';
+  }).join('');
   return '<article class="jt-plan' + (recommended ? ' recommended' : '') + '">'
     + '<div class="jt-plan-top"><div><div class="jt-plan-tier">' + esc(plan.tier.toUpperCase())
     + '</div><h3>' + esc(plan.name) + '</h3></div>' + (recommended ? '<span class="jt-rec">均衡参考</span>' : '')
@@ -241,15 +317,21 @@ function planCardHtml(plan, recommended) {
 function policyCardHtml(policy) {
   const ok = !!policy.eligible;
   const sourceUrl = /^https?:\/\//i.test(policy.sourceUrl || '') ? policy.sourceUrl : '';
+  const secondaryUrl = /^https?:\/\//i.test(policy.sourceSecondaryUrl || '') ? policy.sourceSecondaryUrl : '';
   return '<article class="jt-policy"><div class="jt-policy-head"><h4>' + esc(policy.title) + '</h4>'
-    + '<span class="jt-status ' + (ok ? 'ok' : 'no') + '">' + (ok ? '初筛符合' : '未通过初筛') + '</span></div>'
+    + '<span class="jt-status ' + (ok ? 'ok' : 'no') + '">' + esc(policy.statusLabel || '') + '</span></div>'
     + '<p>' + esc(policy.benefit || '') + '</p><div class="jt-policy-meta"><span>' + esc(policy.region)
     + '</span><span>有效期 ' + esc(policy.validFrom + ' 至 ' + policy.validTo) + '</span></div>'
-    + '<div class="jt-policy-reason"><b>判断依据：</b>' + esc(policy.reasons.join('；'))
-    + (policy.requirements.length ? '<br><b>材料条件：</b>' + esc(policy.requirements.join('、')) : '') + '</div>'
-    + '<div class="jt-policy-demo">演示政策，不构成申领依据。' + (sourceUrl
+    + '<div class="jt-policy-reason"><b>自动初筛：</b>' + esc(policy.reasons.join('；'))
+    + (policy.manualChecks.length ? '<br><b>仍需人工确认：</b>' + esc(policy.manualChecks.join('、')) : '')
+    + (policy.requirements.length ? '<br><b>材料条件：</b>' + esc(policy.requirements.join('、')) : '')
+    + '<br><b>边界：</b>' + esc(policy.disclaimer || '') + '</div>'
+    + '<div class="jt-policy-demo">政策来源：' + (sourceUrl
       ? '<a href="' + esc(sourceUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(policy.sourceName || '政策原文') + '</a>'
-      : esc(policy.sourceName || '')) + '</div></article>';
+      : esc(policy.sourceName || '未提供'))
+    + (secondaryUrl ? ' · <a href="' + esc(secondaryUrl) + '" target="_blank" rel="noopener noreferrer">实施公告</a>' : '')
+    + (policy.sourceRetrievedAt ? ' · 检索于 ' + esc(policy.sourceRetrievedAt) : '')
+    + '</div></article>';
 }
 function renderLocalExplanation(data) {
   const eligiblePolicies = data.policies.filter(p => p.eligible);
@@ -261,9 +343,9 @@ function renderLocalExplanation(data) {
     + data.plans.map(p => '<div class="jt-ai-tier"><b>' + esc(p.name) + '</b><span>包含 '
       + p.actions.length + ' 项措施，预计年节电约 ' + num(p.annualKwhSaved) + ' kWh，前期投入约 '
       + fmt(p.upfrontCost) + '。</span></div>').join('')
-    + (eligiblePolicies.length ? '<p><b>政策初筛：</b>找到 ' + eligiblePolicies.length + ' 条演示政策，仍需按材料条件进一步确认。</p>' : '')
+    + (eligiblePolicies.length ? '<p><b>政策初筛：</b>匹配到 ' + eligiblePolicies.length + ' 条已接入政策，能效等级、门店和材料仍需人工确认。</p>' : '')
     + '<p><b>下一步：</b>比较前期投入和回收周期，选择能实际执行的措施，再记录到碳迹。</p>';
-  aiExplainNote.textContent = '当前为离线演示：不调用 AI，不访问外部政策库。所有数值为估算，政策为演示数据。';
+  aiExplainNote.textContent = '当前为离线演示：不调用 AI。电力因子和西安政策附公开来源，家庭节电量为估算，政策仅为候选匹配。';
 }
 function renderPlans(data) {
   lastPlans = data;
@@ -271,15 +353,26 @@ function renderPlans(data) {
   document.getElementById('baselineSummary').innerHTML =
     '<span>月用电基线 <b>' + num(base.monthlyKwh) + ' kWh</b></span><span class="sep"></span>'
     + '<span>年用电基线 <b>' + num(base.annualKwh) + ' kWh</b></span><span class="sep"></span>'
+    + '<span>综合电价 <b>' + Number(base.tariff || 0).toFixed(4) + ' 元/kWh</b></span><span class="sep"></span>'
     + '<span>前期预算 <b>' + fmt(data.budget) + '</b></span><span class="sep"></span><span>'
-    + esc(base.source) + (base.isDefault ? '（演示基线）' : '') + '</span>';
+    + esc(base.source) + (base.isDefault ? '（工程基线）' : '') + '</span>';
   planCardsEl.innerHTML = data.plans.map((p, i) => planCardHtml(p, i === 1)).join('');
+  const coverage = data.coverage || {};
   policyListEl.innerHTML = data.policies.length ? data.policies.map(policyCardHtml).join('')
-    : '<div class="jt-empty">当前城市或措施暂无匹配的演示政策。</div>';
+    : '<div class="jt-empty">' + esc(coverage.message || '当前方案没有匹配的已接入政策。') + '</div>';
   const meta = data.meta;
+  const factorUrl = /^https?:\/\//i.test(meta.factorUrl || '') ? meta.factorUrl : '';
+  const tariffUrl = /^https?:\/\//i.test(meta.tariffUrl || '') ? meta.tariffUrl : '';
   document.getElementById('planMeta').innerHTML = '<b>数据版本：</b>措施 ' + esc(meta.actionsVersion)
-    + ' · 政策 ' + esc(meta.policiesVersion) + ' · 排放因子 ' + esc(meta.factorVersion) + '（'
-    + esc(meta.factorKgCo2ePerKwh) + ' kg CO₂e/kWh）<br><b>因子来源：</b>' + esc(meta.factorSource || '未提供')
+    + ' · 政策 ' + esc(meta.policiesVersion) + ' · 电力因子 ' + esc(meta.factorVersion) + '（'
+    + esc(meta.factorKgCo2ePerKwh) + ' kg CO₂e/kWh）<br><b>电力因子：</b>' + esc(meta.factorScope || '') + '；'
+    + (factorUrl ? '<a href="' + esc(factorUrl) + '" target="_blank" rel="noopener noreferrer">生态环境部公开附件</a>'
+      : esc(meta.factorSource || '未提供'))
+    + '<br><b>电价口径：</b>' + esc(base.tariffSource || '') + '；'
+    + (tariffUrl ? '<a href="' + esc(tariffUrl) + '" target="_blank" rel="noopener noreferrer">陕西阶梯电价来源</a>'
+      : '未提供')
+    + '<br><b>政策覆盖：</b>' + esc((meta.policyCoverage || []).join('、') || '未接入')
+    + '；' + esc(coverage.message || '')
     + '<br><b>计算与展示边界：</b><ul>' + meta.assumptions.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
   planResultEl.hidden = false;
   const balanced = data.plans[1] || data.plans[0];
@@ -540,6 +633,6 @@ tabsEl.querySelectorAll('.tab').forEach(btn => { btn.onclick = () => switchTab(b
 document.querySelectorAll('[data-goto]').forEach(el => {
   el.addEventListener('click', ev => { ev.preventDefault(); switchTab(el.dataset.goto); });
 });
-document.getElementById('dataVersionTag').textContent = ACTIONS.length + ' 项措施 · ' + POLICIES.length + ' 条演示政策';
+document.getElementById('dataVersionTag').textContent = ACTIONS.length + ' 项措施 · ' + POLICIES.length + ' 条已接入政策';
 loadAndRender();
 switchTab((location.hash || '#plans').slice(1), { noScroll: true, silent: true });

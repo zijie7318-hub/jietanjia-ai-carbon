@@ -33,6 +33,8 @@ The application supports OpenAI-compatible APIs selected and paid for by the use
 
 The interface uses operating-system font fallbacks and self-drawn inline SVG/CSS. No third-party icon library, brand logo, remote font, image library or CDN resource is bundled.
 
-## Demonstration data
+## Data provenance
 
-The files under `backend/catalog/` are team-created demonstration parameters describing measures, an illustrative electricity factor, illustrative tariff and explicitly marked non-official policies. They must not be represented as official statistics or active government policy.
+The electricity carbon-footprint factor and Shaanxi residential tariff derive from official public sources recorded in `docs/数据来源.md`. The Xi'an appliance trade-in policy is linked to the Xi'an Municipal Bureau of Commerce and is displayed only as a candidate match.
+
+Measure-level electricity-saving values are a mixture of public-reference calculations, national-standard calculations and engineering estimates. Values not backed by household measurement are labelled as estimates in the interface and must not be represented as verified savings or government statistics.

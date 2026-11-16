@@ -968,6 +968,9 @@ body{background:var(--paper);}
   .logo-sub{font-size:8px;}
 }
 .jt-policy a{color:var(--red-dark);text-decoration:underline;}
+.jt-action-evidence{margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);font-size:10px;line-height:1.65;color:var(--muted);}
+.jt-action-evidence b{color:var(--body);font-weight:500;}
+.jt-action-evidence a{color:var(--red-dark);text-decoration:underline;}
 
 .jt-offline-bar{background:var(--red-dark);color:#fff;text-align:center;padding:8px 18px;font-size:12px;line-height:1.55;}
 .jt-offline-bar b{color:var(--yellow);}
@@ -995,13 +998,13 @@ body{background:var(--paper);}
     <span class="tabs-ai offline-pill" title="本文件不连接服务器或 AI 服务">离线演示</span>
   </div>
 </div>
-<div class="jt-offline-bar"><b>离线体验版</b> · 节能计算与政策规则在本文件内运行，数据保存在当前浏览器；不调用 AI，也不需要安装环境。</div>
+<div class="jt-offline-bar"><b>离线体验版</b> · 节能计算与政策规则在本文件内运行；电力因子和西安政策附公开来源，碳迹保存在当前浏览器，不调用 AI。</div>
 
 <section class="jt-hero">
   <div>
     <span class="jt-kicker"><span class="dot"></span>家庭节能 · 离线交互演示</span>
     <h1>把节能想法，<br><em>变成算得清的方案。</em></h1>
-    <p class="jt-hero-lead">填几项家庭情况，得到轻量、均衡、深度三档节能方案。每项措施都说明投入、节电、节省电费、减碳量和回收周期，再查看相关演示政策依据。</p>
+    <p class="jt-hero-lead">填几项家庭情况，得到轻量、均衡、深度三档节能方案。每项措施都说明投入、节电、节省电费、减碳量和依据等级，再查看已接入的西安政策。</p>
     <div class="jt-hero-actions">
       <button type="button" class="btn" data-goto="plans">开始家庭评估</button>
       <button type="button" class="btn-ghost" data-goto="diary">记录今天减碳</button>
@@ -1009,7 +1012,7 @@ body{background:var(--paper);}
     <div class="jt-principles">
       <span class="jt-principle">无需安装，双击打开</span>
       <span class="jt-principle">不调用服务器</span>
-      <span class="jt-principle">演示数据明确标注</span>
+      <span class="jt-principle">政策与因子可核验</span>
     </div>
   </div>
   <aside class="jt-preview" aria-label="最近一次方案摘要">
@@ -1020,14 +1023,14 @@ body{background:var(--paper);}
     <div class="jt-preview-metric"><span>月省电费</span><strong id="heroMoney">—<small>元</small></strong></div>
     <div class="jt-preview-metric"><span>年减碳量</span><strong id="heroCo2">—<small>kg</small></strong></div>
     <div class="jt-preview-metric"><span>投入回收</span><strong id="heroPayback">—<small>个月</small></strong></div>
-    <p class="jt-preview-note">所有数字均为基于家庭基线和演示参数的估算，不替代电费账单、检测报告或正式补贴审核。</p>
+    <p class="jt-preview-note">所有数字均为基于家庭基线和工程参数的估算，不替代电费账单、检测报告或正式补贴审核。</p>
   </aside>
 </section>
 
 <section class="jt-strip" aria-label="演示说明">
-  <div class="jt-strip-item"><b>完整交互</b><span>可以真实填写、生成、切换和记录，不是静态截图。</span></div>
+  <div class="jt-strip-item"><b>公开数据</b><span>电力碳足迹因子、陕西阶梯电价和西安政策附来源。</span></div>
   <div class="jt-strip-item"><b>本机保存</b><span>碳迹写入浏览器 localStorage，不会上传到服务器。</span></div>
-  <div class="jt-strip-item"><b>离线模型未接入</b><span>本版本展示规则计算和规则解释，不声称调用 AI。</span></div>
+  <div class="jt-strip-item"><b>参数分级</b><span>措施依据分为公开资料折算、国标计算和工程估算。</span></div>
 </section>
 
 <main class="jt-shell">
@@ -1036,19 +1039,22 @@ body{background:var(--paper);}
       <div>
         <div class="jt-eyebrow">HOUSEHOLD ASSESSMENT</div>
         <h2 id="plansTitle">家庭节能评估</h2>
-        <p>只需填写会影响方案的必要信息。月用电量和月电费至少填一项；都不填时会使用明确标注的演示基线。</p>
+        <p>只需填写会影响方案的必要信息。月用电量和月电费至少填一项；都不填时会使用明确标注的工程基线。</p>
       </div>
       <span class="jt-tag" id="dataVersionTag">正在装载本地规则</span>
     </div>
 
-    <div class="jt-demo-banner"><b>数据说明</b><span>本页面使用与作品一致的演示措施、排放因子和西安演示政策，用于查看产品效果，不构成节电承诺或申领依据。</span></div>
+    <div class="jt-demo-banner"><b>数据说明</b><span>电力碳足迹因子来自生态环境部公开数据，电价按陕西居民阶梯电价估算，西安政策附官方链接。措施节电参数包含公开资料折算和工程估算，不能替代家庭实测。</span></div>
 
     <form class="jt-form" id="planForm" novalidate>
       <div class="jt-form-grid">
         <div class="jt-field">
           <label for="cityInput">所在城市</label>
-          <input type="text" id="cityInput" value="西安市" maxlength="30" autocomplete="off" placeholder="例如：西安市">
-          <span class="help">只有西安市演示政策；其他城市仍能生成节能方案。</span>
+          <select id="cityInput">
+            <option value="西安市">西安市（政策与阶梯电价试点）</option>
+            <option value="陕西省其他城市">陕西省其他城市（仅电价估算）</option>
+          </select>
+          <span class="help">仅接入西安市 2026 年家电政策；陕西其他城市不展示地方补贴，榆林电价口径暂未覆盖。</span>
         </div>
         <div class="jt-field">
           <label for="housingInput">住房情况</label>
@@ -1067,12 +1073,12 @@ body{background:var(--paper);}
         <div class="jt-field">
           <label for="monthlyKwhInput">月用电量 <small>kWh，可选</small></label>
           <input type="number" id="monthlyKwhInput" min="1" max="10000" step="0.1" placeholder="例如：260" inputmode="decimal">
-          <span class="help">与月电费同时填写时优先使用本项。</span>
+          <span class="help">与月电费同时填写时优先使用本项，并按陕西阶梯电价估算。</span>
         </div>
         <div class="jt-field">
           <label for="monthlyBillInput">月电费 <small>元，可选</small></label>
           <input type="number" id="monthlyBillInput" min="1" max="50000" step="0.01" placeholder="例如：150" inputmode="decimal">
-          <span class="help">将按演示电价换算，并明确显示换算过程。</span>
+          <span class="help">两者同时填写时按实际平均单价计算；只有电费时按陕西阶梯电价近似。</span>
         </div>
         <div class="jt-field">
           <label for="budgetInput">可接受前期投入 <small>元</small></label>
@@ -1106,7 +1112,7 @@ body{background:var(--paper);}
         </div>
         <div class="jt-ai-stages" id="aiExplainStages">
           <span data-ai-stage="1">读取规则计算结果</span>
-          <span data-ai-stage="2">核对演示政策条款</span>
+          <span data-ai-stage="2">核对西安政策条款</span>
           <span data-ai-stage="3">生成规则说明</span>
         </div>
         <div class="jt-ai-body" id="aiExplainBody"></div>
@@ -1114,8 +1120,8 @@ body{background:var(--paper);}
       </section>
       <div class="jt-cards" id="planCards"></div>
       <div class="jt-subhead">
-        <div><h3>相关政策依据</h3><p>只展示与当前方案措施有关、同城市的演示政策。</p></div>
-        <span class="jt-tag">规则初筛，不代表获批</span>
+        <div><h3>相关政策依据</h3><p>仅显示已接入的西安市政策，并按措施与有效期做候选匹配。</p></div>
+        <span class="jt-tag">条件待确认，不代表获批</span>
       </div>
       <div class="jt-policy-list" id="policyList"></div>
       <div class="jt-meta" id="planMeta"></div>
@@ -1176,7 +1182,7 @@ body{background:var(--paper);}
 
       <aside class="jt-diary-aside">
         <div class="jt-mini"><b>离线说明</b>这个文件不调用 AI。反馈文字来自本地模板，计算和政策规则也在浏览器内完成。</div>
-        <div class="jt-mini"><b>记录边界</b>碳迹是行动记录，不是经过核查的减排量。方案中的节电和减碳数字均为估算。</div>
+        <div class="jt-mini"><b>数据依据</b>电力因子、陕西阶梯电价和西安政策附公开来源；措施节电参数按依据等级分别标注。</div>
         <div class="jt-mini"><b>隐私</b>无需填写姓名、地址或账号。清理浏览器数据会删除本机碳迹。</div>
       </aside>
     </div>
@@ -1222,7 +1228,7 @@ body{background:var(--paper);}
         </div>
         <div class="foot-col">
           <h4>说明</h4>
-          <span>演示数据与估算边界</span>
+          <span>数据来源与估算边界</span>
           <span>无需安装和服务器</span>
           <span>记录保存在本机</span>
         </div>
@@ -1230,7 +1236,7 @@ body{background:var(--paper);}
     </div>
     <div class="foot-rule"></div>
     <div class="foot-bottom">
-      <div class="tip">所有节能与减碳数字均为估算，演示政策不构成申领依据。</div>
+      <div class="tip">节能与减碳数字为估算；政策候选匹配不构成获批或申领依据。</div>
       <span>2026 · 节碳家离线演示</span>
     </div>
     <div class="footnote">完整 AI 解释、账号与云端归档需运行 Flask 完整版。</div>
@@ -1238,7 +1244,7 @@ body{background:var(--paper);}
 </footer>
 
 <script>
-const CATALOG = {"actions":{"version":"demo-1.0","disclaimer":"以下节电参数为产品演示用估算，不代表检测机构结论或节电承诺；正式版应逐项补充可核验来源。","actions":[{"id":"ac_temp_26","name":"空调设为 26℃ 并开启睡眠模式","category":"空调","summary":"在不影响舒适度的前提下减少持续制冷耗电。","difficulty":"easy","upfront_cost":0,"saving_type":"percent","saving_value":0.06,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced","deep"],"assumption":"按制冷季空调用电约占家庭用电 25%、设定调整可节省其中约 24% 估算。"},{"id":"ac_filter_clean","name":"清洗空调滤网","category":"空调","summary":"保持送风顺畅，降低无效运行时间。","difficulty":"easy","upfront_cost":0,"saving_type":"percent","saving_value":0.02,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced"],"assumption":"按定期清洁可减少约 2% 的家庭月度用电估算。"},{"id":"led_bulbs","name":"将常用灯具更换为 LED","category":"照明","summary":"用低功率 LED 替换高频使用的旧灯具。","difficulty":"easy","upfront_cost":120,"saving_type":"fixed","saving_value":110,"min_monthly_kwh":40,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced"],"assumption":"按替换 5 只常用灯、每天使用 4 小时估算年节电约 110 kWh。"},{"id":"standby_strip","name":"用智能插座集中切断待机电源","category":"待机","summary":"减少电视、路由器外设和充电器的持续待机耗电。","difficulty":"easy","upfront_cost":100,"saving_type":"fixed","saving_value":80,"min_monthly_kwh":50,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按常用设备待机功率合计约 15 W、每天闲置 16 小时估算。"},{"id":"cold_wash","name":"洗衣改用冷水并自然晾干","category":"洗衣","summary":"减少加热洗涤水和烘干机使用。","difficulty":"easy","upfront_cost":0,"saving_type":"fixed","saving_value":45,"min_monthly_kwh":40,"requires_owner":false,"needs_installation":false,"tiers":["light"],"assumption":"按每周 3 次洗衣、减少热水与烘干估算。"},{"id":"fridge_seal","name":"检查冰箱门封并调整摆放位置","category":"冰箱","summary":"避免冷气泄漏和散热受阻造成的额外耗电。","difficulty":"easy","upfront_cost":30,"saving_type":"fixed","saving_value":55,"min_monthly_kwh":60,"requires_owner":false,"needs_installation":false,"tiers":["light"],"assumption":"按门封老化和散热空间不足合计增加约 5% 冰箱用电估算。"},{"id":"water_heater_timer","name":"为热水器设置定时与中温模式","category":"热水","summary":"避免全天反复保温，按家庭作息集中加热。","difficulty":"easy","upfront_cost":80,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":80,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按热水器用电约占家庭用电 15%、定时可节省其中约 27% 估算。"},{"id":"water_heater_insulation","name":"为热水管路增加可拆卸保温层","category":"热水","summary":"减少管路散热损失，租房也可采用可拆卸方案。","difficulty":"medium","upfront_cost":150,"saving_type":"percent","saving_value":0.03,"min_monthly_kwh":80,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按热水管路热损失与保温改善幅度综合估算。"},{"id":"window_seal_removable","name":"加装可拆卸门窗密封条","category":"围护","summary":"减少夏季冷气和冬季暖气从缝隙流失。","difficulty":"medium","upfront_cost":180,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["balanced","deep"],"assumption":"按可拆卸密封改善门窗气密性、降低空调负荷估算。"},{"id":"shade_summer","name":"夏季使用遮阳帘或外窗遮阳","category":"围护","summary":"减少太阳直射带来的空调冷负荷。","difficulty":"easy","upfront_cost":220,"saving_type":"percent","saving_value":0.03,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["balanced","deep"],"assumption":"按主要朝西或朝南窗户遮阳后的制冷负荷变化估算。"},{"id":"ac_replace_eff","name":"将老旧空调更换为一级能效机型","category":"家电更新","summary":"适合自有住房且空调使用年限较长的家庭。","difficulty":"hard","upfront_cost":3500,"saving_type":"fixed","saving_value":260,"min_monthly_kwh":150,"requires_owner":true,"needs_installation":true,"tiers":["deep"],"assumption":"按 1.5 匹老旧定频机与一级能效变频机的典型使用差异估算。"},{"id":"fridge_replace_eff","name":"将老旧冰箱更换为一级能效机型","category":"家电更新","summary":"适合自有住房且冰箱使用超过十年的家庭。","difficulty":"hard","upfront_cost":3200,"saving_type":"fixed","saving_value":190,"min_monthly_kwh":100,"requires_owner":true,"needs_installation":true,"tiers":["deep"],"assumption":"按旧冰箱与新一级能效冰箱的典型年耗电差异估算。"}]},"policies":{"version":"demo-1.0","region":"西安市","disclaimer":"以下全部为作品演示政策，不是真实有效的政府补贴文件，不构成申领依据。正式版本将替换为带官方链接、文号和有效期的公开政策。","policies":[{"id":"demo_appliance_trade_in","title":"节能家电以旧换新补助（演示）","region":"西安市","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":true,"source_name":"作品演示数据，非真实政策","source_url":"","benefit":"按成交价约 10% 估算，单件最高 500 元（演示）","action_ids":["ac_replace_eff","fridge_replace_eff"],"requires_owner":true,"requirements":["自有住房","购买一级能效产品","保留发票和旧机回收凭证"],"application":"演示流程：在政策正式渠道提交购买与回收材料。","updated_at":"2026-11-01"},{"id":"demo_energy_kit","title":"绿色照明与待机节能包（演示）","region":"西安市","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":true,"source_name":"作品演示数据，非真实政策","source_url":"","benefit":"节能用品抵扣 50 元（演示）","action_ids":["led_bulbs","standby_strip","ac_temp_26"],"requires_owner":false,"requirements":["居住在本市","领取后完成至少一项节能行动"],"application":"演示流程：在活动页面登记并上传实施记录。","updated_at":"2026-11-01"},{"id":"demo_window_insulation","title":"门窗保温改善材料补助（演示）","region":"西安市","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":true,"source_name":"作品演示数据，非真实政策","source_url":"","benefit":"材料费用约 20%，最高 300 元（演示）","action_ids":["window_seal_removable","shade_summer"],"requires_owner":true,"requirements":["自有住房","保留材料购买凭证"],"application":"演示流程：提交住房与材料凭证进行审核。","updated_at":"2026-11-01"}]},"factors":{"version":"demo-2026.11","is_demo":true,"kg_co2e_per_kwh":0.55,"default_tariff_yuan_per_kwh":0.55,"default_monthly_kwh_per_person":70,"default_upfront_budget":8000,"region":"全国估算示例","source":"演示用排放系数与电价参数，正式版须替换为生态环境部及当地电网公开数据","updated_at":"2026-11-01","disclaimer":"所有金额和减碳量均为估算，不代表实际账单或经核查的减排量。"}};
+const CATALOG = {"actions":{"version":"2026.11-xian-evidence","disclaimer":"措施节电参数包含公开资料折算、国标参数计算和工程估算三类。没有实测数据的措施已标记为工程估算，结果不构成检测结论或节电承诺。","actions":[{"id":"ac_temp_26","name":"空调设为 26℃ 并开启睡眠模式","category":"空调","summary":"在不影响舒适度的前提下减少持续制冷耗电。","difficulty":"easy","upfront_cost":0,"saving_type":"percent","saving_value":0.02,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced","deep"],"assumption":"按制冷季空调用电约占家庭用电 25%、设定调整可节省其中约 24% 估算。","saving_range":[0.018,0.025],"evidence_level":"public_reference_calculation","evidence_label":"公开资料折算","source_name":"央广网：空调温度上调1℃的节电报道","source_url":"https://news.cnr.cn/native/gd/20230711/t20230711_526324689.shtml","source_note":"公开报道提出空调每上调1℃可节电，结合空调约占家庭用电25%的工程假设，折算到家庭总用电约1.8%—2.5%，本工具取2%；需以实际设备和用电结构校准。","cost_note":"无需新增设备投入。"},{"id":"ac_filter_clean","name":"清洗空调滤网","category":"空调","summary":"保持送风顺畅，降低无效运行时间。","difficulty":"easy","upfront_cost":0,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced"],"assumption":"按定期清洁可减少约 2% 的家庭月度用电估算。","saving_range":[0.03,0.05],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"空调滤网清洁与风阻关系的一般工程口径","source_url":"","source_note":"按滤网积尘降低换热效率、折算到家庭总用电约3%—5%，取4%；不同污染程度差异较大，需实测。","cost_note":"自行清洗无材料费；上门清洗费用因城市而异。"},{"id":"led_bulbs","name":"将常用灯具更换为 LED","category":"照明","summary":"用低功率 LED 替换高频使用的旧灯具。","difficulty":"easy","upfront_cost":120,"saving_type":"fixed","saving_value":110,"min_monthly_kwh":40,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced"],"assumption":"按替换 5 只常用灯、每天使用 4 小时估算年节电约 110 kWh。","saving_range":[80,220],"evidence_level":"standard_calculation","evidence_label":"国标参数 + 计算","source_name":"GB 30255-2019 普通照明用非定向自镇流LED灯能效限定值及能效等级","source_url":"","source_note":"按5只常用灯、每天4小时、旧灯20—40W替换为9W LED计算，年节电约80—226 kWh；取110 kWh对应较低使用强度。","cost_note":"按5只LED灯及可能的灯具更换估算80—200元，取120元。"},{"id":"standby_strip","name":"用智能插座集中切断待机电源","category":"待机","summary":"减少电视、路由器外设和充电器的持续待机耗电。","difficulty":"easy","upfront_cost":100,"saving_type":"fixed","saving_value":80,"min_monthly_kwh":50,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按常用设备待机功率合计约 15 W、每天闲置 16 小时估算。","saving_range":[40,120],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按待机功率 × 闲置时间计算","source_url":"","source_note":"按家庭常用设备待机功率合计约10—20W、每日闲置16小时估算，年节电约58—117 kWh；取80 kWh。","cost_note":"智能插座市场价约50—150元，取100元。"},{"id":"cold_wash","name":"洗衣改用冷水并自然晾干","category":"洗衣","summary":"减少加热洗涤水和烘干机使用。","difficulty":"easy","upfront_cost":0,"saving_type":"fixed","saving_value":45,"min_monthly_kwh":40,"requires_owner":false,"needs_installation":false,"tiers":["light"],"assumption":"按每周 3 次洗衣、减少热水与烘干估算。","saving_range":[20,80],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按洗衣机电加热与烘干使用频率估算","source_url":"","source_note":"按每周3次洗衣、减少热水加热和烘干估算，受机型、进水温度和晾晒条件影响，需实测。","cost_note":"无需新增设备投入。"},{"id":"fridge_seal","name":"检查冰箱门封并调整摆放位置","category":"冰箱","summary":"避免冷气泄漏和散热受阻造成的额外耗电。","difficulty":"easy","upfront_cost":30,"saving_type":"fixed","saving_value":55,"min_monthly_kwh":60,"requires_owner":false,"needs_installation":false,"tiers":["light"],"assumption":"按门封老化和散热空间不足合计增加约 5% 冰箱用电估算。","saving_range":[30,80],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按冰箱门封漏冷与摆放散热条件估算","source_url":"","source_note":"按密封条老化、冰箱贴墙或散热空间不足导致能耗增加估算，实际效果需检查门封和测温。","cost_note":"密封条或调整位置的材料费约20—50元，取30元。"},{"id":"water_heater_timer","name":"为热水器设置定时与中温模式","category":"热水","summary":"避免全天反复保温，按家庭作息集中加热。","difficulty":"easy","upfront_cost":80,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":80,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按热水器用电约占家庭用电 15%、定时可节省其中约 27% 估算。","saving_range":[0.02,0.06],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按储水式热水器保温与定时使用估算","source_url":"","source_note":"按减少无人时段反复加热估算，占家庭总用电2%—6%；与保温性能、设定温度和使用时段有关。","cost_note":"定时插座或控制器约50—120元，取80元。"},{"id":"water_heater_insulation","name":"为热水管路增加可拆卸保温层","category":"热水","summary":"减少管路散热损失，租房也可采用可拆卸方案。","difficulty":"medium","upfront_cost":150,"saving_type":"percent","saving_value":0.03,"min_monthly_kwh":80,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按热水管路热损失与保温改善幅度综合估算。","saving_range":[0.01,0.04],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按热水管路散热损失估算","source_url":"","source_note":"按可触及热水管路的热损失估算，占家庭总用电1%—4%；管路长度和保温现状影响较大。","cost_note":"可拆卸保温材料约100—250元，取150元。"},{"id":"window_seal_removable","name":"加装可拆卸门窗密封条","category":"围护","summary":"减少夏季冷气和冬季暖气从缝隙流失。","difficulty":"medium","upfront_cost":180,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["balanced","deep"],"assumption":"按可拆卸密封改善门窗气密性、降低空调负荷估算。","saving_range":[0.02,0.06],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按门窗缝隙渗透风与空调负荷估算","source_url":"","source_note":"按密封条改善门窗气密性、减少冷热负荷估算，占家庭总用电2%—6%；效果取决于缝隙面积、风压和空调使用时长。","cost_note":"可拆卸密封材料约100—300元，取180元。"},{"id":"shade_summer","name":"夏季使用遮阳帘或外窗遮阳","category":"围护","summary":"减少太阳直射带来的空调冷负荷。","difficulty":"easy","upfront_cost":220,"saving_type":"percent","saving_value":0.03,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["balanced","deep"],"assumption":"按主要朝西或朝南窗户遮阳后的制冷负荷变化估算。","saving_range":[0.02,0.05],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按外窗太阳得热与空调负荷估算","source_url":"","source_note":"按夏季遮阳降低窗户太阳得热估算，占家庭总用电2%—5%；朝向、窗墙比和遮阳方式影响较大。","cost_note":"遮阳帘或外遮阳材料约150—400元，取220元。"},{"id":"ac_replace_eff","name":"将老旧空调更换为一级能效机型","category":"家电更新","summary":"适合自有住房且空调使用年限较长的家庭。","difficulty":"hard","upfront_cost":3500,"saving_type":"fixed","saving_value":260,"min_monthly_kwh":150,"requires_owner":false,"needs_installation":true,"tiers":["deep"],"assumption":"按 1.5 匹老旧定频机与一级能效变频机的典型使用差异估算。","saving_range":[180,350],"evidence_level":"engineering_estimate","evidence_label":"能效参数估算","source_name":"按旧机与新一级能效机型的额定能效和年使用小时估算","source_url":"","source_note":"以旧机能效衰减、匹数和年制冷/制热小时为假设，年节电约180—350 kWh；必须按具体机型铭牌和APF值核算。 购买家电本身不要求自有住房，租户也可申请。","cost_note":"按一级能效挂机含安装的示例预算3500元，具体以门店报价为准。"},{"id":"fridge_replace_eff","name":"将老旧冰箱更换为一级能效机型","category":"家电更新","summary":"适合自有住房且冰箱使用超过十年的家庭。","difficulty":"hard","upfront_cost":3200,"saving_type":"fixed","saving_value":190,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":true,"tiers":["deep"],"assumption":"按旧冰箱与新一级能效冰箱的典型年耗电差异估算。","saving_range":[120,260],"evidence_level":"engineering_estimate","evidence_label":"能效参数估算","source_name":"按旧冰箱与新一级能效冰箱的铭牌耗电量估算","source_url":"","source_note":"按旧机老化、容积和使用习惯估算，年节电约120—260 kWh；应以旧机和目标机型铭牌耗电量计算。 购买家电本身不要求自有住房，租户也可申请。","cost_note":"按一级能效冰箱示例预算3200元，具体以门店报价为准。"}]},"policies":{"version":"2026.11-xian-official","region_scope":"西安市","coverage_note":"当前仅接入西安市地方政策。陕西省其他城市及其他省份不展示地方补贴，节能方案仍可使用通用估算。","disclaimer":"政策卡仅按城市、日期和关联措施做候选匹配，不代表已确认资格、已获批或可申领；购买能效等级、活动门店、实名信息和材料条件仍需用户核实。","policies":[{"id":"xa_appliance_trade_in_2026","title":"2026年西安市家电以旧换新补贴","region":"西安市","region_level":"city","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":false,"source_name":"西安市商务局","source_url":"https://xasswj.xa.gov.cn/xwzx/tzgg/2019352127281319938.html","source_secondary_url":"https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html","source_retrieved_at":"2026-11-16","benefit":"购买冰箱、洗衣机、电视、空调、电脑、热水器6类中1级能效或水效产品，按最终销售价格15%补贴，单件最高1500元；每人每类可补贴1件。","action_ids":["ac_replace_eff","fridge_replace_eff"],"requires_owner":false,"requirements":["个人消费者购买6类家电中1级能效或水效产品","在西安市参与活动的零售实体门店购买","在云闪付完成实名授权并领取当日消费折扣券","申领人、付款人和补贴确认书签订人为同一人","每人每类产品限补贴1件，单件补贴不超过1500元","保留发票、能效或水效标识、SN码和补贴确认书"],"application":"在参与活动门店选购后，通过云闪付领取消费折扣券并支付，补贴在支付环节直接减免；具体参与门店和资金进度以西安市商务局及云闪付公布为准。","benefit_rule":{"type":"percent_capped","rate":0.15,"cap_yuan":1500},"automatic_checks":["城市为西安市","当前日期在2026年度内","方案包含家电更新措施"],"manual_checks":["1级能效或水效","参与活动门店","云闪付实名与领券","每类限1件"],"updated_at":"2026-11-16","disclaimer":"城市、日期和措施仅用于候选匹配；未核验能效等级、活动门店、补贴资金余额和实名材料，不代表已具备领取资格。"}]},"factors":{"version":"2026.11-official-factor","data_class":"official_factor_and_tariff_with_estimated_baseline","kg_co2e_per_kwh":0.5777,"factor_year":2024,"factor_region":"全国","factor_scope":"2024年全国电力平均碳足迹因子","source":"生态环境部《关于发布2024年电力碳足迹因子数据的公告》附件：2024年全国电力平均碳足迹因子为0.5777 kgCO₂e/kWh。","source_url":"https://www.mee.gov.cn/xxgk2018/xxgk/xxgk01/202510/W020251024569470952545.pdf","source_published_at":"2025-10-24","source_retrieved_at":"2026-11-16","tariff_profile":{"region":"陕西省（不含榆林）","customer_type":"一户一表居民用户","annual_cycle":"7月1日至次年6月30日按年累计","tiers":[{"label":"第一档","limit_kwh":2160,"rate_yuan_per_kwh":0.4983},{"label":"第二档","limit_kwh":4200,"rate_yuan_per_kwh":0.5483},{"label":"第三档","limit_kwh":null,"rate_yuan_per_kwh":0.7983}],"reference_rate_yuan_per_kwh":0.5483,"peak_valley_note":"可选择峰谷分时电价：峰段每kWh加0.05元，谷段每kWh降低0.20元；11月1日至次年3月31日居民阶梯政策适用规则不同。","source":"陕西省居民阶梯电价公开口径（陕价商发〔2017〕97号、〔2018〕73号、〔2018〕83号），长武县人民政府《用电业务办理告知书》转载。","source_url":"https://www.changwu.gov.cn/zfxxgk/zbbmgkml/ggqsydw/gd/ydywblcxjsx/202610/t20261015_2124226.html","source_retrieved_at":"2026-11-16","caveat":"本工具按年化月用电量估算阶梯平均电价，未计入峰谷时段、采暖期特殊规则、合表用户和年度跨期变化。"},"default_monthly_kwh_per_person":70,"default_monthly_kwh_basis":"工程估算：仅用于用户未提供用电量或电费时建立可替换的工程基线，不代表陕西居民统计均值。","default_upfront_budget":8000,"region":"陕西省西安市试点","policy_coverage":["西安市"],"disclaimer":"电力碳足迹因子来自生态环境部公开数据；电价按陕西居民阶梯电价估算。家庭节电量和减碳量仍为估算，不代表实际账单或经第三方核查的减排量。"}};
 const ACTIONS = CATALOG.actions.actions || [];
 const POLICIES = CATALOG.policies.policies || [];
 const FACTORS = CATALOG.factors;
@@ -1285,28 +1291,67 @@ function normalizeInput(payload) {
   const budget = parseNumber(payload.budget, '前期预算', 0, 200000, Number(FACTORS.default_upfront_budget));
   return { city, housing, residents, monthlyKwh, monthlyBill, budget };
 }
+function tierEstimate(annualKwh, profile) {
+  let remaining = Math.max(0, annualKwh), lower = 0, total = 0, highest = null;
+  for (const tier of profile.tiers || []) {
+    const upper = tier.limit_kwh == null ? Infinity : Number(tier.limit_kwh);
+    const band = Math.min(remaining, Math.max(0, upper - lower));
+    if (band > 0) {
+      total += band * Number(tier.rate_yuan_per_kwh || 0);
+      highest = tier;
+      remaining -= band;
+    }
+    lower = upper;
+    if (remaining <= 0) break;
+  }
+  return {
+    annualCost: round2(total),
+    effectiveRate: annualKwh > 0 ? total / annualKwh : Number(profile.reference_rate_yuan_per_kwh || 0),
+    tierLabel: (highest && highest.label) || '第一档'
+  };
+}
 function buildBaseline(h) {
-  const tariff = Number(FACTORS.default_tariff_yuan_per_kwh);
-  let monthlyKwh, source, isDefault = false;
-  if (h.monthlyKwh !== null) {
+  const profile = FACTORS.tariff_profile || {};
+  const reference = Number(profile.reference_rate_yuan_per_kwh || 0.5483);
+  let monthlyKwh, tariff, source, tariffSource, estimated = true;
+  if (h.monthlyKwh !== null && h.monthlyBill !== null) {
     monthlyKwh = h.monthlyKwh;
+    tariff = h.monthlyBill / monthlyKwh;
+    if (tariff < 0.1 || tariff > 2.0) throw new Error('月电费与月用电量比例异常，请检查账单或只填其中一项');
     source = '按你填写的月用电量计算';
+    tariffSource = '按你填写的月电费 ÷ 月用电量计算实际平均单价';
+    estimated = false;
+  } else if (h.monthlyKwh !== null) {
+    monthlyKwh = h.monthlyKwh;
+    const tier = tierEstimate(monthlyKwh * 12, profile);
+    tariff = tier.effectiveRate;
+    source = '按你填写的月用电量计算';
+    tariffSource = '按陕西居民年阶梯电价估算（年化后所处' + tier.tierLabel + '）';
   } else if (h.monthlyBill !== null) {
-    monthlyKwh = h.monthlyBill / tariff;
-    source = '按你填写的月电费除以 ' + tariff.toFixed(2) + ' 元/kWh 估算';
+    monthlyKwh = h.monthlyBill / reference;
+    tariff = reference;
+    source = '按你填写的月电费反推用电量';
+    tariffSource = '仅有月电费，按陕西第二档 ' + reference.toFixed(4) + ' 元/kWh 近似反推';
   } else {
     monthlyKwh = h.residents * Number(FACTORS.default_monthly_kwh_per_person);
-    source = '未填用电量，按每人每月 ' + FACTORS.default_monthly_kwh_per_person + ' kWh 的演示基线估算';
-    isDefault = true;
+    const tier = tierEstimate(monthlyKwh * 12, profile);
+    tariff = tier.effectiveRate;
+    source = '未填用电量，按每人每月 ' + FACTORS.default_monthly_kwh_per_person + ' kWh 的工程基线估算';
+    tariffSource = '无账单数据，按工程基线及陕西年阶梯电价估算';
   }
   monthlyKwh = round1(monthlyKwh);
   return {
     monthlyKwh,
     annualKwh: round1(monthlyKwh * 12),
-    tariff,
-    monthlyBill: round2(monthlyKwh * tariff),
+    tariff: round2(tariff * 10000) / 10000,
+    monthlyBill: h.monthlyBill !== null ? round2(h.monthlyBill) : round2(monthlyKwh * tariff),
+    annualBill: h.monthlyBill !== null ? round2(h.monthlyBill * 12) : round2(monthlyKwh * tariff * 12),
     source,
-    isDefault
+    tariffSource,
+    tariffEstimated: estimated,
+    tariffRegion: profile.region || '陕西省',
+    tariffCaveat: profile.caveat || '',
+    isDefault: h.monthlyKwh === null && h.monthlyBill === null
   };
 }
 function savingOf(action, baseline) {
@@ -1323,13 +1368,23 @@ function actionCard(action, baseline) {
   const money = kwh * baseline.tariff;
   const upfront = Number(action.upfront_cost || 0);
   const payback = upfront === 0 ? 0 : (money > 0 ? round1(upfront / (money / 12)) : null);
+  let annualKwhRange = null;
+  if (Array.isArray(action.saving_range) && action.saving_range.length === 2) {
+    annualKwhRange = action.saving_type === 'percent'
+      ? [round1(baseline.annualKwh * Number(action.saving_range[0])),
+         round1(baseline.annualKwh * Number(action.saving_range[1]))]
+      : [round1(Number(action.saving_range[0])), round1(Number(action.saving_range[1]))];
+  }
   return {
     id: action.id, name: action.name, category: action.category,
     difficulty: action.difficulty, upfrontCost: round2(upfront),
     annualKwhSaved: round1(kwh), annualMoneySaved: round2(money),
     annualCo2eKg: round1(kwh * Number(FACTORS.kg_co2e_per_kwh)),
     paybackMonths: payback, requiresOwner: !!action.requires_owner,
-    needsInstallation: !!action.needs_installation, assumption: action.assumption
+    needsInstallation: !!action.needs_installation, assumption: action.assumption,
+    annualKwhRange, evidenceLabel: action.evidence_label,
+    sourceName: action.source_name, sourceUrl: action.source_url || '',
+    sourceNote: action.source_note || action.assumption, costNote: action.cost_note
   };
 }
 function trimToBudget(list, budget) {
@@ -1382,22 +1437,27 @@ function matchPolicies(household, actionIds) {
     const reasons = [];
     let ok = true;
     if (today < policy.valid_from || today > policy.valid_to) {
-      ok = false; reasons.push('当前日期不在演示有效期内');
+      ok = false; reasons.push('当前日期不在政策有效期内');
     } else {
-      reasons.push('当前日期在演示有效期内');
+      reasons.push('当前日期在政策有效期内');
     }
     if (policy.requires_owner && household.housing !== 'own') {
-      ok = false; reasons.push('该演示政策要求自有住房');
+      ok = false; reasons.push('该政策要求自有住房');
     } else if (policy.requires_owner) {
       reasons.push('满足自有住房条件');
     }
     return [{
       id: policy.id, title: policy.title, region: policy.region,
-      status: ok ? 'likely' : 'ineligible', eligible: ok, benefit: policy.benefit,
-      requirements: policy.requirements || [], application: policy.application,
-      actionIds: related, reasons, validFrom: policy.valid_from, validTo: policy.valid_to,
+      status: ok ? 'candidate' : 'ineligible',
+      statusLabel: ok ? '涉及此政策 · 条件待确认' : '当前不适用',
+      eligible: ok, benefit: policy.benefit,
+      requirements: policy.requirements || [], manualChecks: policy.manual_checks || [],
+      application: policy.application, actionIds: related, reasons,
+      validFrom: policy.valid_from, validTo: policy.valid_to,
       isDemo: !!policy.is_demo, sourceName: policy.source_name,
-      sourceUrl: policy.source_url || '', updatedAt: policy.updated_at
+      sourceUrl: policy.source_url || '', sourceSecondaryUrl: policy.source_secondary_url || '',
+      sourceRetrievedAt: policy.source_retrieved_at, updatedAt: policy.updated_at,
+      disclaimer: policy.disclaimer
     }];
   });
 }
@@ -1410,15 +1470,28 @@ function buildResponse(payload) {
   plans.forEach(plan => {
     plan.policyIds = policies.filter(p => p.actionIds.some(id => plan.actionIds.includes(id))).map(p => p.id);
   });
+  const coverageItems = FACTORS.policy_coverage || [];
+  const citySupported = coverageItems.some(region => normalizeRegion(region) === normalizeRegion(household.city));
+  const coverageMessage = citySupported
+    ? (policies.length ? '已接入西安市地方政策。政策卡只做候选匹配，能效等级、活动门店和材料条件仍需用户确认。'
+      : '已接入西安市地方政策，但当前方案的措施不属于已收录政策范围。')
+    : '当前仅接入西安市地方政策。该城市不展示地方补贴；未提供实际电费时，电价按陕西参考阶梯估算。';
   return {
     household, baseline, budget: household.budget, plans, policies,
+    coverage: { citySupported, supportedRegions: coverageItems, message: coverageMessage },
     meta: {
       actionsVersion: CATALOG.actions.version,
       policiesVersion: CATALOG.policies.version,
       factorVersion: FACTORS.version,
       factorKgCo2ePerKwh: FACTORS.kg_co2e_per_kwh,
       factorSource: FACTORS.source,
-      assumptions: [FACTORS.disclaimer, CATALOG.actions.disclaimer, CATALOG.policies.disclaimer]
+      factorUrl: FACTORS.source_url,
+      factorScope: FACTORS.factor_scope,
+      tariffSource: (FACTORS.tariff_profile || {}).source,
+      tariffUrl: (FACTORS.tariff_profile || {}).source_url,
+      policyCoverage: coverageItems,
+      assumptions: [FACTORS.disclaimer, CATALOG.actions.disclaimer, CATALOG.policies.disclaimer,
+        (FACTORS.tariff_profile || {}).caveat]
     }
   };
 }
@@ -1459,12 +1532,21 @@ function paybackText(months) {
   return Number(months) === 0 ? '无需投入' : num(months, 1) + ' 个月';
 }
 function planCardHtml(plan, recommended) {
-  const actionsHtml = plan.actions.map(action =>
-    '<details class="jt-action"><summary><span>' + esc(action.name) + '</span><span>' + esc(action.category || '')
-    + '</span></summary><div class="jt-action-body"><b>年节电</b> ' + num(action.annualKwhSaved)
-    + ' kWh · <b>年节省</b> ' + fmt(action.annualMoneySaved) + ' · <b>投入</b> ' + fmt(action.upfrontCost)
-    + ' · <b>回收</b> ' + paybackText(action.paybackMonths) + '<br>' + esc(action.assumption || '') + '</div></details>'
-  ).join('');
+  const actionsHtml = plan.actions.map(action => {
+    const range = Array.isArray(action.annualKwhRange) && action.annualKwhRange.length === 2
+      ? '，参考区间 ' + num(action.annualKwhRange[0]) + '–' + num(action.annualKwhRange[1]) + ' kWh' : '';
+    const sourceUrl = /^https?:\/\//i.test(action.sourceUrl || '') ? action.sourceUrl : '';
+    const source = sourceUrl
+      ? '<a href="' + esc(sourceUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(action.sourceName || '查看来源') + '</a>'
+      : esc(action.sourceName || '工程假设');
+    return '<details class="jt-action"><summary><span>' + esc(action.name) + '</span><span>' + esc(action.category || '')
+      + '</span></summary><div class="jt-action-body"><b>年节电</b> ' + num(action.annualKwhSaved)
+      + ' kWh · <b>年节省</b> ' + fmt(action.annualMoneySaved) + ' · <b>投入</b> ' + fmt(action.upfrontCost)
+      + ' · <b>回收</b> ' + paybackText(action.paybackMonths) + '<br>' + esc(action.assumption || '')
+      + '<div class="jt-action-evidence"><b>依据等级：</b>' + esc(action.evidenceLabel || '工程估算') + range
+      + '<br><b>依据：</b>' + source + (action.sourceNote ? '<br>' + esc(action.sourceNote) : '')
+      + (action.costNote ? '<br><b>成本口径：</b>' + esc(action.costNote) : '') + '</div></div></details>';
+  }).join('');
   return '<article class="jt-plan' + (recommended ? ' recommended' : '') + '">'
     + '<div class="jt-plan-top"><div><div class="jt-plan-tier">' + esc(plan.tier.toUpperCase())
     + '</div><h3>' + esc(plan.name) + '</h3></div>' + (recommended ? '<span class="jt-rec">均衡参考</span>' : '')
@@ -1481,15 +1563,21 @@ function planCardHtml(plan, recommended) {
 function policyCardHtml(policy) {
   const ok = !!policy.eligible;
   const sourceUrl = /^https?:\/\//i.test(policy.sourceUrl || '') ? policy.sourceUrl : '';
+  const secondaryUrl = /^https?:\/\//i.test(policy.sourceSecondaryUrl || '') ? policy.sourceSecondaryUrl : '';
   return '<article class="jt-policy"><div class="jt-policy-head"><h4>' + esc(policy.title) + '</h4>'
-    + '<span class="jt-status ' + (ok ? 'ok' : 'no') + '">' + (ok ? '初筛符合' : '未通过初筛') + '</span></div>'
+    + '<span class="jt-status ' + (ok ? 'ok' : 'no') + '">' + esc(policy.statusLabel || '') + '</span></div>'
     + '<p>' + esc(policy.benefit || '') + '</p><div class="jt-policy-meta"><span>' + esc(policy.region)
     + '</span><span>有效期 ' + esc(policy.validFrom + ' 至 ' + policy.validTo) + '</span></div>'
-    + '<div class="jt-policy-reason"><b>判断依据：</b>' + esc(policy.reasons.join('；'))
-    + (policy.requirements.length ? '<br><b>材料条件：</b>' + esc(policy.requirements.join('、')) : '') + '</div>'
-    + '<div class="jt-policy-demo">演示政策，不构成申领依据。' + (sourceUrl
+    + '<div class="jt-policy-reason"><b>自动初筛：</b>' + esc(policy.reasons.join('；'))
+    + (policy.manualChecks.length ? '<br><b>仍需人工确认：</b>' + esc(policy.manualChecks.join('、')) : '')
+    + (policy.requirements.length ? '<br><b>材料条件：</b>' + esc(policy.requirements.join('、')) : '')
+    + '<br><b>边界：</b>' + esc(policy.disclaimer || '') + '</div>'
+    + '<div class="jt-policy-demo">政策来源：' + (sourceUrl
       ? '<a href="' + esc(sourceUrl) + '" target="_blank" rel="noopener noreferrer">' + esc(policy.sourceName || '政策原文') + '</a>'
-      : esc(policy.sourceName || '')) + '</div></article>';
+      : esc(policy.sourceName || '未提供'))
+    + (secondaryUrl ? ' · <a href="' + esc(secondaryUrl) + '" target="_blank" rel="noopener noreferrer">实施公告</a>' : '')
+    + (policy.sourceRetrievedAt ? ' · 检索于 ' + esc(policy.sourceRetrievedAt) : '')
+    + '</div></article>';
 }
 function renderLocalExplanation(data) {
   const eligiblePolicies = data.policies.filter(p => p.eligible);
@@ -1501,9 +1589,9 @@ function renderLocalExplanation(data) {
     + data.plans.map(p => '<div class="jt-ai-tier"><b>' + esc(p.name) + '</b><span>包含 '
       + p.actions.length + ' 项措施，预计年节电约 ' + num(p.annualKwhSaved) + ' kWh，前期投入约 '
       + fmt(p.upfrontCost) + '。</span></div>').join('')
-    + (eligiblePolicies.length ? '<p><b>政策初筛：</b>找到 ' + eligiblePolicies.length + ' 条演示政策，仍需按材料条件进一步确认。</p>' : '')
+    + (eligiblePolicies.length ? '<p><b>政策初筛：</b>匹配到 ' + eligiblePolicies.length + ' 条已接入政策，能效等级、门店和材料仍需人工确认。</p>' : '')
     + '<p><b>下一步：</b>比较前期投入和回收周期，选择能实际执行的措施，再记录到碳迹。</p>';
-  aiExplainNote.textContent = '当前为离线演示：不调用 AI，不访问外部政策库。所有数值为估算，政策为演示数据。';
+  aiExplainNote.textContent = '当前为离线演示：不调用 AI。电力因子和西安政策附公开来源，家庭节电量为估算，政策仅为候选匹配。';
 }
 function renderPlans(data) {
   lastPlans = data;
@@ -1511,15 +1599,26 @@ function renderPlans(data) {
   document.getElementById('baselineSummary').innerHTML =
     '<span>月用电基线 <b>' + num(base.monthlyKwh) + ' kWh</b></span><span class="sep"></span>'
     + '<span>年用电基线 <b>' + num(base.annualKwh) + ' kWh</b></span><span class="sep"></span>'
+    + '<span>综合电价 <b>' + Number(base.tariff || 0).toFixed(4) + ' 元/kWh</b></span><span class="sep"></span>'
     + '<span>前期预算 <b>' + fmt(data.budget) + '</b></span><span class="sep"></span><span>'
-    + esc(base.source) + (base.isDefault ? '（演示基线）' : '') + '</span>';
+    + esc(base.source) + (base.isDefault ? '（工程基线）' : '') + '</span>';
   planCardsEl.innerHTML = data.plans.map((p, i) => planCardHtml(p, i === 1)).join('');
+  const coverage = data.coverage || {};
   policyListEl.innerHTML = data.policies.length ? data.policies.map(policyCardHtml).join('')
-    : '<div class="jt-empty">当前城市或措施暂无匹配的演示政策。</div>';
+    : '<div class="jt-empty">' + esc(coverage.message || '当前方案没有匹配的已接入政策。') + '</div>';
   const meta = data.meta;
+  const factorUrl = /^https?:\/\//i.test(meta.factorUrl || '') ? meta.factorUrl : '';
+  const tariffUrl = /^https?:\/\//i.test(meta.tariffUrl || '') ? meta.tariffUrl : '';
   document.getElementById('planMeta').innerHTML = '<b>数据版本：</b>措施 ' + esc(meta.actionsVersion)
-    + ' · 政策 ' + esc(meta.policiesVersion) + ' · 排放因子 ' + esc(meta.factorVersion) + '（'
-    + esc(meta.factorKgCo2ePerKwh) + ' kg CO₂e/kWh）<br><b>因子来源：</b>' + esc(meta.factorSource || '未提供')
+    + ' · 政策 ' + esc(meta.policiesVersion) + ' · 电力因子 ' + esc(meta.factorVersion) + '（'
+    + esc(meta.factorKgCo2ePerKwh) + ' kg CO₂e/kWh）<br><b>电力因子：</b>' + esc(meta.factorScope || '') + '；'
+    + (factorUrl ? '<a href="' + esc(factorUrl) + '" target="_blank" rel="noopener noreferrer">生态环境部公开附件</a>'
+      : esc(meta.factorSource || '未提供'))
+    + '<br><b>电价口径：</b>' + esc(base.tariffSource || '') + '；'
+    + (tariffUrl ? '<a href="' + esc(tariffUrl) + '" target="_blank" rel="noopener noreferrer">陕西阶梯电价来源</a>'
+      : '未提供')
+    + '<br><b>政策覆盖：</b>' + esc((meta.policyCoverage || []).join('、') || '未接入')
+    + '；' + esc(coverage.message || '')
     + '<br><b>计算与展示边界：</b><ul>' + meta.assumptions.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
   planResultEl.hidden = false;
   const balanced = data.plans[1] || data.plans[0];
@@ -1780,7 +1879,7 @@ tabsEl.querySelectorAll('.tab').forEach(btn => { btn.onclick = () => switchTab(b
 document.querySelectorAll('[data-goto]').forEach(el => {
   el.addEventListener('click', ev => { ev.preventDefault(); switchTab(el.dataset.goto); });
 });
-document.getElementById('dataVersionTag').textContent = ACTIONS.length + ' 项措施 · ' + POLICIES.length + ' 条演示政策';
+document.getElementById('dataVersionTag').textContent = ACTIONS.length + ' 项措施 · ' + POLICIES.length + ' 条已接入政策';
 loadAndRender();
 switchTab((location.hash || '#plans').slice(1), { noScroll: true, silent: true });
 
