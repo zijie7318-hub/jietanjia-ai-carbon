@@ -1,4 +1,4 @@
-"""本地节能方案与演示政策规则的离线测试。"""
+"""本地节能方案、阶梯电价与已接入政策规则的离线测试。"""
 
 import json
 import os
@@ -28,9 +28,14 @@ client = app_module.app.test_client()
 meta = client.get("/api/energy/meta").get_json()
 check("元数据可读取", meta.get("success") is True, meta)
 check("措施库为 12 项", meta.get("actionCount") == 12, meta.get("actionCount"))
-check("演示政策为 3 条", meta.get("policyCount") == 3, meta.get("policyCount"))
-check("数据明确标记为演示", meta.get("isDemo") is True)
-check("包含三项数据免责声明", len(meta.get("disclaimers") or []) == 3, meta.get("disclaimers"))
+check("已接入政策为 1 条", meta.get("policyCount") == 1, meta.get("policyCount"))
+check("数据不再整体标记为演示", meta.get("isDemo") is False)
+check("包含数据来源和边界说明", len(meta.get("disclaimers") or []) >= 3 and meta.get("factorUrl"),
+      meta.get("disclaimers"))
+check("官方电力碳足迹因子为 0.5777", abs(meta.get("factorKgCo2ePerKwh") - 0.5777) < 1e-9,
+      meta.get("factorKgCo2ePerKwh"))
+check("陕西阶梯电价包含三档", len(meta.get("tariffTiers") or []) == 3, meta.get("tariffTiers"))
+check("政策覆盖明确为西安市", meta.get("policyCoverage") == ["西安市"], meta.get("policyCoverage"))
 
 own_payload = {
     "city": "西安市",
@@ -63,11 +68,13 @@ check("减碳量按版本化因子计算",
       body["plans"][0]["annualCo2eKg"])
 
 policies = body.get("policies") or []
-check("西安市自有住房可初筛到三条演示政策", len(policies) == 3, policies)
-check("政策状态均为规则初筛 likely", all(p.get("status") == "likely" for p in policies), policies)
-check("政策全部标注演示", all(p.get("isDemo") is True for p in policies))
-check("演示政策不伪造官方链接", all(p.get("sourceUrl") == "" for p in policies))
-check("政策包含有效期和资格原因", all(p.get("validTo") and p.get("reasons") for p in policies))
+check("西安市家电更新可匹配一条真实政策", len(policies) == 1, policies)
+check("政策状态为条件待确认", all(p.get("status") == "candidate" for p in policies), policies)
+check("政策不再标记为演示", all(p.get("isDemo") is False for p in policies))
+check("政策提供官方原文链接", all(p.get("sourceUrl", "").startswith("https://xasswj.xa.gov.cn/") for p in policies),
+      [p.get("sourceUrl") for p in policies])
+check("政策包含有效期和自动初筛原因", all(p.get("validTo") and p.get("reasons") for p in policies))
+check("政策列出仍需人工核实的条件", all(p.get("manualChecks") for p in policies), policies)
 check("方案可关联政策", any(p.get("policyIds") for p in body["plans"]),
       [(p["tier"], p["policyIds"]) for p in body["plans"]])
 
@@ -77,14 +84,11 @@ rent_actions = [a for p in rent_body["plans"] for a in p["actions"]]
 check("租房方案排除自有住房措施", all(not a.get("requiresOwner") for a in rent_actions),
       [a["name"] for a in rent_actions if a.get("requiresOwner")])
 rent_policies = {p["id"]: p for p in rent_body.get("policies", [])}
-check("租房家庭仍可匹配公共节能包", rent_policies.get("demo_energy_kit", {}).get("eligible") is True,
-      rent_policies.get("demo_energy_kit"))
-check("租房家庭不得通过自有住房补助初筛",
-      rent_policies.get("demo_appliance_trade_in", {}).get("eligible") is not True,
-      rent_policies.get("demo_appliance_trade_in"))
-check("租房方案只展示与措施相关的政策", set(rent_policies) == {"demo_energy_kit", "demo_window_insulation"},
+check("家电补贴不额外要求自有住房", rent_policies.get("xa_appliance_trade_in_2026", {}).get("eligible") is True,
+      rent_policies.get("xa_appliance_trade_in_2026"))
+check("租房方案只展示与措施相关的政策", set(rent_policies) <= {"xa_appliance_trade_in_2026"},
       list(rent_policies))
-check("城市简称可匹配", len(rent_policies) == 2, list(rent_policies))
+check("城市简称可匹配西安市政策", "xa_appliance_trade_in_2026" in rent_policies, list(rent_policies))
 
 low_budget = dict(own_payload, budget=50)
 low_body = client.post("/api/energy/plans", json=low_budget).get_json()
@@ -104,6 +108,18 @@ bill_body = client.post("/api/energy/plans", json=bill_payload).get_json()
 check("月电费可按电价换算用电量", bill_body["baseline"]["monthlyKwh"] == 220.0, bill_body["baseline"])
 check("未填电量时使用填写电价", bill_body["baseline"]["tariff"] == 0.5, bill_body["baseline"])
 
+abnormal = client.post("/api/energy/plans", json={
+    "city": "西安市", "housing": "own", "residents": 3,
+    "monthlyKwh": 100, "monthlyBill": 5000, "budget": 8000})
+check("电费与电量比例异常被拒绝", abnormal.status_code == 400, abnormal.get_json())
+
+actual_rate = client.post("/api/energy/plans", json={
+    "city": "西安市", "housing": "own", "residents": 3,
+    "monthlyKwh": 280, "monthlyBill": 160, "budget": 8000}).get_json()
+check("电费和电量同填时采用实际平均单价",
+      abs(actual_rate["baseline"]["tariff"] - 160 / 280) < 0.0001,
+      actual_rate["baseline"])
+
 default_body = client.post("/api/energy/plans", json={
     "city": "西安市", "housing": "own", "residents": 2}).get_json()
 check("缺省用电量时明确使用默认基线", default_body["baseline"]["isDefault"] is True,
@@ -118,13 +134,19 @@ for field, value in (("residents", 0), ("residents", "abc"), ("monthlyKwh", 0),
     check("非法输入返回 400：" + field + "=" + str(value), response.status_code == 400,
           response.get_json())
 
-check("其他城市不展示西安演示政策", client.post("/api/energy/plans", json={
-    **own_payload, "city": "北京市"}).get_json().get("policies") == [])
+other_body = client.post("/api/energy/plans", json={
+    **own_payload, "city": "北京市"}).get_json()
+check("其他城市不展示西安政策", other_body.get("policies") == [])
+check("其他城市明确提示政策未覆盖", other_body.get("coverage", {}).get("citySupported") is False
+      and "仅接入西安市" in other_body.get("coverage", {}).get("message", ""), other_body.get("coverage"))
+
+check("电价按陕西年阶梯估算", 0.49 < body["baseline"]["tariff"] < 0.80
+      and body["baseline"]["tariffEstimated"] is True, body["baseline"])
 
 expired = energy_service.match_policies(
-    "西安市", "own", ["ac_replace_eff", "led_bulbs", "window_seal_removable"],
+    "西安市", "own", ["ac_replace_eff", "fridge_replace_eff"],
     as_of=date(2027, 1, 1))
-check("过期演示政策不判为符合", all(not item["eligible"] and item["status"] == "ineligible" for item in expired),
+check("过期政策不判为适用", all(not item["eligible"] and item["status"] == "ineligible" for item in expired),
       expired)
 
 first = client.post("/api/energy/plans", json=own_payload).get_json()

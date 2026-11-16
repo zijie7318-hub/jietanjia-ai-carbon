@@ -41,8 +41,10 @@ check('移动端保留 AI 设置入口', /\.tabs-ai\{display:inline-flex/.test(h
 check('连续请求会丢弃过期 AI 结果', /requestId !== aiRequestSeq/.test(script));
 check('政策原文链接只允许 HTTP(S)', /\/\^https\?:\\\/\\\/\//.test(script) || /sourceUrl = \/\^https/.test(script));
 check('页面包含年/月/日归档区', /id="recTree"/.test(html) && /id="recDate"/.test(html));
-check('页面明确标注演示政策边界', /演示政策，不构成申领依据/.test(html));
-check('页面明确标注数值为估算', /不构成节电承诺或申领依据/.test(html));
+check('页面明确标注政策候选边界', /不代表获批/.test(html) && /条件待确认/.test(html));
+check('页面明确标注数值为估算', /不能替代家庭实测/.test(html) && /估算/.test(html));
+check('页面说明仅接入西安市地方政策', /仅接入西安市/.test(html) && /不展示地方补贴/.test(html));
+check('页面展示官方来源入口', /生态环境部/.test(html) && /陕西阶梯电价来源/.test(html));
 
 const requiredEndpoints = ['/api/energy/plans', '/api/energy/meta', '/api/energy/explain', '/api/auth/login', '/api/carbon-entries'];
 requiredEndpoints.forEach(api => check('包含接口 ' + api, script.includes(api)));

@@ -41,8 +41,9 @@ check("政策检索返回条款证据", len(evidence) >= 3, len(evidence))
 check("检索覆盖当前匹配政策", len(grouped) == len(result["policies"]),
       (len(grouped), len(result["policies"])))
 check("每条证据都有政策 ID 和条款", all(x.get("policyId") and x.get("text") for x in evidence))
-check("证据保留演示状态", all(x.get("isDemo") is True for x in evidence))
-check("检索不伪造官方来源", all(x.get("sourceName") for x in evidence))
+check("证据保留真实政策状态", all(x.get("isDemo") is False for x in evidence))
+check("检索保留官方来源", all(x.get("sourceName") == "西安市商务局" for x in evidence),
+      [x.get("sourceName") for x in evidence])
 
 # 无配置与不允许的地址
 r = client.post("/api/energy/explain", json=PAYLOAD)
@@ -65,7 +66,7 @@ def good_llm(base_url, model, key, system, user, **kwargs):
             {"tier": "unknown", "note": "这条应被过滤。"},
         ],
         "policyNotes": [
-            {"policyId": "demo_energy_kit", "note": "演示节能包仅表示可能符合，仍需确认条件。"},
+            {"policyId": "xa_appliance_trade_in_2026", "note": "家电补贴仅表示可能相关，仍需确认门店和能效等级。"},
             {"policyId": "forged_policy", "note": "这条应被过滤。"},
         ],
         "nextStep": "选择一项能本周执行的措施，并记录到碳迹。",
@@ -80,7 +81,7 @@ check("AI 模式正确标记", body.get("ai", {}).get("mode") == "llm", body.get
 check("未知档位被过滤", all(x.get("tier") in ("light", "balanced", "deep")
                           for x in body.get("ai", {}).get("tierNotes", [])),
       body.get("ai", {}).get("tierNotes"))
-check("伪造政策 ID 被过滤", all(x.get("policyId") == "demo_energy_kit"
+check("伪造政策 ID 被过滤", all(x.get("policyId") == "xa_appliance_trade_in_2026"
                            for x in body.get("ai", {}).get("policyNotes", [])),
       body.get("ai", {}).get("policyNotes"))
 check("返回检索元数据", body.get("retrieval", {}).get("clauseCount", 0) > 0,
@@ -88,7 +89,8 @@ check("返回检索元数据", body.get("retrieval", {}).get("clauseCount", 0) >
 check("检索模式如实说明", body.get("retrieval", {}).get("mode") == "metadata-filter + local-lexical",
       body.get("retrieval"))
 check("提示词包含禁止改数边界", "不能重新计算" in captured.get("system", ""), captured.get("system", "")[:120])
-check("提示词只含演示政策证据", "演示" in captured.get("user", ""), captured.get("user", "")[:120])
+check("提示词只含已匹配的政策证据", "西安市商务局" in captured.get("user", "")
+      and "xa_appliance_trade_in_2026" in captured.get("user", ""), captured.get("user", "")[:160])
 
 
 def garbage_llm(*args, **kwargs):
@@ -101,8 +103,8 @@ fallback = r.get_json() or {}
 check("模型乱答仍返回 200", r.status_code == 200 and fallback.get("success"), r.status_code)
 check("模型乱答自动回退规则解释", fallback.get("ai", {}).get("mode") == "rules", fallback.get("ai"))
 check("回退说明保留计算结果", "kWh" in fallback.get("ai", {}).get("intro", ""), fallback.get("ai"))
-check("回退说明保留演示政策边界", any("演示" in x.get("note", "") or "初筛" in x.get("note", "")
-                                    for x in fallback.get("ai", {}).get("policyNotes", [])),
+check("回退说明保留政策边界", any("条件" in x.get("note", "") or "人工确认" in x.get("note", "")
+                                for x in fallback.get("ai", {}).get("policyNotes", [])),
       fallback.get("ai", {}).get("policyNotes"))
 
 
