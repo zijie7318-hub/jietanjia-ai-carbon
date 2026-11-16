@@ -54,6 +54,20 @@ python scripts/build_offline_demo.py
 - 模型地址采用服务端白名单；默认只允许代码中列出的公开模型服务，自建地址须显式配置。
 - 用户模型 Key 默认仅存本机 sessionStorage，勾选“记住”才存 localStorage；服务端不落盘、不写日志。
 
+### 工具型 Agent 模式（可选）
+
+在 AI 解释区打开「Agent 模式」后，前端改调 `POST /api/energy/agent`，由模型**自主规划并多轮调用只读工具**：
+
+```text
+get_baseline（用电基线）→ get_plans（三档数值）→ retrieve_policies（RAG 政策条款）→ finish（提交解释）
+```
+
+- 工具全部在服务端 `agent.py` 白名单内，未知工具一律拒绝；每轮最多 6 步，防死循环。
+- 工具返回的数值全部来自规则引擎与政策检索，模型不能计算或改写任何金额、节电量、减碳量与资格。
+- 最终解释仍经过与基础解释相同的 ID 白名单、长度截断与承诺/数字拦截。
+- SSE 实时推送「思考 → 调用工具 → 工具结果 → 结论」轨迹；任何异常降级为规则说明，规则方案不受影响。
+- 关闭 Agent 模式时完全走原有 `/api/energy/explain` 链路，行为与历史版本一致。
+
 ## 快速启动
 
 ```bash
@@ -161,13 +175,14 @@ core → ai-config → nav → ai-explain → plans → diary → account → ai
 测试全部离线运行，不需要模型 Key、外部业务接口或网络：
 
 ```bash
-python tests/smoke_api.py    # 42 项
-python tests/test_energy.py  # 50 项
+python tests/smoke_api.py    # 43 项
+python tests/test_energy.py  # 52 项
 python tests/test_ai.py      # 32 项
+python tests/test_agent.py   # 18 项：工具型 Agent 规划/调用/校验/降级
 node tests/smoke_ui.js       # 52 项
 ```
 
-当前结果：**176/176 通过**。
+当前结果：**197/197 通过**。
 
 另有两项不改变计数的门禁：
 
