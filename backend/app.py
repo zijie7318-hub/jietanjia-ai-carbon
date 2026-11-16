@@ -69,7 +69,7 @@ TRUST_PROXY = (os.environ.get("JTC_TRUST_PROXY") or "").strip().lower() in ("1",
 _RATE_HITS: dict[str, list[float]] = {}
 
 # 登录接口防止暴力尝试；模型接口防止额度被刷。记录 CRUD 沿用用户令牌隔离。
-GUARDED = ("/api/llm/", "/api/energy/", "/api/auth/")
+GUARDED = ("/api/llm/", "/api/energy/", "/api/auth/", "/api/carbon-entries")
 
 
 def _err(error, code=500):

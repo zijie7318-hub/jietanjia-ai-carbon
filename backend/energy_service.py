@@ -86,6 +86,15 @@ def _norm_region(value: str) -> str:
     return re.sub(r"(特别行政区|自治区|省|市)$", "", text)
 
 
+def _first_present(mapping: dict, *keys: str):
+    """取第一个真正存在的字段；0 是有效输入，不能当成缺省。"""
+    for key in keys:
+        value = mapping.get(key)
+        if value is not None and value != "":
+            return value
+    return None
+
+
 def normalize_input(payload: dict) -> dict:
     body = payload if isinstance(payload, dict) else {}
     household = body.get("household") if isinstance(body.get("household"), dict) else body
@@ -98,12 +107,12 @@ def normalize_input(payload: dict) -> dict:
     housing = _HOUSING.get(housing_raw, _HOUSING.get(str(household.get("housing") or ""), "other"))
 
     residents = int(_num(household.get("residents"), "家庭人口", 1, 20, 3))
-    monthly_kwh = _num(household.get("monthlyKwh") or household.get("monthly_kwh"),
+    monthly_kwh = _num(_first_present(household, "monthlyKwh", "monthly_kwh"),
                        "月用电量", 1, 10000, None)
-    monthly_bill = _num(household.get("monthlyBill") or household.get("monthly_bill"),
+    monthly_bill = _num(_first_present(household, "monthlyBill", "monthly_bill"),
                         "月电费", 1, 50000, None)
     tariff = _num(household.get("tariff"), "电价", 0.1, 2.0, None)
-    budget = _num(household.get("budget") or household.get("upfrontBudget") or household.get("upfront_budget"),
+    budget = _num(_first_present(household, "budget", "upfrontBudget", "upfront_budget"),
                   "前期预算", 0, 200000, None)
     return {
         "city": city,

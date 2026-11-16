@@ -56,6 +56,7 @@ def retrieve(policy_matches: list[dict], plans: list[dict], limit: int = 8) -> l
                 "status": policy.get("status"),
                 "isDemo": bool(policy.get("isDemo")),
                 "sourceName": policy.get("sourceName"),
+                "sourceUrl": policy.get("sourceUrl") or "",
                 "validFrom": policy.get("validFrom"),
                 "validTo": policy.get("validTo"),
                 "label": label,

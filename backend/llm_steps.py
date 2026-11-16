@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 from llm_review import LlmError, call_llm, extract_json
 
@@ -34,12 +35,23 @@ def gen_carbon_feedback(text: str, scene_label: str,
         raise LlmError("大模型返回的反馈太短，已回退本地模板")
     if content.startswith(("{", "[", "```")):
         raise LlmError("大模型没有按自然语言格式返回，已回退本地模板")
+    _assert_safe_claims(content)
+    if "计划" in scene_label and re.search(r"已经完成|完成了|已完成|已执行|实际减碳|实际节电", content):
+        raise LlmError("模型把计划行动写成了已完成结果，已回退本地模板")
     return content[:400]
 
 
 def _clean_text(value, limit: int) -> str:
     text = str(value or "").strip().replace("\x00", "")
     return text[:limit]
+
+
+def _assert_safe_claims(text: str) -> None:
+    """拦截保证收益、政策获批和未授权的数字承诺。"""
+    if re.search(r"保证(?:领取|获批|节省|回本)|已获批|官方认证|稳赚|包回本", text):
+        raise LlmError("模型解释包含未经支持的承诺，已回退规则说明")
+    if re.search(r"\d+(?:\.\d+)?\s*(?:元|万元|kWh|kg|KG|%|％|度电)", text):
+        raise LlmError("模型解释包含未经核验的数字，已回退规则说明")
 
 
 def explain_energy_plan(result: dict, evidence: list[dict],
@@ -106,6 +118,10 @@ def explain_energy_plan(result: dict, evidence: list[dict],
 
     if not intro and not tier_notes and not policy_notes:
         raise LlmError("模型没有返回可用的方案解释")
+    combined = " ".join([intro, next_step]
+                        + [item["note"] for item in tier_notes]
+                        + [item["note"] for item in policy_notes])
+    _assert_safe_claims(combined)
     return {
         "mode": "llm",
         "intro": intro,

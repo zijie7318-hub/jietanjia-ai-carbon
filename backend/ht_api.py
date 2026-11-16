@@ -395,4 +395,28 @@ def del_carbon_entry(entry_id: int):
     return jsonify({"success": True})
 
 
+@ht_bp.route("/api/carbon-entries/<int:entry_id>", methods=["PATCH"])
+def update_carbon_entry(entry_id: int):
+    """只允许更新当前用户记录的计划/完成状态，不改动正文。"""
+    user = _auth()
+    if not user:
+        return _fail("登录后才能更新碳迹", 401)
+    body = request.get_json(silent=True) or {}
+    status = str(body.get("status") or "").strip()
+    if status not in ("planned", "done"):
+        return _fail("状态只能是 planned 或 done")
+    conn = _conn()
+    try:
+        with _LOCK:
+            cursor = conn.execute(
+                "UPDATE carbon_entries SET scene = ? WHERE id = ? AND user_id = ?",
+                (status, entry_id, user["id"]))
+            conn.commit()
+        if cursor.rowcount == 0:
+            return _fail("没有找到这条碳迹", 404)
+    finally:
+        conn.close()
+    return jsonify({"success": True, "id": entry_id, "status": status})
+
+
 _init_db()

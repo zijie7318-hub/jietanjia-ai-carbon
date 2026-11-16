@@ -960,7 +960,14 @@ body{background:var(--paper);}
   .jt-summary .sep{display:none;}
   .jt-metrics{grid-template-columns:1fr 1fr;}
   .jt-plan{padding:16px;}
+  .topbar-in{flex-wrap:wrap;gap:8px;padding:10px 14px;}
+  .tabs-ai{display:inline-flex;margin-left:auto;padding:7px 9px;font-size:11px;}
+  .tabs{order:3;flex:1 0 100%;margin:0;overflow-x:auto;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .logo-name{font-size:16px;}
+  .logo-sub{font-size:8px;}
 }
+.jt-policy a{color:var(--red-dark);text-decoration:underline;}
 </style>
 </head>
 <body>
@@ -1445,8 +1452,10 @@ body{background:var(--paper);}
   const aiExplainBody = document.getElementById('aiExplainBody');
   const aiExplainNote = document.getElementById('aiExplainNote');
   let lastPlans = null;
+  let aiRequestSeq = 0;
 
   function resetAiExplain() {
+    aiRequestSeq += 1;
     aiExplainBox.hidden = true;
     aiExplainState.textContent = '';
     aiExplainBody.innerHTML = '';
@@ -1460,6 +1469,7 @@ body{background:var(--paper);}
   }
   async function runAiExplanation(householdPayload) {
     if (!aiReady()) { resetAiExplain(); return; }
+    const requestId = ++aiRequestSeq;
     aiExplainBox.hidden = false;
     markAiStages(1);
     aiExplainState.textContent = '正在请求服务端重算方案、检索政策条款并生成解释…';
@@ -1470,6 +1480,7 @@ body{background:var(--paper);}
         method: 'POST', headers: aiJsonHeaders(),
         body: JSON.stringify({ ...householdPayload, ...aiPair() })
       }, 32000);
+      if (requestId !== aiRequestSeq) return;
       const aiData = data.ai || {};
       markAiStages(3);
       aiExplainState.textContent = aiData.mode === 'llm'
@@ -1490,6 +1501,7 @@ body{background:var(--paper);}
       aiExplainNote.textContent = (data.aiNote || '')
         + (retrieval.clauseCount ? ' 已检索 ' + retrieval.clauseCount + ' 个政策条款片段，仅使用演示政策。' : '');
     } catch (err) {
+      if (requestId !== aiRequestSeq) return;
       markAiStages(1);
       aiExplainState.textContent = 'AI 解释暂不可用';
       aiExplainBody.innerHTML = '<p>规则方案和全部数值不受影响，可继续比较方案。'
@@ -1569,6 +1581,7 @@ body{background:var(--paper);}
   }
   function policyCardHtml(policy) {
     const ok = !!policy.eligible;
+    const sourceUrl = /^https?:\/\//i.test(policy.sourceUrl || '') ? policy.sourceUrl : '';
     const meta = [
       policy.validFrom && policy.validTo ? ('有效期 ' + policy.validFrom + ' 至 ' + policy.validTo) : '',
       policy.updatedAt ? ('更新 ' + policy.updatedAt) : ''
@@ -1581,7 +1594,11 @@ body{background:var(--paper);}
       + (policy.requirements && policy.requirements.length ? '<br><b>材料条件：</b>' + esc(policy.requirements.join('、')) : '')
       + '</div>'
       + '<div class="jt-policy-demo">' + (policy.isDemo ? '演示政策，不构成申领依据。' : '')
-      + esc(policy.sourceName || '') + '</div></article>';
+      + (sourceUrl
+        ? '<a href="' + esc(sourceUrl) + '" target="_blank" rel="noopener noreferrer">'
+          + esc(policy.sourceName || '查看政策原文') + '</a>'
+        : esc(policy.sourceName || ''))
+      + '</div></article>';
   }
   function renderPlans(data) {
     lastPlans = data;
@@ -1600,13 +1617,16 @@ body{background:var(--paper);}
     document.getElementById('planMeta').innerHTML =
       '<b>数据版本：</b>措施 ' + esc(meta.actionsVersion) + ' · 政策 ' + esc(meta.policiesVersion)
       + ' · 排放因子 ' + esc(meta.factorVersion) + '（' + esc(meta.factorKgCo2ePerKwh) + ' kg CO₂e/kWh）<br>'
+      + '<b>因子来源：</b>' + esc(meta.factorSource || '未提供') + '<br>'
       + '<b>计算与展示边界：</b><ul>' + (meta.assumptions || []).map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
     planResultEl.hidden = false;
     const balanced = (data.plans || [])[1] || (data.plans || [])[0];
     if (balanced) {
       document.getElementById('heroMoney').innerHTML = fmt(balanced.monthlyMoneySaved) + '<small>元</small>';
       document.getElementById('heroCo2').innerHTML = num(balanced.annualCo2eKg) + '<small>kg</small>';
-      document.getElementById('heroPayback').innerHTML = paybackText(balanced.paybackMonths).replace(' 个月', '') + '<small>个月</small>';
+      const heroPayback = paybackText(balanced.paybackMonths);
+      document.getElementById('heroPayback').innerHTML = heroPayback === '无需投入'
+        ? '无需投入' : heroPayback.replace(' 个月', '') + '<small>个月</small>';
       document.getElementById('heroPreviewHint').textContent = '最近一次：' + balanced.name;
     }
   }
@@ -1634,7 +1654,6 @@ body{background:var(--paper);}
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
       }, 16000);
       setProgress(3, true);
-      await sleep(180);
       renderPlans(data);
       if (aiReady()) runAiExplanation(payload);
     } catch (err) {
@@ -1739,9 +1758,11 @@ body{background:var(--paper);}
     const status = '<span class="rec-status ' + (done ? 'done' : '') + '">'
       + (done ? '已完成' : '计划执行') + '</span>';
     const from = item.inputText ? status + '「' + esc(item.inputText).slice(0, 90) + '」' : status;
+    const markDone = done ? '' : '<button type="button" class="hp-link" data-act="done" data-id="' + item.id + '">标为已完成</button>';
     return '<div class="rec-item"><div class="rec-item-meta"><span>' + time + '</span><span>' + from + '</span></div>'
       + '<div class="rec-item-text">' + esc(item.content) + '</div>'
-      + '<div class="rec-item-ops"><button type="button" class="hp-link" data-act="copy" data-id="' + item.id + '">复制</button>'
+      + '<div class="rec-item-ops">' + markDone
+      + '<button type="button" class="hp-link" data-act="copy" data-id="' + item.id + '">复制</button>'
       + '<button type="button" class="hp-link" data-act="del" data-id="' + item.id + '">删除</button></div></div>';
   }
   function hpRenderList(items) {
@@ -1897,6 +1918,19 @@ body{background:var(--paper);}
       recEmptyEl.hidden = false; recEmptyEl.textContent = '删除失败：' + hpErrText(err);
     }
   }
+  async function hpMarkDone(id) {
+    const token = localStorage.getItem(HP_TOKEN_KEY) || '';
+    try {
+      await requestJson('/api/carbon-entries/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-HT-Token': token },
+        body: JSON.stringify({ status: 'done' })
+      }, 12000);
+      hpLoadList();
+    } catch (err) {
+      recEmptyEl.hidden = false; recEmptyEl.textContent = '更新失败：' + hpErrText(err);
+    }
+  }
   document.querySelectorAll('#hpChips .chip').forEach(chip => {
     chip.onclick = () => { hpInputEl.value = chip.dataset.text || ''; hpInputEl.focus(); };
   });
@@ -1928,6 +1962,7 @@ body{background:var(--paper);}
   recTreeEl.onclick = ev => {
     const btn = ev.target.closest('button[data-act]'); if (!btn) return;
     if (btn.dataset.act === 'del') { hpDelete(btn.dataset.id); return; }
+    if (btn.dataset.act === 'done') { hpMarkDone(btn.dataset.id); return; }
     const text = btn.closest('.rec-item') && btn.closest('.rec-item').querySelector('.rec-item-text');
     if (text) copyText(text.textContent).then(ok => { if (ok) flashBtn(btn, '已复制'); });
   };
