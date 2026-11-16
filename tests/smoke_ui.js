@@ -10,7 +10,7 @@ const html = fs.readFileSync(path.join(ROOT, 'backend', 'index.html'), 'utf8');
 // 页面已拆成按序加载的同源模块；这里按 HTML 中的真实顺序拼接后统一检查，
 // 这样「脚本语法」「DOM 引用」「接口字面量」仍然是对整份前端代码做校验。
 const MODULE_ORDER = ['core', 'ai-config', 'nav', 'ai-explain', 'plans',
-  'diary', 'account', 'ai-modal', 'boot'];
+  'diary', 'account', 'ai-modal', 'boot', 'agent-ui'];
 const moduleTags = [...html.matchAll(/<script src="(static\/js\/[a-z-]+\.js)"><\/script>/g)]
   .map(m => m[1]);
 const moduleFiles = moduleTags.map(rel => path.join(ROOT, 'backend', rel));

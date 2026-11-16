@@ -108,6 +108,16 @@ bill_body = client.post("/api/energy/plans", json=bill_payload).get_json()
 check("月电费可按电价换算用电量", bill_body["baseline"]["monthlyKwh"] == 220.0, bill_body["baseline"])
 check("未填电量时使用填写电价", bill_body["baseline"]["tariff"] == 0.5, bill_body["baseline"])
 
+# 月电费需乘 12 才是年费（历史 bug：只填月电费时年费被算成月费）
+bill_only = client.post("/api/energy/plans", json={
+    "city": "西安市", "housing": "own", "residents": 3,
+    "monthlyBill": 150, "budget": 8000}).get_json()
+_b = bill_only["baseline"]
+check("只填月电费时年费为月费的12倍",
+      abs(_b["annualBill"] - _b["monthlyBill"] * 12) < 0.01,
+      {"月费": _b["monthlyBill"], "年费": _b["annualBill"]})
+check("只填月电费时年费为1800", abs(_b["annualBill"] - 1800) < 0.01, _b["annualBill"])
+
 abnormal = client.post("/api/energy/plans", json={
     "city": "西安市", "housing": "own", "residents": 3,
     "monthlyKwh": 100, "monthlyBill": 5000, "budget": 8000})
