@@ -46,6 +46,19 @@ check("nosniff", h.headers.get("X-Content-Type-Options") == "nosniff")
 check("首页带 CSP", "default-src 'self'" in (client.get("/").headers.get("Content-Security-Policy") or ""))
 check("调试账户接口默认关闭", client.get("/api/debug/auth").status_code == 404)
 
+# 前端资源：模块化加载、gzip 与静态缓存
+home_raw = client.get("/").get_data()
+home_gz = client.get("/", headers={"Accept-Encoding": "gzip"})
+check("首页按序引用 9 个前端模块",
+      home_raw.decode("utf-8").count('src="static/js/') == 9)
+check("首页文本响应启用 gzip",
+      home_gz.headers.get("Content-Encoding") == "gzip" and len(home_gz.get_data()) < len(home_raw),
+      "%d → %d 字节" % (len(home_raw), len(home_gz.get_data())))
+_static = client.get("/static/js/plans.js")
+check("静态模块允许缓存且不泄露接口缓存头",
+      "public" in (_static.headers.get("Cache-Control") or "")
+      and _static.status_code == 200)
+
 # 已移除的餐饮与下单接口
 for path in ("/api/stores", "/api/plans", "/api/plans/llm", "/api/blindbox"):
     check("餐饮接口已下线 " + path, client.get(path).status_code == 404)

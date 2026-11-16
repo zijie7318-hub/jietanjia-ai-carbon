@@ -71,6 +71,65 @@ def extract_json(text: str) -> dict:
     return {"raw": text}
 
 
+def call_llm_stream(base_url: str, model: str, api_key: str, system: str, user: str,
+                    temperature: float = 0.2, timeout: int = 60):
+    """流式调用，逐段 yield 文本增量；协议或网络异常统一抛 LlmError。
+
+    只用于「把已算好的结论讲清楚」这类展示场景，业务数值不经过这里。
+    """
+    if not (api_key or "").strip():
+        raise LlmError("缺少大模型 API Key")
+    if not (model or "").strip():
+        raise LlmError("缺少大模型 model 名称")
+    payload = {
+        "model": model.strip(),
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        "temperature": temperature,
+        "stream": True,
+    }
+    req = urllib.request.Request(
+        _endpoint(base_url),
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "text/event-stream",
+            "Authorization": "Bearer " + api_key.strip(),
+        },
+    )
+    try:
+        resp = urllib.request.urlopen(req, timeout=timeout)
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", errors="replace")[:300]
+        raise LlmError(f"大模型接口 HTTP {e.code}：{detail}") from e
+    except urllib.error.URLError as e:
+        raise LlmError(f"大模型网络错误：{e.reason}") from e
+
+    with resp:
+        for raw_line in resp:
+            line = raw_line.decode("utf-8", errors="replace").strip()
+            if not line or not line.startswith("data:"):
+                continue
+            chunk = line[5:].strip()
+            if chunk == "[DONE]":
+                break
+            try:
+                obj = json.loads(chunk)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(obj, dict) and obj.get("error"):
+                raise LlmError("大模型接口报错：%s" % json.dumps(obj["error"], ensure_ascii=False)[:300])
+            try:
+                piece = obj["choices"][0]["delta"].get("content")
+            except (KeyError, IndexError, TypeError, AttributeError):
+                piece = None
+            if piece:
+                yield piece
+
+
 def call_llm(base_url: str, model: str, api_key: str, system: str, user: str,
              temperature: float = 0.3, timeout: int = 90) -> str:
     """OpenAI 兼容 chat/completions 非流式调用，返回 message.content 文本。"""

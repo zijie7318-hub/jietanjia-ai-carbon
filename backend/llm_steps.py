@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import re
 
-from llm_review import LlmError, call_llm, extract_json
+from llm_review import LlmError, call_llm, call_llm_stream, extract_json
 
 
 def gen_carbon_feedback(text: str, scene_label: str,
@@ -54,13 +54,9 @@ def _assert_safe_claims(text: str) -> None:
         raise LlmError("模型解释包含未经核验的数字，已回退规则说明")
 
 
-def explain_energy_plan(result: dict, evidence: list[dict],
-                        base_url: str, model: str, api_key: str) -> dict:
-    """基于已计算方案和检索条款生成解释，不接受模型修改数值或资格。"""
+def _explain_messages(result: dict, evidence: list[dict]):
+    """构造解释用的系统提示与用户消息；数值只作为给定事实传入。"""
     plans = result.get("plans") or []
-    allowed_tiers = {str(item.get("tier")): str(item.get("name")) for item in plans}
-    allowed_policies = {str(item.get("id")): str(item.get("title")) for item in result.get("policies") or []}
-
     system = (
         "你是家庭节能方案解释助手。服务端已经完成全部数值计算和政策资格规则判断。"
         "你只能依据用户消息中的 JSON 写通俗说明，不能重新计算、补充或修改任何金额、节电量、"
@@ -90,9 +86,14 @@ def explain_energy_plan(result: dict, evidence: list[dict],
         "政策证据": evidence,
         "边界": "电力因子和电价有公开来源；家庭节电和减碳为估算；政策仅为候选匹配，不代表获批。",
     }
-    text = call_llm(base_url, model, api_key, system,
-                    json.dumps(prompt, ensure_ascii=False), temperature=0.2, timeout=25)
-    data = extract_json(text)
+    return system, json.dumps(prompt, ensure_ascii=False)
+
+
+def build_explanation(data: dict, result: dict) -> dict:
+    """把模型输出收敛成可展示结构：ID 白名单、长度截断、承诺与数字拦截。"""
+    plans = result.get("plans") or []
+    allowed_tiers = {str(item.get("tier")): str(item.get("name")) for item in plans}
+    allowed_policies = {str(item.get("id")): str(item.get("title")) for item in result.get("policies") or []}
 
     intro = _clean_text(data.get("intro"), 600)
     next_step = _clean_text(data.get("nextStep"), 300)
@@ -133,3 +134,28 @@ def explain_energy_plan(result: dict, evidence: list[dict],
             "所有数值仍以本次规则计算结果为准；政策卡是候选匹配，不构成获批或申领依据。",
         ],
     }
+
+
+def explain_energy_plan(result: dict, evidence: list[dict],
+                        base_url: str, model: str, api_key: str) -> dict:
+    """基于已计算方案和检索条款生成解释，不接受模型修改数值或资格。"""
+    system, user = _explain_messages(result, evidence)
+    text = call_llm(base_url, model, api_key, system, user, temperature=0.2, timeout=25)
+    return build_explanation(extract_json(text), result)
+
+
+def stream_explain(result: dict, evidence: list[dict],
+                   base_url: str, model: str, api_key: str):
+    """流式解释：先报阶段，再逐段吐字，最后给出与一次性接口完全一致的校验结果。
+
+    安全性不变——模型输出仍然先累积成完整文本，再由 build_explanation 做
+    ID 白名单、长度截断和承诺/数字拦截；校验不通过时由调用方回退规则说明。
+    """
+    system, user = _explain_messages(result, evidence)
+    yield ("stage", {"stage": 2, "label": "已重算方案并检索政策条款"})
+    chunks = []
+    for piece in call_llm_stream(base_url, model, api_key, system, user,
+                                 temperature=0.2, timeout=60):
+        chunks.append(piece)
+        yield ("delta", {"text": piece})
+    yield ("done", build_explanation(extract_json("".join(chunks)), result))

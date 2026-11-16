@@ -152,6 +152,70 @@ except llm_steps.LlmError:
     planned_done_rejected = True
 check("计划行动不能被写成已完成", planned_done_rejected)
 
+# ---- SSE 流式解释 ----
+
+STREAM_BODY = json.dumps({
+    "intro": "三档方案均由服务端算好，这里只做解释。",
+    "tierNotes": [
+        {"tier": "light", "note": "先做低成本措施。"},
+        {"tier": "unknown", "note": "伪造档位，应被过滤。"},
+    ],
+    "policyNotes": [
+        {"policyId": "forged_policy", "note": "伪造政策，应被过滤。"},
+    ],
+    "nextStep": "选一项本周能执行的措施。",
+}, ensure_ascii=False)
+
+
+def stream_ok(*args, **kwargs):
+    step = 9
+    for i in range(0, len(STREAM_BODY), step):
+        yield STREAM_BODY[i:i + step]
+
+
+def stream_boom(*args, **kwargs):
+    raise llm_steps.LlmError("大模型接口 HTTP 401：invalid key")
+
+
+def stream_claim(*args, **kwargs):
+    yield '{"intro":"保证领取补贴，一年省下 500 元。"'
+
+
+def sse_events(text):
+    return [line.split(":", 1)[1].strip()
+            for line in text.splitlines() if line.startswith("event:")]
+
+
+llm_steps.call_llm_stream = stream_ok
+r = client.post("/api/energy/explain", json=dict(PAYLOAD, stream=1), headers=LLM)
+text = r.get_data(as_text=True)
+events = sse_events(text)
+check("流式解释返回 text/event-stream", r.status_code == 200 and "text/event-stream" in r.content_type)
+check("流式先报阶段再逐字输出", events[:2] == ["start", "stage"] and events.count("delta") >= 3,
+      events[:6])
+check("流式以 done 收尾", events[-2:] == ["done", "end"], events[-3:])
+_done = None
+for block in text.split("\n\n"):
+    if block.startswith("event: done"):
+        _done = json.loads(block.split("data: ", 1)[1])
+check("流式结果同样过滤伪造档位与政策",
+      _done is not None
+      and all(x.get("tier") in ("light", "balanced", "deep") for x in _done["ai"]["tierNotes"])
+      and all(x.get("policyId") == "xa_appliance_trade_in_2026" for x in _done["ai"]["policyNotes"]),
+      (_done or {}).get("ai"))
+
+llm_steps.call_llm_stream = stream_boom
+r = client.post("/api/energy/explain", json=dict(PAYLOAD, stream=1), headers=LLM)
+events = sse_events(r.get_data(as_text=True))
+fallback_block = [b for b in r.get_data(as_text=True).split("\n\n") if b.startswith("event: fallback")]
+check("流式模型异常时补发规则说明", "fallback" in events and fallback_block
+      and json.loads(fallback_block[0].split("data: ", 1)[1])["ai"]["mode"] == "rules", events)
+
+llm_steps.call_llm_stream = stream_claim
+r = client.post("/api/energy/explain", json=dict(PAYLOAD, stream=1), headers=LLM)
+events = sse_events(r.get_data(as_text=True))
+check("流式输出含承诺与数字时降级", "fallback" in events and "done" not in events, events)
+
 print("\n".join(R))
 passed = sum(1 for item in R if item.startswith("PASS"))
 print("\n%d/%d passed" % (passed, len(R)))

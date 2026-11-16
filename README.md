@@ -95,7 +95,17 @@ backend/
 ├─ llm_review.py          # OpenAI 兼容传输层
 ├─ llm_steps.py           # 方案解释、碳迹反馈、结构化输出校验
 ├─ ht_api.py              # 账号与碳迹记录（SQLite）
-├─ index.html             # 单文件前端：页面、样式和交互
+├─ index.html             # 页面结构与样式（零构建、无第三方依赖）
+├─ static/js/             # 按职责拆分的 9 个前端模块，加载顺序见「前端结构」
+│  ├─ core.js             # 配置、同源请求、超时与格式化
+│  ├─ ai-config.js        # 模型预设与 Key 存储
+│  ├─ nav.js              # 三个主入口切换
+│  ├─ ai-explain.js       # AI 解释区与 SSE 流式渲染
+│  ├─ plans.js            # 表单、三档方案卡、政策卡
+│  ├─ diary.js            # 碳迹日记生成与保存
+│  ├─ account.js          # 登录注册与碳档案归档
+│  ├─ ai-modal.js         # AI 配置弹窗
+│  └─ boot.js             # 首屏初始化顺序
 └─ catalog/
    ├─ actions.json        # 12 项演示节能措施
    ├─ policies.json       # 1 条真实西安家电补贴政策
@@ -103,7 +113,8 @@ backend/
 tests/
 ├─ smoke_api.py           # 账号、记录、安全、分享码与限流
 ├─ test_energy.py         # 三档计算、预算、政策日期与资格
-├─ test_ai.py             # 检索、AI 解释、输出过滤与降级
+├─ test_ai.py             # 检索、AI 解释、流式输出、过滤与降级
+├─ rag_ablation.py        # 检索消融对照（不计入主测试数）
 └─ smoke_ui.js            # 前端语法、DOM、接口与品牌残留
 docs/
 ├─ 技术报告.md / 数据来源版.docx  # 技术报告源稿与可编辑 Word
@@ -114,6 +125,19 @@ docs/
 └─ screenshots/           # 技术文档截图
 ```
 
+## 前端结构
+
+前端仍然零构建、无第三方依赖，但按职责拆成 9 个同源模块，页面按固定顺序加载：
+
+```text
+core → ai-config → nav → ai-explain → plans → diary → account → ai-modal → boot
+```
+
+- 用普通脚本而非 ES module：`file://` 下直接打开页面也能工作，不必依赖服务器；
+- `types/frontend.d.ts` 声明了方案、措施、政策、碳迹的数据契约，用 `jsconfig.json` 做类型检查；
+- AI 解释走 SSE 流式输出，逐字渲染并在结束时替换为服务端校验后的结构；
+- 服务端对文本响应做 gzip，静态模块带 `Cache-Control`，接口响应仍为 `no-store`。
+
 ## API
 
 | 方法 | 路径 | 说明 |
@@ -121,7 +145,7 @@ docs/
 | `GET` | `/api/health` | 健康检查，不返回任何密钥 |
 | `GET` | `/api/energy/meta` | 数据版本、措施/政策数量和免责声明 |
 | `POST` | `/api/energy/plans` | 家庭条件 → 三档方案 + 政策初筛 |
-| `POST` | `/api/energy/explain` | 重算方案 → 条款检索 → 可选 AI 解释 |
+| `POST` | `/api/energy/explain` | 重算方案 → 条款检索 → 可选 AI 解释；`stream=1` 时返回 SSE |
 | `POST` | `/api/auth/register` | 注册 |
 | `POST` | `/api/auth/login` | 登录 |
 | `POST` | `/api/auth/logout` | 登出并吊销令牌 |
@@ -137,13 +161,20 @@ docs/
 测试全部离线运行，不需要模型 Key、外部业务接口或网络：
 
 ```bash
-python tests/smoke_api.py    # 39 项
+python tests/smoke_api.py    # 42 项
 python tests/test_energy.py  # 50 项
-python tests/test_ai.py      # 26 项
-node tests/smoke_ui.js       # 44 项
+python tests/test_ai.py      # 32 项
+node tests/smoke_ui.js       # 52 项
 ```
 
-当前结果：**159/159 通过**。
+当前结果：**176/176 通过**。
+
+另有两项不改变计数的门禁：
+
+```bash
+npx -y -p typescript tsc -p jsconfig.json   # 前端类型检查，期望 0 error
+python tests/rag_ablation.py                # 检索消融对照，30 组样本
+```
 
 测试覆盖重点：
 
@@ -151,7 +182,9 @@ node tests/smoke_ui.js       # 44 项
 - 政策城市、有效期、住房条件和演示状态；
 - 模型乱答、超时、不可达及输出 ID 过滤；
 - 密码登录、令牌吊销、用户记录隔离和限流；
-- 品牌残留、DOM 引用、接口路径和前端脚本语法。
+- 品牌残留、DOM 引用、接口路径和前端脚本语法；
+- 模块加载顺序、SSE 事件序列与流式失败回退；
+- gzip 生效与静态资源缓存头；
 
 ## 部署
 

@@ -8,11 +8,13 @@ OpenAI 兼容文案接口。餐饮门店、优惠券、核价与真实下单能�
 
 from __future__ import annotations
 
+import gzip
+import json
 import os
 import time
 from pathlib import Path
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, Response, jsonify, request, send_from_directory
 
 HERE = Path(__file__).resolve().parent
 
@@ -53,6 +55,38 @@ if (os.environ.get("JTC_ENABLE_CORS") or "").strip().lower() in ("1", "true", "y
     CORS(app)
 
 
+_COMPRESSIBLE = {"text/html", "text/css", "application/javascript",
+                 "text/javascript", "application/json", "image/svg+xml"}
+
+
+@app.after_request
+def _compress(resp):
+    """对文本类响应做 gzip，降低首屏传输体积。"""
+    if resp.status_code != 200 or resp.headers.get("Content-Encoding"):
+        return resp
+    if "gzip" not in (request.headers.get("Accept-Encoding") or "").lower():
+        return resp
+    ctype = (resp.content_type or "").split(";")[0].strip().lower()
+    if ctype not in _COMPRESSIBLE:
+        return resp
+    try:
+        if resp.direct_passthrough:
+            resp.direct_passthrough = False
+        data = resp.get_data()
+    except Exception:
+        return resp
+    if len(data) < 1024:
+        return resp
+    packed = gzip.compress(data, 6)
+    if len(packed) >= len(data):
+        return resp
+    resp.set_data(packed)
+    resp.headers["Content-Encoding"] = "gzip"
+    resp.headers["Content-Length"] = str(len(packed))
+    resp.headers.add("Vary", "Accept-Encoding")
+    return resp
+
+
 @app.route("/")
 def serve_index():
     return send_from_directory(str(HERE), "index.html")
@@ -87,8 +121,13 @@ def _client_ip() -> str:
 @app.after_request
 def _harden(resp):
     """保留原项目的安全响应头和模型 Key 错误脱敏。"""
-    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-    resp.headers["Pragma"] = "no-cache"
+    if request.path.startswith("/static/"):
+        # 静态模块按内容版本变化，允许浏览器缓存；接口响应仍然禁止缓存。
+        resp.headers["Cache-Control"] = "public, max-age=3600, must-revalidate"
+        resp.headers.add("Vary", "Accept-Encoding")
+    else:
+        resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        resp.headers["Pragma"] = "no-cache"
     resp.headers["X-Content-Type-Options"] = "nosniff"
     resp.headers["X-Frame-Options"] = "DENY"
     resp.headers["Referrer-Policy"] = "no-referrer"
@@ -205,6 +244,39 @@ def energy_plans():
         return jsonify({"success": False, "error": "方案计算失败，请检查输入后重试"}), 500
 
 
+def _sse(event, payload):
+    return "event: %s\ndata: %s\n\n" % (event, json.dumps(payload, ensure_ascii=False))
+
+
+def _explain_stream(result, evidence, retrieval, llm):
+    """SSE 解释流：阶段 → 逐字增量 → 完整校验结果；异常时补发规则说明。"""
+    yield _sse("start", {"retrieval": retrieval})
+    try:
+        for kind, payload in llm_steps.stream_explain(result, evidence, *llm):
+            if kind == "done":
+                yield _sse("done", {
+                    "ai": payload,
+                    "aiNote": "AI 解释已生成；数值与资格未由模型决定。",
+                    "retrieval": retrieval,
+                })
+            else:
+                yield _sse(kind, payload)
+    except LlmError as exc:
+        yield _sse("fallback", {
+            "ai": energy_service.build_rule_explanation(result),
+            "aiNote": "AI 解释暂不可用，已使用规则说明：%s" % str(exc)[:160],
+            "retrieval": retrieval,
+        })
+    except Exception:
+        app.logger.exception("energy explanation stream failure")
+        yield _sse("fallback", {
+            "ai": energy_service.build_rule_explanation(result),
+            "aiNote": "AI 解释暂不可用，已使用规则说明。",
+            "retrieval": retrieval,
+        })
+    yield _sse("end", {})
+
+
 @app.route("/api/energy/explain", methods=["POST"])
 def energy_explain():
     """重新计算方案后做本地条款检索，再由模型组织解释；失败自动回退规则说明。"""
@@ -227,6 +299,13 @@ def energy_explain():
         "policyCount": len({item.get("policyId") for item in evidence}),
         "coverage": "西安市已接入政策",
     }
+    if body.get("stream"):
+        return Response(
+            _explain_stream(result, evidence, retrieval, llm),
+            mimetype="text/event-stream",
+            headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store"},
+        )
+
     try:
         ai = llm_steps.explain_energy_plan(result, evidence, *llm)
         note = "AI 解释已生成；数值与资格未由模型决定。"
