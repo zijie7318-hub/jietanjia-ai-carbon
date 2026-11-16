@@ -11,6 +11,20 @@
 
 > 当前仓库中的节能参数、排放因子、电价和补贴政策均为**演示数据**。它们用于验证产品流程，不构成节电承诺、真实政策或申领依据。
 
+## 直接分享的离线演示网页
+
+如果只需要让队友或评审快速查看效果，可直接发送：
+
+`docs/节碳家_离线演示.html`
+
+该文件无需安装 Python、无需服务器、无需联网或模型 Key，双击即可在浏览器中体验三档方案、政策初筛、碳迹保存和计划转完成。离线版明确不在浏览器中伪造 AI 调用，完整 AI 解释与账号归档需运行 Flask 完整版。
+
+重新生成离线版：
+
+```bash
+python scripts/build_offline_demo.py
+```
+
 ## 功能
 
 1. **家庭节能评估**：月用电量和月电费至少填写一项，缺少时使用醒目标注的演示基线。
@@ -92,7 +106,7 @@ tests/
 ├─ test_ai.py             # 检索、AI 解释、输出过滤与降级
 └─ smoke_ui.js            # 前端语法、DOM、接口与品牌残留
 docs/
-├─ 技术报告.md / .docx    # 技术报告源稿与可编辑 Word
+├─ 技术报告.md / 最终版.docx  # 技术报告源稿与可编辑 Word
 ├─ 演示视频脚本.md        # 5–8 分钟录制脚本
 ├─ 提交检查清单.md        # 省赛提交前核对项
 ├─ 验收记录.md            # 本地测试与浏览器验收结果
@@ -122,13 +136,13 @@ docs/
 测试全部离线运行，不需要模型 Key、外部业务接口或网络：
 
 ```bash
-python tests/smoke_api.py    # 35 项
-python tests/test_energy.py  # 40 项
-python tests/test_ai.py      # 24 项
-node tests/smoke_ui.js       # 34 项
+python tests/smoke_api.py    # 39 项
+python tests/test_energy.py  # 43 项
+python tests/test_ai.py      # 26 项
+node tests/smoke_ui.js       # 38 项
 ```
 
-当前结果：**133/133 通过**。
+当前结果：**146/146 通过**。
 
 测试覆盖重点：
 
