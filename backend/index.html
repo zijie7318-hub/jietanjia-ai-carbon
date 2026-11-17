@@ -880,7 +880,12 @@ body{background:var(--paper);}
 .jt-ai-tier b{min-width:72px;color:var(--red-dark);font-weight:500;}
 .jt-ai-note{font-size:10px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed #CADFD4;}
 .jt-ai-placeholder{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;}
-.jt-ai-placeholder i{width:8px;height:8px;border-radius:50%;background:var(--red);animation:jtPulse 1s infinite;}
+.jt-ai-placeholder i{
+  width:6px;height:6px;border-radius:50%;background:var(--red);flex:none;
+  animation:ldBounce 1.15s var(--ease-in-out) infinite;
+  box-shadow:9px 0 0 -1px var(--red),18px 0 0 -1px var(--red);
+  margin-right:14px;
+}
 .ai-cursor{display:inline-block;width:2px;height:1em;margin-left:2px;vertical-align:-2px;background:var(--red);animation:jtPulse .9s steps(2) infinite;}
 .jt-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:14px;}
 .jt-plan{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;min-width:0;box-shadow:0 3px 0 rgba(20,35,29,.04);}
@@ -893,7 +898,12 @@ body{background:var(--paper);}
 .jt-metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:14px 0;}
 .jt-metric{background:var(--paper-2);padding:11px 10px;}
 .jt-metric span{display:block;font-size:10px;color:var(--muted);margin-bottom:2px;}
-.jt-metric strong{font-family:var(--mono);font-size:16px;color:var(--ink);font-weight:600;word-break:break-word;}
+.jt-metric strong{
+  font-family:var(--mono);font-size:16px;color:var(--ink);font-weight:600;word-break:break-word;
+  display:inline-block;animation:numRise var(--dur-slow) var(--ease-smooth-out) both;
+}
+@keyframes numRise{from{opacity:0;transform:translateY(6px);filter:blur(2px);}to{opacity:1;transform:none;filter:blur(0);}}
+@media(prefers-reduced-motion:reduce){.jt-metric strong{animation:none;}}
 .jt-metric strong small{font-size:10px;font-weight:400;color:var(--muted);margin-left:2px;}
 .jt-action-list{display:flex;flex-direction:column;gap:7px;margin:0 0 14px;}
 .jt-action{border-top:1px solid var(--line);padding-top:8px;}
@@ -1397,7 +1407,8 @@ body{background:var(--paper);}
 }
 .agent-toggle input{width:13px;height:13px;accent-color:var(--red);margin:0;cursor:pointer;}
 .agent-toggle:hover{border-color:var(--red);}
-.agent-toggle:has(input:checked){background:var(--red-t);border-color:var(--red);color:var(--red-dark);font-weight:600;}
+.agent-toggle:has(input:checked){background:var(--green-t);border-color:#BFDCCB;color:var(--green);}
+.agent-toggle:has(input:checked) input{accent-color:var(--green);}
 .agent-trace{display:flex;flex-direction:column;gap:6px;margin:0 0 12px;}
 .agent-ev{
   display:flex;gap:8px;align-items:flex-start;font-size:11.5px;line-height:1.6;color:var(--body);
@@ -1413,6 +1424,208 @@ body{background:var(--paper);}
 }
 .agent-args{font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all;}
 @media(max-width:640px){.agent-toggle span{font-size:10.5px;}}
+
+/* ============================================================
+   Beautiful UI 基元增强（AI 白盒化）
+   02 Thinking 折叠轨迹 / 05 Tool Chips / 01 带耗时加载
+   手法：transitions.dev accordion(grid-rows) + 状态语义色
+   ============================================================ */
+
+/* 运行中语义色（项目主色没有蓝，这里补一个克制的信息蓝） */
+:root{--info-blue:#2F6DB5;--info-blue-t:#E8F0FA;}
+
+/* ---- 01 加载状态：点阵 + 已耗时 ---- */
+.loading-state{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--body);}
+.loading-dots{display:inline-flex;gap:3px;flex:none;}
+.loading-dots i{width:5px;height:5px;border-radius:50%;background:var(--red);opacity:.35;animation:ldBounce 1.15s var(--ease-in-out) infinite;}
+.loading-dots i:nth-child(2){animation-delay:.14s;}
+.loading-dots i:nth-child(3){animation-delay:.28s;}
+@keyframes ldBounce{0%,60%,100%{transform:translateY(0);opacity:.32;}30%{transform:translateY(-4px);opacity:1;}}
+.loading-elapsed{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-left:auto;flex:none;}
+
+/* ---- 02 Thinking 折叠轨迹 ---- */
+.agent-think{border:1px solid var(--line);border-radius:12px;background:var(--paper-2);margin:0 0 13px;overflow:hidden;}
+.agent-think-head{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;user-select:none;
+  transition:background-color var(--dur-quick) var(--ease-out);
+}
+.agent-think-head:hover{background:var(--paper-4);}
+.agent-think-head:focus-visible{outline:2px solid var(--red);outline-offset:-2px;}
+.agent-think-ico{width:15px;height:15px;flex:none;color:var(--red);}
+.agent-think-sum{flex:1;font-size:12px;font-weight:600;color:var(--ink);min-width:0;}
+.agent-think-sum em{font-style:normal;font-weight:400;color:var(--muted);font-size:11px;margin-left:6px;}
+.agent-think-count{font-family:var(--mono);font-size:10px;color:var(--muted);flex:none;
+  background:var(--paper-4);border-radius:999px;padding:1px 7px;}
+.agent-think-chev{width:13px;height:13px;flex:none;color:var(--muted);
+  transition:transform var(--dur-fast) var(--ease-smooth-out);}
+.agent-think[data-open="1"] .agent-think-chev{transform:scaleY(-1);}
+
+/* accordion：grid-rows 0fr→1fr，padding 放内层 */
+.agent-think-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--dur-slow) var(--ease-smooth-out);}
+.agent-think[data-open="1"] .agent-think-body{grid-template-rows:1fr;}
+.agent-think-inner{overflow:hidden;}
+.agent-think-pad{padding:2px 12px 12px;}
+
+/* 轨迹单步：序号 + 竖线 + 内容 */
+.agent-step{display:flex;gap:10px;position:relative;padding:6px 0;}
+.agent-step:not(:last-child)::before{
+  content:"";position:absolute;left:8px;top:22px;bottom:-4px;width:1px;background:var(--line);}
+.agent-step-n{
+  width:17px;height:17px;border-radius:50%;flex:none;z-index:1;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9px;font-weight:700;
+  background:var(--paper-4);color:var(--muted);border:1px solid var(--line);
+  transition:background-color var(--dur-fast),color var(--dur-fast),border-color var(--dur-fast);
+}
+.agent-step.run .agent-step-n{background:var(--info-blue);border-color:var(--info-blue);color:#fff;animation:stepPulse 1.2s var(--ease-in-out) infinite;}
+.agent-step.done .agent-step-n{background:var(--green);border-color:var(--green);color:#fff;}
+@keyframes stepPulse{50%{box-shadow:0 0 0 5px rgba(47,109,181,.16);}}
+.agent-step-main{min-width:0;flex:1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.agent-step-thought{font-size:11.5px;line-height:1.55;color:var(--body);width:100%;}
+
+/* ---- 05 Tool Chips ---- */
+.tool-chip{
+  display:inline-flex;align-items:center;gap:5px;border-radius:999px;
+  border:1px solid var(--line);background:var(--paper-2);
+  padding:2px 9px 2px 7px;font-size:10.5px;color:var(--ink-2);
+  font-family:var(--mono);white-space:nowrap;
+  transition:background-color var(--dur-quick),border-color var(--dur-quick);
+}
+.tool-chip .dot{width:6px;height:6px;border-radius:50%;flex:none;background:var(--faint);}
+.tool-chip.run{border-color:#B7D0EC;background:var(--info-blue-t);}
+.tool-chip.run .dot{background:var(--info-blue);animation:chipBlink 1s var(--ease-in-out) infinite;}
+.tool-chip.done{border-color:#BFDCCB;background:var(--green-t);color:var(--green);}
+.tool-chip.done .dot{background:var(--green);}
+.tool-chip.finish{border-color:#BFDCCB;background:var(--green-t);color:var(--green);}
+@keyframes chipBlink{50%{opacity:.28;}}
+.tool-chip-result{font-size:10.5px;color:var(--muted);font-family:var(--mono);}
+
+/* ---- 缩略态：折叠时只显示进度点阵 ---- */
+.agent-think-mini{display:inline-flex;gap:3px;align-items:center;}
+.agent-think-mini i{width:5px;height:5px;border-radius:50%;background:var(--green);opacity:.3;}
+.agent-think-mini i.on{opacity:1;}
+
+@media(prefers-reduced-motion:reduce){
+  .loading-dots i,.agent-step.run .agent-step-n,.tool-chip.run .dot{animation:none;}
+  .agent-think-body{transition:none;}
+}
+@media(max-width:640px){
+  .agent-think-sum em{display:none;}
+  .agent-think-pad{padding:2px 10px 10px;}
+}
+
+/* ============================================================
+   Web Design Layout 精修层 · 排版层级 / 留白 / 交互反馈
+   依据 design-system：1.25 type scale、4px 间距网格、
+   5.3 视觉焦点引导、8.2 卡片、8.3 输入框、中文行高 1.7-1.8
+   纯 CSS 覆盖，不改结构 / JS / id
+   ============================================================ */
+:root{
+  --type-xs:12px; --type-sm:14px; --type-base:16px;
+  --type-lg:18px; --type-xl:20px; --type-2xl:24px; --type-3xl:30px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-5:20px; --sp-6:24px; --sp-8:32px; --sp-10:40px;
+}
+
+/* 1. 全局中文行高统一到 1.72（标题单独收紧） */
+body{line-height:1.72;}
+
+/* 2. 标题层级修正：区块小标题 ≥ 卡片标题，恢复 1.25 递进 */
+.jt-panel-head h2{font-size:var(--type-3xl);line-height:1.28;letter-spacing:-.02em;}
+.jt-subhead h3{font-size:var(--type-2xl);line-height:1.3;letter-spacing:-.015em;font-weight:700;}
+.jt-subhead p{font-size:var(--type-sm);line-height:1.7;margin-top:var(--sp-1);}
+.jt-plan h3{font-size:var(--type-xl);line-height:1.3;}
+
+/* 3. 区块留白：主区块之间给足呼吸，按 4px 网格 */
+.jt-subhead{margin:var(--sp-10) 0 var(--sp-3);}
+.jt-panel-head{margin-bottom:var(--sp-5);}
+.jt-panel-head p{font-size:var(--type-sm);line-height:1.75;max-width:720px;}
+.jt-strip{padding-bottom:var(--sp-8);gap:var(--sp-4);}
+.jt-shell{padding-bottom:var(--sp-16,64px);}
+
+/* 4. 卡片 hover 焦点引导（5.3 / 8.2）：克制的上浮与柔阴影 */
+.jt-plan{
+  transition:transform var(--dur-fast) var(--ease-smooth-out),
+             box-shadow var(--dur-fast) var(--ease-smooth-out),
+             border-color var(--dur-quick) var(--ease-out);
+}
+.jt-plan:hover{
+  transform:translateY(-4px);
+  box-shadow:0 12px 28px -12px rgba(20,35,29,.22),0 3px 0 rgba(20,35,29,.04);
+}
+.jt-plan.recommended:hover{box-shadow:0 0 0 2px rgba(14,110,92,.12),0 12px 28px -12px rgba(20,35,29,.22);}
+.jt-strip-item{
+  transition:transform var(--dur-fast) var(--ease-smooth-out),
+             box-shadow var(--dur-fast) var(--ease-smooth-out);
+}
+.jt-strip-item:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 22px -14px rgba(20,35,29,.28);
+}
+.jt-strip-item b{font-size:var(--type-sm);letter-spacing:.01em;}
+.jt-strip-item span{font-size:var(--type-xs);line-height:1.72;}
+
+/* 5. 输入框 focus 强化（8.3）：品牌色描边 + 三层柔光环 */
+.jt-field input,.jt-field select,.big-input{
+  transition:border-color var(--dur-quick) var(--ease-out),
+             box-shadow var(--dur-quick) var(--ease-out);
+}
+.jt-field input:focus,.jt-field select:focus,.big-input:focus{
+  border-color:var(--red);
+  box-shadow:0 0 0 4px rgba(14,110,92,.13),0 0 0 1px rgba(14,110,92,.18);
+  outline:none;
+}
+
+/* 6. 表单卡片内边距按 4px 网格放大，字段呼吸更均匀 */
+.jt-form{padding:var(--sp-6);border-radius:var(--radius-xl);}
+.jt-form-grid{gap:var(--sp-5);}
+.jt-field{gap:var(--sp-2);}
+.jt-field label{font-size:var(--type-sm);}
+.jt-field .help{font-size:var(--type-xs);line-height:1.65;}
+.jt-form-foot{margin-top:var(--sp-5);padding-top:var(--sp-5);}
+.jt-form-foot p{font-size:var(--type-xs);line-height:1.7;}
+
+/* 7. 首屏副标题与正文统一；eyebrow 字距更精致 */
+.jt-hero-lead{font-size:var(--type-lg);line-height:1.78;max-width:660px;text-wrap:pretty;}
+.jt-eyebrow,.section-eyebrow{letter-spacing:.16em;}
+
+/* 8. 按钮：轻微缩放反馈 + 焦点可见（8.1） */
+.jt-submit,.btn,.tabs-ai{
+  transition:transform var(--dur-fast) var(--ease-bounce),
+             background-color var(--dur-quick) var(--ease-out),
+             box-shadow var(--dur-quick) var(--ease-out);
+}
+.jt-submit:hover:not(:disabled),.btn:hover{transform:translateY(-2px);}
+.jt-submit:active:not(:disabled){transform:scale(.97);}
+.jt-submit:focus-visible,.btn:focus-visible,.tab:focus-visible{
+  outline:3px solid rgba(14,110,92,.35);outline-offset:2px;
+}
+
+/* 9. 政策/说明等长文本可读性 */
+.jt-ai-body,.hp-text,.info-body p{line-height:1.8;}
+
+/* 10. 移动端：收紧留白，避免过长滚动 */
+@media(max-width:640px){
+  .jt-panel-head h2{font-size:var(--type-2xl);}
+  .jt-subhead h3{font-size:var(--type-xl);}
+  .jt-subhead{margin:var(--sp-8) 0 var(--sp-3);}
+  .jt-form{padding:var(--sp-4);}
+  .jt-hero-lead{font-size:15px;max-width:100%;}
+  /* 修复首屏固定 760px 列宽在窄屏的横向溢出 */
+  .jt-hero.no-preview{grid-template-columns:minmax(0,1fr);}
+  .jt-hero.no-preview>div{max-width:100%;min-width:0;}
+  .jt-hero h1{max-width:100%;overflow-wrap:break-word;}
+  .jt-principles{max-width:100%;}
+  .jt-orb{width:220px;height:260px;right:-40px;opacity:.55;}
+}
+
+/* 11. 无障碍：尊重减少动效 */
+@media(prefers-reduced-motion:reduce){
+  .jt-plan,.jt-strip-item,.jt-submit,.btn,.tabs-ai,
+  .jt-field input,.jt-field select,.big-input{transition:none;}
+  .jt-plan:hover,.jt-strip-item:hover,.jt-submit:hover:not(:disabled),
+  .jt-submit:active:not(:disabled),.btn:hover{transform:none;}
+}
 </style>
 </head>
 <body>

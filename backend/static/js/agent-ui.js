@@ -40,25 +40,67 @@
       retrieve_policies: '检索政策条款', finish: '提交解释'
     };
 
-    function renderAgentTrace(events, done, note) {
+    var THINK_SVG = '<svg class="agent-think-ico" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.7"/></svg>';
+    var CHEV_SVG = '<svg class="agent-think-chev" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    function resultSummary(r) {
+      if (!r) return '结果已取得';
+      if (r.clauses) return '返回 ' + r.clauses.length + ' 条政策条款';
+      if (r.plans) return '返回 ' + r.plans.length + ' 档方案';
+      if (r.baseline) return '返回用电基线';
+      return '结果已取得';
+    }
+
+    function renderAgentTrace(events, done, note, open) {
       var body = document.getElementById('aiExplainBody');
       var state = document.getElementById('aiExplainState');
       if (!body) return;
-      var html = '<div class="agent-trace">';
-      events.forEach(function (ev) {
-        if (ev.kind === 'step') {
-          html += '<div class="agent-ev step"><span class="agent-tag">思考 ' + ev.data.step + '</span>'
-            + '<span>' + escHtml(ev.data.thought || '') + '</span></div>';
-          html += '<div class="agent-ev call"><span class="agent-tag">' + escHtml(TOOL_LABEL[ev.data.tool] || ev.data.tool) + '</span>'
-            + '<span class="agent-args">' + escHtml(JSON.stringify(ev.data.args || {})) + '</span></div>';
-        } else if (ev.kind === 'tool') {
-          var r = ev.data.result || {};
-          var summary = r.clauses ? ('返回 ' + r.clauses.length + ' 条政策条款')
-            : (r.plans ? ('返回 ' + r.plans.length + ' 档方案') : (r.baseline ? '返回用电基线' : '结果已取得'));
-          html += '<div class="agent-ev result"><span class="agent-tag">工具结果</span><span>' + escHtml(summary) + '</span></div>';
-        }
+      // 保留已有折叠状态：用户手动开合后不被重渲染打回默认
+      var prevWrap = body.querySelector('.agent-think');
+      var isOpen = open !== undefined ? open
+        : (prevWrap ? prevWrap.getAttribute('data-open') === '1' : !done);
+
+      var steps = events.filter(function (e) { return e.kind === 'step'; });
+      var tools = {};
+      events.forEach(function (e) { if (e.kind === 'tool') tools[e.data.step] = e.data; });
+
+      var inner = '';
+      steps.forEach(function (ev, i) {
+        var d = ev.data;
+        var isFinish = d.tool === 'finish';
+        var tr = tools[d.step];
+        var stepCls = isFinish || tr ? 'done' : 'run';
+        var chipCls = isFinish ? 'finish' : (tr ? 'done' : 'run');
+        inner += '<div class="agent-step ' + stepCls + '">'
+          + '<span class="agent-step-n">' + (isFinish || tr ? '✓' : d.step) + '</span>'
+          + '<div class="agent-step-main">'
+          + '<span class="tool-chip ' + chipCls + '"><span class="dot"></span>'
+          + escHtml(TOOL_LABEL[d.tool] || d.tool) + '</span>'
+          + (tr ? '<span class="tool-chip-result">' + escHtml(resultSummary(tr.result)) + '</span>' : '')
+          + (d.thought ? '<span class="agent-step-thought">' + escHtml(d.thought) + '</span>' : '')
+          + '</div></div>';
       });
-      html += '</div>';
+
+      var doneCount = steps.filter(function (e) {
+        return e.data.tool === 'finish' || tools[e.data.step];
+      }).length;
+      var mini = '<span class="agent-think-mini">' + steps.map(function (e, i) {
+        return '<i class="' + (i < doneCount ? 'on' : '') + '"></i>';
+      }).join('') + '</span>';
+
+      var summary = done ? '推理已完成' : '正在推理';
+      var html = '<div class="agent-think" data-open="' + (isOpen ? '1' : '0') + '">'
+        + '<div class="agent-think-head" role="button" tabindex="0" aria-expanded="' + (isOpen ? 'true' : 'false') + '">'
+        + THINK_SVG
+        + '<span class="agent-think-sum">' + summary + '<em>工具调用轨迹</em></span>'
+        + mini
+        + '<span class="agent-think-count">' + steps.length + ' 步</span>'
+        + CHEV_SVG
+        + '</div>'
+        + '<div class="agent-think-body"><div class="agent-think-inner"><div class="agent-think-pad">'
+        + (inner || '<div class="agent-step run"><span class="agent-step-n">1</span><div class="agent-step-main"><span class="agent-step-thought">正在读取家庭条件…</span></div></div>')
+        + '</div></div></div></div>';
+
       if (done) {
         var tierHtml = (done.tierNotes || []).map(function (x) {
           return '<div class="jt-ai-tier"><b>' + escHtml(x.tierName || x.tier) + '</b><span>' + escHtml(x.note) + '</span></div>';
@@ -72,7 +114,36 @@
         if (done.nextStep) html += '<p><b>下一步：</b>' + escHtml(done.nextStep) + '</p>';
       }
       body.innerHTML = html;
+
+      // 折叠交互：点击/回车切换
+      var head = body.querySelector('.agent-think-head');
+      var wrap = body.querySelector('.agent-think');
+      if (head && wrap) {
+        var toggle = function () {
+          var now = wrap.getAttribute('data-open') === '1';
+          wrap.setAttribute('data-open', now ? '0' : '1');
+          head.setAttribute('aria-expanded', now ? 'false' : 'true');
+        };
+        head.addEventListener('click', toggle);
+        head.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+        });
+      }
       if (state) state.textContent = note || 'Agent 已完成分析 · 数值来自规则与政策检索';
+    }
+
+    // 带耗时的加载态（Beautiful UI 01）
+    function showLoading(body, state) {
+      var t0 = Date.now();
+      body.innerHTML = '<div class="loading-state"><span class="loading-dots"><i></i><i></i><i></i></span>'
+        + '<span>Agent 正在规划并调用工具…</span><span class="loading-elapsed">0.0s</span></div>';
+      if (state) state.textContent = 'Agent 工作中';
+      var el = body.querySelector('.loading-elapsed');
+      var timer = setInterval(function () {
+        if (!el || !document.body.contains(el)) { clearInterval(timer); return; }
+        el.textContent = ((Date.now() - t0) / 1000).toFixed(1) + 's';
+      }, 100);
+      return function stop() { clearInterval(timer); };
     }
 
     function escHtml(s) {
@@ -86,9 +157,9 @@
       var state = document.getElementById('aiExplainState');
       var body = document.getElementById('aiExplainBody');
       box2.hidden = false;
-      body.innerHTML = '<div class="jt-ai-placeholder"><i></i><span>Agent 正在规划并调用工具…</span></div>';
-      if (state) state.textContent = 'Agent 工作中';
+      var stopLoading = showLoading(body, state);
       var events = [];
+      var firstPaint = true;
       try {
         var resp = await fetch(apiUrl('/api/energy/agent'), {
           method: 'POST',
@@ -113,20 +184,28 @@
               events.push({ kind: 'agent_start', data: ev });
             } else if (eventName === 'step' || eventName === 'tool') {
               events.push({ kind: eventName, data: ev });
-              renderAgentTrace(events, null, 'Agent 正在调用工具…');
+              if (firstPaint) { stopLoading(); firstPaint = false; }
+              // 流式过程自动展开跟随（open=true）
+              renderAgentTrace(events, null, 'Agent 正在调用工具…', true);
             } else if (eventName === 'done') {
               events.push({ kind: 'done', data: ev });
-              renderAgentTrace(events.filter(function (x) { return x.kind !== 'done'; }), ev.ai, ev.aiNote);
+              if (firstPaint) { stopLoading(); firstPaint = false; }
+              // 完成时默认折叠轨迹，把结论推到视线中心
+              renderAgentTrace(events.filter(function (x) { return x.kind !== 'done'; }),
+                ev.ai, ev.aiNote, false);
               done = true;
             } else if (eventName === 'fallback') {
-              renderAgentTrace([], ev.ai, ev.aiNote);
+              if (firstPaint) { stopLoading(); firstPaint = false; }
+              renderAgentTrace([], ev.ai, ev.aiNote, false);
               done = true;
             } else if (eventName === 'end') {
               done = true;
             }
           }
         }
+        stopLoading();
       } catch (err) {
+        stopLoading();
         if (state) state.textContent = 'Agent 暂不可用';
         body.innerHTML = '<p>Agent 调用失败，规则方案不受影响。' + escHtml(err && err.message || '') + '</p>';
       }
