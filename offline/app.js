@@ -227,9 +227,9 @@ function buildResponse(payload) {
   const coverageItems = FACTORS.policy_coverage || [];
   const citySupported = coverageItems.some(region => normalizeRegion(region) === normalizeRegion(household.city));
   const coverageMessage = citySupported
-    ? (policies.length ? '已接入西安市地方政策。政策卡只做候选匹配，能效等级、活动门店和材料条件仍需用户确认。'
-      : '已接入西安市地方政策，但当前方案的措施不属于已收录政策范围。')
-    : '当前仅接入西安市地方政策。该城市不展示地方补贴；未提供实际电费时，电价按陕西参考阶梯估算。';
+    ? (policies.length ? '已核验西安市 2026 年以旧换新 4 类政策（汽车两类仅作参考）。政策卡只做候选匹配，能效等级、活动门店和材料条件仍需用户确认。'
+      : '已核验西安市 2026 年以旧换新 4 类政策（汽车两类仅作参考），但当前方案的措施不属于已收录政策范围。')
+    : '当前已核验西安市 4 类以旧换新政策（汽车两类仅作参考）。该城市不展示地方补贴；未提供实际电费时，电价按陕西参考阶梯估算。';
   return {
     household, baseline, budget: household.budget, plans, policies,
     coverage: { citySupported, supportedRegions: coverageItems, message: coverageMessage },

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""从 docs/技术报告.md 生成竞赛提交版 docx（含截图、保留团队占位）。
+"""从 docs/技术报告.md 生成竞赛提交版 docx（含截图、已填团队信息）。
 
 用法：python scripts/build_submission_docx.py
 输出：docs/节碳家_技术报告_竞赛提交版.docx
-说明：不改动任何既有 docx，单独产出新文件供选择。
+说明：产出唯一提交用 docx，是本仓库的文档定稿来源。
 """
 
 from __future__ import annotations

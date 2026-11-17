@@ -880,7 +880,12 @@ body{background:var(--paper);}
 .jt-ai-tier b{min-width:72px;color:var(--red-dark);font-weight:500;}
 .jt-ai-note{font-size:10px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed #CADFD4;}
 .jt-ai-placeholder{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;}
-.jt-ai-placeholder i{width:8px;height:8px;border-radius:50%;background:var(--red);animation:jtPulse 1s infinite;}
+.jt-ai-placeholder i{
+  width:6px;height:6px;border-radius:50%;background:var(--red);flex:none;
+  animation:ldBounce 1.15s var(--ease-in-out) infinite;
+  box-shadow:9px 0 0 -1px var(--red),18px 0 0 -1px var(--red);
+  margin-right:14px;
+}
 .ai-cursor{display:inline-block;width:2px;height:1em;margin-left:2px;vertical-align:-2px;background:var(--red);animation:jtPulse .9s steps(2) infinite;}
 .jt-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:14px;}
 .jt-plan{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;min-width:0;box-shadow:0 3px 0 rgba(20,35,29,.04);}
@@ -893,7 +898,12 @@ body{background:var(--paper);}
 .jt-metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:14px 0;}
 .jt-metric{background:var(--paper-2);padding:11px 10px;}
 .jt-metric span{display:block;font-size:10px;color:var(--muted);margin-bottom:2px;}
-.jt-metric strong{font-family:var(--mono);font-size:16px;color:var(--ink);font-weight:600;word-break:break-word;}
+.jt-metric strong{
+  font-family:var(--mono);font-size:16px;color:var(--ink);font-weight:600;word-break:break-word;
+  display:inline-block;animation:numRise var(--dur-slow) var(--ease-smooth-out) both;
+}
+@keyframes numRise{from{opacity:0;transform:translateY(6px);filter:blur(2px);}to{opacity:1;transform:none;filter:blur(0);}}
+@media(prefers-reduced-motion:reduce){.jt-metric strong{animation:none;}}
 .jt-metric strong small{font-size:10px;font-weight:400;color:var(--muted);margin-left:2px;}
 .jt-action-list{display:flex;flex-direction:column;gap:7px;margin:0 0 14px;}
 .jt-action{border-top:1px solid var(--line);padding-top:8px;}
@@ -912,6 +922,16 @@ body{background:var(--paper);}
 .jt-subhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin:34px 0 10px;}
 .jt-subhead h3{font-size:19px;}
 .jt-subhead p{font-size:12px;color:var(--muted);margin-top:3px;}
+.jt-policy-group-title{
+  grid-column:1/-1;font-size:12px;font-weight:600;color:var(--muted);
+  letter-spacing:.02em;padding:6px 0 2px;margin-top:4px;
+  border-top:1px dashed var(--line);
+}
+.jt-policy-group-title:first-child{border-top:0;margin-top:0;padding-top:0;}
+.jt-policy.is-ref{opacity:.82;background:var(--paper);}
+.jt-policy.is-ref .jt-status{
+  background:var(--paper-4);color:var(--muted);border-color:var(--line-2);
+}
 .jt-policy-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
 .jt-policy{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0;}
 .jt-policy-head{display:flex;gap:8px;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
@@ -980,6 +1000,713 @@ body{background:var(--paper);}
 .jt-action-evidence{margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);font-size:10px;line-height:1.65;color:var(--muted);}
 .jt-action-evidence b{color:var(--body);font-weight:500;}
 .jt-action-evidence a{color:var(--red-dark);text-decoration:underline;}
+
+/* ============================================================
+   精修增强层 · UI 设计语言库
+   shadcn/ui 语义 token + radius 派生（骨架/规范）
+   transitions.dev 动效 token（进慢出快 / blur 交叉溶解）
+   beUI spring 手感（按压回弹 / 玻璃核心）
+   Rare UI Fluid Orb（首屏唯一流体球亮点，单色品牌绿）
+   说明：只新增样式与装饰节点，不改任何 JS / id / data-* / class 名
+   ============================================================ */
+:root{
+  /* shadcn: 单源圆角派生 */
+  --radius:14px;
+  --radius-sm:calc(var(--radius)*.6);
+  --radius-md:calc(var(--radius)*.8);
+  --radius-lg:var(--radius);
+  --radius-xl:calc(var(--radius)*1.4);
+  /* shadcn: 语义别名（指向既有品牌 token，不另定义颜色） */
+  --primary:var(--red);
+  --primary-fg:#FFFFFF;
+  --surface:var(--paper-2);
+  --surface-fg:var(--ink);
+  --muted-fg:var(--muted);
+  --border-subtle:var(--line);
+  /* transitions.dev: 动效 token */
+  --dur-stagger:40ms;
+  --dur-micro:80ms;
+  --dur-quick:150ms;
+  --dur-fast:250ms;
+  --dur-medium:350ms;
+  --dur-slow:500ms;
+  --ease-smooth-out:cubic-bezier(.22,1,.36,1);
+  --ease-in-out:ease-in-out;
+  --ease-out:ease-out;
+  --ease-linear:linear;
+  --ease-bounce:cubic-bezier(.34,1.56,.64,1);      /* beUI spring 按压/回弹 */
+  --ease-panel:cubic-bezier(.32,1.25,.4,1);        /* beUI 面板 morph 过冲 */
+  --blur-soft:2px;
+  --blur-large:8px;
+}
+
+/* ---- transitions.dev: 面板切换 blur 交叉溶解（覆盖原 jtIn） ---- */
+@keyframes jtIn{
+  from{opacity:0;transform:translateY(8px);filter:blur(var(--blur-soft));}
+  to{opacity:1;transform:none;filter:blur(0);}
+}
+.jt-panel.active{animation:jtIn var(--dur-slow) var(--ease-smooth-out) both;}
+
+/* ---- transitions.dev: 三档方案卡错峰揭示（纯 CSS，卡片由 JS 生成 3 张） ---- */
+@keyframes jtCardIn{
+  from{opacity:0;transform:translateY(14px);filter:blur(4px);}
+  to{opacity:1;transform:none;filter:blur(0);}
+}
+.jt-cards .jt-plan{animation:jtCardIn var(--dur-slow) var(--ease-smooth-out) both;}
+.jt-cards .jt-plan:nth-child(1){animation-delay:var(--dur-stagger);}
+.jt-cards .jt-plan:nth-child(2){animation-delay:calc(var(--dur-stagger)*3);}
+.jt-cards .jt-plan:nth-child(3){animation-delay:calc(var(--dur-stagger)*5);}
+
+/* ---- beUI: 主按钮 spring 按压回弹（保留原配色，只换手感） ---- */
+.btn,.jt-submit,.cta-btn,.feat-cta,.param-go,.hp-btn-sm,.aio,.jt-plan-btn{
+  transition:transform var(--dur-fast) var(--ease-bounce),
+             background-color var(--dur-quick) var(--ease-out),
+             box-shadow var(--dur-quick) var(--ease-out);
+}
+.btn:active,.jt-submit:active,.cta-btn:active,.feat-cta:active,
+.param-go:active,.hp-btn-sm:active,.aio:active{
+  transform:scale(.965);
+}
+
+/* ---- beUI: tab 药丸 spring 弹入 + 玻璃态顶栏 ---- */
+.tabs .tab.active{
+  transition:background-color var(--dur-fast) var(--ease-out),
+             color var(--dur-fast) var(--ease-out),
+             transform var(--dur-fast) var(--ease-bounce);
+  animation:tabPop var(--dur-fast) var(--ease-bounce) both;
+}
+@keyframes tabPop{from{transform:scale(.94);}to{transform:scale(1);}}
+.topbar{
+  background:rgba(243,247,243,.78);
+  backdrop-filter:blur(18px) saturate(1.4);
+  -webkit-backdrop-filter:blur(18px) saturate(1.4);
+}
+
+/* ---- shadcn: 统一焦点环（语义 token，克制不发光） ---- */
+.jt-field input:focus,.jt-field select:focus,
+.rec-toolbar input:focus,.hp-auth input:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(14,110,92,.12);
+}
+.jt-plan-btn:focus-visible,.btn:focus-visible,.jt-submit:focus-visible,
+.tab:focus-visible,.chip:focus-visible{
+  outline:2px solid var(--primary);
+  outline-offset:2px;
+}
+
+/* ---- transitions.dev: AI 逐字游标打磨（JS 结构不变） ---- */
+.ai-cursor{
+  background:var(--primary);
+  border-radius:1px;
+  animation:jtPulse .9s steps(2) infinite;
+}
+.jt-ai-stages span.done{animation:tabPop var(--dur-fast) var(--ease-bounce) both;}
+
+/* ---- shadcn: 次级信息统一 muted-fg，细边框分层 ---- */
+.jt-preview-sub,.jt-action-body,.jt-plan-note,.jt-ai-note{color:var(--muted-fg);}
+.jt-form,.jt-plan,.jt-card{border-color:var(--border-subtle);}
+
+/* ============================================================
+   Rare UI · Fluid Orb（首屏唯一亮点，单色品牌绿）
+   CSS 多层 blur 圆形 + 缓动漂移复刻；单色注入；ambient 带静帧降级
+   ============================================================ */
+.jt-hero.no-preview{position:relative;}
+.jt-hero.no-preview > div:first-child{position:relative;z-index:2;}
+.jt-orb{
+  position:absolute;right:4px;top:50%;transform:translateY(-50%);
+  width:372px;height:416px;z-index:1;pointer-events:none;
+}
+.orb-blobs{position:absolute;left:26px;right:26px;top:18px;height:300px;filter:blur(24px);}
+.ob{position:absolute;border-radius:50%;mix-blend-mode:multiply;}
+.ob1{width:210px;height:210px;background:#0E6E5C;left:44px;top:8px;animation:obF1 11s var(--ease-in-out) infinite;}
+.ob2{width:178px;height:178px;background:#2E9B7E;right:16px;top:56px;animation:obF2 9s var(--ease-in-out) infinite;}
+.ob3{width:158px;height:158px;background:#6FC09C;left:78px;bottom:6px;animation:obF3 13s var(--ease-in-out) infinite;}
+.ob4{width:132px;height:132px;background:#CDEB9B;right:74px;bottom:22px;animation:obF4 10s var(--ease-in-out) infinite;}
+@keyframes obF1{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(22px,16px) scale(1.08);}}
+@keyframes obF2{0%,100%{transform:translate(0,0) scale(1.05);}50%{transform:translate(-18px,22px) scale(.94);}}
+@keyframes obF3{0%,100%{transform:translate(0,0) scale(.96);}50%{transform:translate(20px,-18px) scale(1.1);}}
+@keyframes obF4{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-22px,-12px) scale(.92);}}
+.orb-ring{
+  position:absolute;left:50%;top:168px;width:224px;height:224px;margin:-112px 0 0 -112px;
+  border-radius:50%;border:1px dashed rgba(14,110,92,.34);
+  animation:orbSpin 40s var(--ease-linear) infinite;
+}
+.orb-ring::after{
+  content:"";position:absolute;top:-4px;left:50%;width:7px;height:7px;margin-left:-3.5px;
+  border-radius:50%;background:var(--primary);
+}
+@keyframes orbSpin{to{transform:rotate(360deg);}}
+.orb-core{
+  position:absolute;left:50%;top:168px;width:108px;height:108px;margin:-54px 0 0 -54px;
+  border-radius:50%;background:rgba(255,255,255,.72);
+  border:1px solid rgba(14,110,92,.24);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 34px rgba(14,110,92,.16);
+}
+.orb-core svg{width:46px;height:46px;}
+.orb-caption{position:absolute;left:0;right:0;bottom:2px;text-align:center;}
+.orb-caption b{display:block;font-size:13px;color:var(--red-dark);letter-spacing:.01em;}
+.orb-caption span{display:block;font-size:11px;color:var(--muted-fg);margin-top:3px;line-height:1.6;}
+
+/* 首屏窄屏：流体球降级为背景装饰（保留动效与视觉亮点，不挤压文字） */
+@media(max-width:1180px){
+  .jt-orb{
+    display:block;                 /* 覆盖旧的 display:none，恢复渲染 */
+    right:-90px;top:58%;
+    width:240px;height:280px;
+    opacity:.22;                   /* 压低透明度，作为背景不抢文字 */
+    z-index:0;
+  }
+  .orb-blobs{filter:blur(18px);}
+  .orb-caption{display:none;}      /* 桌面端说明文字在窄屏隐藏，避免与正文叠字 */
+  .jt-hero.no-preview > div:first-child{z-index:2;} /* 文字始终在球之上 */
+}
+
+/* ---- shadcn: 亮暗双模式（默认亮色不变，尊重系统暗色偏好） ---- */
+@media(prefers-color-scheme:dark){
+  :root{
+    --paper:#0F1A16;--paper-2:#16251F;--paper-3:#1B2E26;--paper-4:#20362D;
+    --ink:#EAF3EE;--ink-2:#C6D8CE;--body:#A9C0B4;--muted:#81998C;--faint:#607568;
+    --line:#2A4035;--line-2:#355045;
+    --red:#4FC5A0;--red-dark:#8AE7C6;--red-t:#184237;
+    --yellow:#CDEB9B;--yellow-t:#2A3A20;--yellow-d:#B9DB86;
+    --green:#7FD96A;--green-t:#1E3A24;
+    --primary-fg:#0F1A16;
+    --shadow-hard:0 5px 0 rgba(0,0,0,.28);
+    --shadow-card:0 8px 24px rgba(0,0,0,.3);
+  }
+  body{background:var(--paper);}
+  .topbar{background:rgba(15,26,22,.8);border-bottom-color:var(--line);}
+  .jt-field input,.jt-field select,.jt-entry-status select,
+  .rec-toolbar input[type=search],.rec-toolbar input[type=date]{background:var(--paper);color:var(--ink);}
+  .jt-ai{background:#142A22;border-color:#2A5A48;}
+  .jt-ai-stages span{background:var(--paper-2);}
+  .jt-ai-tier{border-top-color:#274238;}
+  .jt-status.no,.jt-policy-demo,.jt-demo-banner,
+  .flow-src,.bb-notice{background:#2E2A1E;color:#E4D49B;border-color:#4A4228;}
+  .jt-plan-btn:hover{background:var(--red-t);}
+  .ob{mix-blend-mode:screen;}
+  .orb-core{background:rgba(22,37,31,.72);border-color:rgba(79,197,160,.35);}
+  .orb-core svg path{stroke:#7FE0BC;}
+  .orb-ring{border-color:rgba(79,197,160,.4);}
+  .orb-ring::after{background:var(--primary);}
+  .btn:hover,.btn-ghost:hover{filter:brightness(1.05);}
+  footer{background:#0A120F;}
+}
+
+/* ---- 无障碍: 尊重"减少动态效果"系统偏好（ambient 静帧降级） ---- */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;}
+  .ob1,.ob2,.ob3,.ob4{animation:none !important;transform:none !important;}
+  .orb-ring{animation:none !important;}
+  .ai-cursor{animation:none !important;}
+}
+
+/* ============================================================
+   页脚「说明」详情面板（复用设计语言 token，纯静态内容）
+   shadcn: muted-foreground 次级文本 / 1px border / radius 派生
+   transitions.dev: modal 进慢出快 + blur 交叉溶解
+   beUI: 面板 spring 过冲入场 + 玻璃遮罩
+   ============================================================ */
+.foot-col .foot-info{
+  color:#C9BBA4;font-size:13px;text-decoration:none;background:none;border:none;
+  text-align:left;padding:0;cursor:pointer;font-family:inherit;transition:.15s;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.foot-col .foot-info::after{
+  content:"↗";font-family:var(--mono);font-size:11px;opacity:.55;transition:transform var(--dur-quick) var(--ease-smooth-out);
+}
+.foot-col .foot-info:hover{color:#FFFBF2;}
+.foot-col .foot-info:hover::after{transform:translate(2px,-2px);opacity:1;}
+.foot-col .foot-info:focus-visible{outline:2px solid var(--primary);outline-offset:3px;border-radius:3px;}
+
+.info-modal{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:20px;}
+.info-modal[hidden]{display:none;}
+.info-mask{position:absolute;inset:0;background:rgba(16,28,23,.5);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+.info-panel{
+  position:relative;width:100%;max-width:660px;max-height:86vh;overflow:auto;
+  background:var(--paper-2);color:var(--ink);border:1px solid var(--line);
+  border-radius:var(--radius-xl);padding:30px 32px 26px;
+  box-shadow:0 24px 60px rgba(16,28,23,.22);
+  animation:infoIn var(--dur-fast) var(--ease-panel) both;
+}
+@keyframes infoIn{from{opacity:0;transform:translateY(12px) scale(.97);filter:blur(var(--blur-soft));}to{opacity:1;transform:none;filter:blur(0);}}
+.info-x{
+  position:absolute;top:16px;right:18px;border:none;background:none;cursor:pointer;
+  font-size:24px;line-height:1;color:var(--muted);padding:4px 9px;border-radius:8px;transition:.15s;
+}
+.info-x:hover{color:var(--ink);background:var(--paper-4);}
+.info-kicker{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--red);font-weight:700;margin-bottom:8px;}
+.info-panel h2{font-size:22px;font-weight:800;letter-spacing:-.01em;margin-bottom:12px;padding-right:32px;}
+.info-lead{font-size:13.5px;line-height:1.85;color:var(--body);margin-bottom:18px;}
+.info-panel h3{font-size:14px;font-weight:700;margin:20px 0 8px;color:var(--ink-2);}
+.info-panel p,.info-panel li{font-size:13px;line-height:1.8;color:var(--body);}
+.info-panel ul{margin:6px 0 0 18px;}
+.info-panel li{margin-bottom:5px;}
+.info-panel b{color:var(--ink);font-weight:600;}
+.info-panel code{font-family:var(--mono);font-size:12px;background:var(--paper-4);border-radius:5px;padding:1px 6px;color:var(--red-dark);}
+.info-panel a{color:var(--red-dark);text-decoration:underline;text-underline-offset:2px;word-break:break-all;}
+.info-callout{
+  margin-top:20px;padding:13px 15px;border-radius:var(--radius-md);
+  background:var(--yellow-t);border:1px solid var(--line);
+  font-size:12.5px;line-height:1.75;color:var(--yellow-d);
+}
+.info-callout b{color:var(--yellow-d);}
+@media(max-width:640px){.info-panel{padding:24px 20px 20px;max-height:90vh;}}
+
+/* ============================================================
+   首次进入引导弹窗 + 醒目登录入口（沿用设计语言 token）
+   shadcn: 语义 token / radius 派生 / muted 次级文本
+   transitions.dev: modal 进慢出快 + blur 交叉溶解 + 错峰入场
+   beUI: spring 面板入场 + 按钮按压回弹
+   ============================================================ */
+
+/* 醒目登录/注册按钮：覆盖原 .hp-link 的下划线小字样式 */
+.hp-link.hp-auth-cta{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--red);color:#fff;border:1px solid var(--red);
+  border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:600;
+  text-decoration:none;white-space:nowrap;box-shadow:0 3px 0 var(--red-dark);
+  transition:transform var(--dur-fast) var(--ease-bounce),
+             background-color var(--dur-quick) var(--ease-out),
+             box-shadow var(--dur-quick) var(--ease-out);
+}
+.hp-link.hp-auth-cta::before{content:"◉";font-size:11px;line-height:1;}
+.hp-link.hp-auth-cta:hover{background:var(--red-dark);color:#fff;text-decoration:none;transform:translateY(-1px);}
+.hp-link.hp-auth-cta:active{transform:translateY(2px) scale(.97);box-shadow:0 1px 0 var(--red-dark);}
+.hp-link.hp-auth-cta:focus-visible{outline:2px solid var(--red);outline-offset:3px;}
+
+/* 引导弹窗容器 */
+.welcome-modal{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;padding:20px;}
+.welcome-modal[hidden]{display:none;}
+.welcome-mask{position:absolute;inset:0;background:rgba(16,28,23,.55);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);}
+.welcome-panel{
+  position:relative;width:100%;max-width:600px;max-height:90vh;overflow:auto;
+  background:var(--paper-2);color:var(--ink);border:1px solid var(--line);
+  border-radius:var(--radius-xl);padding:34px 34px 26px;
+  box-shadow:0 26px 70px rgba(16,28,23,.28);
+  animation:infoIn var(--dur-fast) var(--ease-panel) both;
+}
+.welcome-x{
+  position:absolute;top:16px;right:18px;border:none;background:none;cursor:pointer;
+  font-size:24px;line-height:1;color:var(--muted);padding:4px 9px;border-radius:8px;transition:.15s;
+}
+.welcome-x:hover{color:var(--ink);background:var(--paper-4);}
+.welcome-kicker{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--red);font-weight:700;margin-bottom:10px;}
+.welcome-panel h2{font-size:25px;font-weight:800;letter-spacing:-.02em;line-height:1.3;margin-bottom:10px;padding-right:30px;}
+.welcome-lead{font-size:13.5px;line-height:1.8;color:var(--body);margin-bottom:22px;}
+.welcome-opts{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.welcome-opt{
+  display:flex;flex-direction:column;gap:8px;text-align:left;
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:18px;
+}
+.welcome-opt-ico{
+  width:38px;height:38px;border-radius:11px;background:var(--red-t);
+  display:flex;align-items:center;justify-content:center;flex:none;
+}
+.welcome-opt-ico svg{width:21px;height:21px;}
+.welcome-opt b{font-size:15px;color:var(--ink);}
+.welcome-opt p{font-size:12px;line-height:1.7;color:var(--body);flex:1;margin:0;}
+.welcome-opt .wo-tag{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.04em;}
+.welcome-go{
+  align-self:flex-start;margin-top:4px;border:1px solid var(--red);background:transparent;
+  color:var(--red-dark);border-radius:9px;padding:8px 14px;font-family:inherit;
+  font-size:12.5px;font-weight:600;cursor:pointer;transition:transform var(--dur-fast) var(--ease-bounce),background-color var(--dur-quick);
+}
+.welcome-go:hover{background:var(--red-t);}
+.welcome-go:active{transform:scale(.96);}
+.welcome-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:22px;padding-top:16px;border-top:1px solid var(--line);}
+.welcome-skip{border:none;background:none;font-family:inherit;font-size:12.5px;color:var(--muted);cursor:pointer;padding:4px 0;}
+.welcome-skip:hover{color:var(--ink);text-decoration:underline;}
+.welcome-tip{font-family:var(--mono);font-size:10.5px;color:var(--faint);line-height:1.6;}
+.welcome-note{margin-top:14px;background:var(--yellow-t);border:1px solid var(--line);border-radius:var(--radius-md);padding:11px 13px;font-size:11.5px;line-height:1.7;color:var(--yellow-d);}
+@media(max-width:640px){.welcome-opts{grid-template-columns:1fr;}.welcome-panel{padding:26px 20px 20px;}}
+
+/* 首次使用引导：三步上手 + 可选增强 */
+.welcome-steps{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+  margin:0 0 18px;
+}
+.welcome-step{
+  display:flex;align-items:flex-start;gap:9px;min-width:0;
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);
+  padding:12px 11px;
+}
+.ws-num{
+  width:20px;height:20px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--red);color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;
+}
+.welcome-step b{display:block;font-size:12px;color:var(--ink);line-height:1.4;}
+.welcome-step small{display:block;font-size:10.5px;line-height:1.6;color:var(--muted);margin-top:3px;}
+.welcome-more{
+  margin:0 0 18px;padding:11px 13px;border-radius:var(--radius-md);
+  background:var(--green-t);border:1px solid #CFE5D8;
+  font-size:11.5px;line-height:1.75;color:var(--body);
+}
+.welcome-more b{display:block;font-size:12px;color:var(--green);margin-bottom:3px;}
+.welcome-more em{font-style:normal;font-weight:600;color:var(--green);}
+.welcome-more i{font-style:normal;font-weight:600;color:var(--green);}
+@media(max-width:640px){
+  .welcome-steps{grid-template-columns:1fr;gap:6px;}
+  .welcome-step{padding:9px 11px;}
+  .welcome-step small{font-size:11px;}
+  .welcome-lead{margin-bottom:14px;}
+}
+
+/* ============================================================
+   多模态输入 + AI 工作流可视化（纯前端，浏览器原生 API）
+   SpeechRecognition 语音输入 / SpeechSynthesis 朗读 / FileReader 图片预览
+   不上传服务器、不调用后端、不改任何既有 id 与 JS 逻辑
+   ============================================================ */
+
+/* ---- 多模态：日记输入工具条 ---- */
+.mm-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 2px;}
+.mm-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid var(--line-2);background:var(--paper-2);color:var(--body);
+  font-family:inherit;font-size:12px;padding:7px 11px;border-radius:9px;cursor:pointer;
+  transition:transform var(--dur-fast) var(--ease-bounce),background-color var(--dur-quick),color var(--dur-quick),border-color var(--dur-quick);
+}
+.mm-btn svg{width:15px;height:15px;flex:none;}
+.mm-btn:hover{border-color:var(--red);color:var(--red-dark);background:var(--red-t);}
+.mm-btn:active{transform:scale(.96);}
+.mm-btn.listening{background:var(--red);color:#fff;border-color:var(--red);animation:mmPulse 1.1s var(--ease-in-out) infinite;}
+@keyframes mmPulse{50%{box-shadow:0 0 0 6px rgba(14,110,92,.14);}}
+.mm-btn:disabled{opacity:.5;cursor:not-allowed;}
+.mm-hint{font-size:11px;color:var(--faint);margin-left:auto;}
+.mm-note{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px;line-height:1.6;}
+
+/* 语音识别临时文字 */
+.mm-live{
+  margin-top:8px;padding:9px 12px;border:1px dashed var(--red);border-radius:9px;
+  background:var(--red-t);color:var(--red-dark);font-size:13px;line-height:1.6;min-height:20px;
+}
+.mm-live:empty{display:none;}
+.mm-live i{font-style:normal;opacity:.6;}
+
+/* 图片预览（本地，不上传） */
+.mm-shot{margin-top:10px;}
+.mm-shot[hidden]{display:none;}
+.mm-shot img{
+  max-width:220px;max-height:150px;object-fit:cover;display:block;
+  border:1px solid var(--line);border-radius:10px;margin-bottom:6px;
+}
+.mm-shot-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.mm-shot-meta span{font-size:11px;color:var(--muted);}
+.mm-shot-remove{border:none;background:none;color:var(--red);font-family:inherit;font-size:11px;cursor:pointer;text-decoration:underline;}
+.mm-shot-ocr{
+  border:1px solid var(--red);background:var(--red);color:#fff;font-family:inherit;
+  font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;cursor:pointer;
+  transition:transform var(--dur-fast) var(--ease-bounce),background-color var(--dur-quick);
+}
+.mm-shot-ocr:hover{background:var(--red-dark);}
+.mm-shot-ocr:active{transform:scale(.95);}
+.mm-shot-ocr:disabled{opacity:.55;cursor:wait;}
+.mm-ocr-msg{font-size:11.5px;line-height:1.6;margin-top:6px;color:var(--muted);}
+.mm-ocr-msg:empty{display:none;}
+.mm-ocr-msg.ok{color:var(--green);}
+.mm-ocr-msg.err{color:var(--red);}
+
+/* 朗读按钮（AI 解释区、碳迹反馈区通用） */
+.mm-speak{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1px solid var(--line-2);background:var(--paper-2);color:var(--body);
+  font-family:inherit;font-size:11px;padding:5px 10px;border-radius:999px;cursor:pointer;
+  transition:background-color var(--dur-quick),color var(--dur-quick),transform var(--dur-fast) var(--ease-bounce);
+}
+.mm-speak svg{width:13px;height:13px;}
+.mm-speak:hover{background:var(--green-t);color:var(--green);border-color:#BFDCCB;}
+.mm-speak:active{transform:scale(.95);}
+.mm-speak.speaking{background:var(--green);color:#fff;border-color:var(--green);}
+.mm-speak:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ---- AI 工作流可视化：把三阶段执行轨迹做出来 ---- */
+.wf-track{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+  margin:2px 0 14px;position:relative;
+}
+.wf-step{
+  display:flex;gap:9px;align-items:flex-start;
+  border:1px solid var(--line);border-radius:10px;padding:10px 11px;
+  background:var(--paper-2);position:relative;transition:border-color var(--dur-fast),background-color var(--dur-fast);
+}
+.wf-step .wf-n{
+  width:22px;height:22px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:11px;font-weight:700;
+  background:var(--paper-4);color:var(--muted);border:1px solid var(--line);
+  transition:background-color var(--dur-fast),color var(--dur-fast),border-color var(--dur-fast);
+}
+.wf-step b{font-size:12px;color:var(--ink);display:block;line-height:1.4;}
+.wf-step small{font-size:10px;color:var(--faint);line-height:1.5;display:block;margin-top:2px;}
+.wf-step.done{border-color:#BFDCCB;background:var(--green-t);}
+.wf-step.done .wf-n{background:var(--green);color:#fff;border-color:var(--green);}
+.wf-step.active{border-color:#B7D9CC;background:var(--red-t);}
+.wf-step.active .wf-n{background:var(--red);color:#fff;border-color:var(--red);animation:wfBeat 1.1s var(--ease-in-out) infinite;}
+@keyframes wfBeat{50%{box-shadow:0 0 0 5px rgba(14,110,92,.14);}}
+.wf-step.done .wf-n::after{content:"✓";}
+.wf-step.done .wf-n span{display:none;}
+@media(max-width:640px){.wf-track{grid-template-columns:1fr;}.mm-hint{margin-left:0;flex:1 1 100%;}}
+
+/* ---- Agent 模式开关与执行轨迹 ---- */
+.agent-toggle{
+  display:inline-flex;align-items:center;gap:5px;cursor:pointer;user-select:none;
+  font-size:11px;color:var(--body);border:1px solid var(--line-2);
+  background:var(--paper-2);border-radius:999px;padding:4px 9px;white-space:nowrap;
+  transition:border-color var(--dur-quick),background-color var(--dur-quick),color var(--dur-quick);
+}
+.agent-toggle input{width:13px;height:13px;accent-color:var(--red);margin:0;cursor:pointer;}
+.agent-toggle:hover{border-color:var(--red);}
+.agent-toggle:has(input:checked){background:var(--green-t);border-color:#BFDCCB;color:var(--green);}
+.agent-toggle:has(input:checked) input{accent-color:var(--green);}
+
+/* Agent 开关一次性引导气泡 */
+.agent-hint-wrap{display:inline-flex;align-items:center;}
+.agent-hint{
+  position:absolute;bottom:calc(100% + 9px);right:0;z-index:12;
+  display:flex;align-items:center;gap:8px;white-space:nowrap;
+  background:var(--ink);color:#FFFBF2;border-radius:9px;
+  padding:8px 10px;font-size:11.5px;line-height:1.5;
+  box-shadow:0 8px 20px rgba(16,28,23,.24);
+  animation:hintIn var(--dur-fast) var(--ease-smooth-out) both;
+}
+.agent-hint::before{
+  content:"";position:absolute;bottom:-5px;right:20px;
+  border-left:5px solid transparent;border-right:5px solid transparent;
+  border-top:5px solid var(--ink);
+}
+.agent-hint-x{
+  border:none;background:rgba(255,255,255,.16);color:inherit;cursor:pointer;
+  width:16px;height:16px;border-radius:50%;line-height:14px;text-align:center;
+  font-size:13px;padding:0;flex:none;
+}
+.agent-hint-x:hover{background:rgba(255,255,255,.3);}
+@keyframes hintIn{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:none;}}
+@media(prefers-reduced-motion:reduce){.agent-hint{animation:none;}}
+@media(max-width:640px){
+  .agent-hint{white-space:normal;max-width:230px;right:auto;left:0;line-height:1.65;}
+  .agent-hint::before{right:auto;left:20px;}
+}
+.agent-trace{display:flex;flex-direction:column;gap:6px;margin:0 0 12px;}
+.agent-ev{
+  display:flex;gap:8px;align-items:flex-start;font-size:11.5px;line-height:1.6;color:var(--body);
+  border-radius:8px;padding:6px 9px;background:var(--paper);border-left:2px solid var(--line-2);
+  animation:jtCardIn var(--dur-fast) var(--ease-smooth-out) both;
+}
+.agent-ev.step{border-left-color:var(--yellow);background:var(--yellow-t);}
+.agent-ev.call{border-left-color:var(--red);background:var(--red-t);}
+.agent-ev.result{border-left-color:var(--green);background:var(--green-t);}
+.agent-tag{
+  flex:none;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--red-dark);
+  background:var(--paper-2);border-radius:5px;padding:1px 6px;letter-spacing:.02em;
+}
+.agent-args{font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all;}
+@media(max-width:640px){.agent-toggle span{font-size:10.5px;}}
+
+/* ============================================================
+   Beautiful UI 基元增强（AI 白盒化）
+   02 Thinking 折叠轨迹 / 05 Tool Chips / 01 带耗时加载
+   手法：transitions.dev accordion(grid-rows) + 状态语义色
+   ============================================================ */
+
+/* 运行中语义色（项目主色没有蓝，这里补一个克制的信息蓝） */
+:root{--info-blue:#2F6DB5;--info-blue-t:#E8F0FA;}
+
+/* ---- 01 加载状态：点阵 + 已耗时 ---- */
+.loading-state{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--body);}
+.loading-dots{display:inline-flex;gap:3px;flex:none;}
+.loading-dots i{width:5px;height:5px;border-radius:50%;background:var(--red);opacity:.35;animation:ldBounce 1.15s var(--ease-in-out) infinite;}
+.loading-dots i:nth-child(2){animation-delay:.14s;}
+.loading-dots i:nth-child(3){animation-delay:.28s;}
+@keyframes ldBounce{0%,60%,100%{transform:translateY(0);opacity:.32;}30%{transform:translateY(-4px);opacity:1;}}
+.loading-elapsed{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-left:auto;flex:none;}
+
+/* ---- 02 Thinking 折叠轨迹 ---- */
+.agent-think{border:1px solid var(--line);border-radius:12px;background:var(--paper-2);margin:0 0 13px;overflow:hidden;}
+.agent-think-head{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;user-select:none;
+  transition:background-color var(--dur-quick) var(--ease-out);
+}
+.agent-think-head:hover{background:var(--paper-4);}
+.agent-think-head:focus-visible{outline:2px solid var(--red);outline-offset:-2px;}
+.agent-think-ico{width:15px;height:15px;flex:none;color:var(--red);}
+.agent-think-sum{flex:1;font-size:12px;font-weight:600;color:var(--ink);min-width:0;}
+.agent-think-sum em{font-style:normal;font-weight:400;color:var(--muted);font-size:11px;margin-left:6px;}
+.agent-think-count{font-family:var(--mono);font-size:10px;color:var(--muted);flex:none;
+  background:var(--paper-4);border-radius:999px;padding:1px 7px;}
+.agent-think-chev{width:13px;height:13px;flex:none;color:var(--muted);
+  transition:transform var(--dur-fast) var(--ease-smooth-out);}
+.agent-think[data-open="1"] .agent-think-chev{transform:scaleY(-1);}
+
+/* accordion：grid-rows 0fr→1fr，padding 放内层 */
+.agent-think-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--dur-slow) var(--ease-smooth-out);}
+.agent-think[data-open="1"] .agent-think-body{grid-template-rows:1fr;}
+.agent-think-inner{overflow:hidden;}
+.agent-think-pad{padding:2px 12px 12px;}
+
+/* 轨迹单步：序号 + 竖线 + 内容 */
+.agent-step{display:flex;gap:10px;position:relative;padding:6px 0;}
+.agent-step:not(:last-child)::before{
+  content:"";position:absolute;left:8px;top:22px;bottom:-4px;width:1px;background:var(--line);}
+.agent-step-n{
+  width:17px;height:17px;border-radius:50%;flex:none;z-index:1;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:9px;font-weight:700;
+  background:var(--paper-4);color:var(--muted);border:1px solid var(--line);
+  transition:background-color var(--dur-fast),color var(--dur-fast),border-color var(--dur-fast);
+}
+.agent-step.run .agent-step-n{background:var(--info-blue);border-color:var(--info-blue);color:#fff;animation:stepPulse 1.2s var(--ease-in-out) infinite;}
+.agent-step.done .agent-step-n{background:var(--green);border-color:var(--green);color:#fff;}
+@keyframes stepPulse{50%{box-shadow:0 0 0 5px rgba(47,109,181,.16);}}
+.agent-step-main{min-width:0;flex:1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.agent-step-thought{font-size:11.5px;line-height:1.55;color:var(--body);width:100%;}
+
+/* ---- 05 Tool Chips ---- */
+.tool-chip{
+  display:inline-flex;align-items:center;gap:5px;border-radius:999px;
+  border:1px solid var(--line);background:var(--paper-2);
+  padding:2px 9px 2px 7px;font-size:10.5px;color:var(--ink-2);
+  font-family:var(--mono);white-space:nowrap;
+  transition:background-color var(--dur-quick),border-color var(--dur-quick);
+}
+.tool-chip .dot{width:6px;height:6px;border-radius:50%;flex:none;background:var(--faint);}
+.tool-chip.run{border-color:#B7D0EC;background:var(--info-blue-t);}
+.tool-chip.run .dot{background:var(--info-blue);animation:chipBlink 1s var(--ease-in-out) infinite;}
+.tool-chip.done{border-color:#BFDCCB;background:var(--green-t);color:var(--green);}
+.tool-chip.done .dot{background:var(--green);}
+.tool-chip.finish{border-color:#BFDCCB;background:var(--green-t);color:var(--green);}
+@keyframes chipBlink{50%{opacity:.28;}}
+.tool-chip-result{font-size:10.5px;color:var(--muted);font-family:var(--mono);}
+
+/* ---- 缩略态：折叠时只显示进度点阵 ---- */
+.agent-think-mini{display:inline-flex;gap:3px;align-items:center;}
+.agent-think-mini i{width:5px;height:5px;border-radius:50%;background:var(--green);opacity:.3;}
+.agent-think-mini i.on{opacity:1;}
+
+@media(prefers-reduced-motion:reduce){
+  .loading-dots i,.agent-step.run .agent-step-n,.tool-chip.run .dot{animation:none;}
+  .agent-think-body{transition:none;}
+}
+@media(max-width:640px){
+  .agent-think-sum em{display:none;}
+  .agent-think-pad{padding:2px 10px 10px;}
+}
+
+/* ============================================================
+   Web Design Layout 精修层 · 排版层级 / 留白 / 交互反馈
+   依据 design-system：1.25 type scale、4px 间距网格、
+   5.3 视觉焦点引导、8.2 卡片、8.3 输入框、中文行高 1.7-1.8
+   纯 CSS 覆盖，不改结构 / JS / id
+   ============================================================ */
+:root{
+  --type-xs:12px; --type-sm:14px; --type-base:16px;
+  --type-lg:18px; --type-xl:20px; --type-2xl:24px; --type-3xl:30px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-5:20px; --sp-6:24px; --sp-8:32px; --sp-10:40px;
+}
+
+/* 1. 全局中文行高统一到 1.72（标题单独收紧） */
+body{line-height:1.72;}
+
+/* 2. 标题层级修正：区块小标题 ≥ 卡片标题，恢复 1.25 递进 */
+.jt-panel-head h2{font-size:var(--type-3xl);line-height:1.28;letter-spacing:-.02em;}
+.jt-subhead h3{font-size:var(--type-2xl);line-height:1.3;letter-spacing:-.015em;font-weight:700;}
+.jt-subhead p{font-size:var(--type-sm);line-height:1.7;margin-top:var(--sp-1);}
+.jt-plan h3{font-size:var(--type-xl);line-height:1.3;}
+
+/* 3. 区块留白：主区块之间给足呼吸，按 4px 网格 */
+.jt-subhead{margin:var(--sp-10) 0 var(--sp-3);}
+.jt-panel-head{margin-bottom:var(--sp-5);}
+.jt-panel-head p{font-size:var(--type-sm);line-height:1.75;max-width:720px;}
+.jt-strip{padding-bottom:var(--sp-8);gap:var(--sp-4);}
+.jt-shell{padding-bottom:var(--sp-16,64px);}
+
+/* 4. 卡片 hover 焦点引导（5.3 / 8.2）：克制的上浮与柔阴影 */
+.jt-plan{
+  transition:transform var(--dur-fast) var(--ease-smooth-out),
+             box-shadow var(--dur-fast) var(--ease-smooth-out),
+             border-color var(--dur-quick) var(--ease-out);
+}
+.jt-plan:hover{
+  transform:translateY(-4px);
+  box-shadow:0 12px 28px -12px rgba(20,35,29,.22),0 3px 0 rgba(20,35,29,.04);
+}
+.jt-plan.recommended:hover{box-shadow:0 0 0 2px rgba(14,110,92,.12),0 12px 28px -12px rgba(20,35,29,.22);}
+.jt-strip-item{
+  transition:transform var(--dur-fast) var(--ease-smooth-out),
+             box-shadow var(--dur-fast) var(--ease-smooth-out);
+}
+.jt-strip-item:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 22px -14px rgba(20,35,29,.28);
+}
+.jt-strip-item b{font-size:var(--type-sm);letter-spacing:.01em;}
+.jt-strip-item span{font-size:var(--type-xs);line-height:1.72;}
+
+/* 5. 输入框 focus 强化（8.3）：品牌色描边 + 三层柔光环 */
+.jt-field input,.jt-field select,.big-input{
+  transition:border-color var(--dur-quick) var(--ease-out),
+             box-shadow var(--dur-quick) var(--ease-out);
+}
+.jt-field input:focus,.jt-field select:focus,.big-input:focus{
+  border-color:var(--red);
+  box-shadow:0 0 0 4px rgba(14,110,92,.13),0 0 0 1px rgba(14,110,92,.18);
+  outline:none;
+}
+
+/* 6. 表单卡片内边距按 4px 网格放大，字段呼吸更均匀 */
+.jt-form{padding:var(--sp-6);border-radius:var(--radius-xl);}
+.jt-form-grid{gap:var(--sp-5);}
+.jt-field{gap:var(--sp-2);}
+.jt-field label{font-size:var(--type-sm);}
+.jt-field .help{font-size:var(--type-xs);line-height:1.65;}
+.jt-form-foot{margin-top:var(--sp-5);padding-top:var(--sp-5);}
+.jt-form-foot p{font-size:var(--type-xs);line-height:1.7;}
+
+/* 7. 首屏副标题与正文统一；eyebrow 字距更精致 */
+.jt-hero-lead{font-size:var(--type-lg);line-height:1.78;max-width:660px;text-wrap:pretty;}
+.jt-eyebrow,.section-eyebrow{letter-spacing:.16em;}
+
+/* 8. 按钮：轻微缩放反馈 + 焦点可见（8.1） */
+.jt-submit,.btn,.tabs-ai{
+  transition:transform var(--dur-fast) var(--ease-bounce),
+             background-color var(--dur-quick) var(--ease-out),
+             box-shadow var(--dur-quick) var(--ease-out);
+}
+.jt-submit:hover:not(:disabled),.btn:hover{transform:translateY(-2px);}
+.jt-submit:active:not(:disabled){transform:scale(.97);}
+.jt-submit:focus-visible,.btn:focus-visible,.tab:focus-visible{
+  outline:3px solid rgba(14,110,92,.35);outline-offset:2px;
+}
+
+/* 9. 政策/说明等长文本可读性 */
+.jt-ai-body,.hp-text,.info-body p{line-height:1.8;}
+
+/* 10. 移动端：收紧留白，避免过长滚动 */
+@media(max-width:640px){
+  .jt-panel-head h2{font-size:var(--type-2xl);}
+  .jt-subhead h3{font-size:var(--type-xl);}
+  .jt-subhead{margin:var(--sp-8) 0 var(--sp-3);}
+  .jt-form{padding:var(--sp-4);}
+  .jt-hero-lead{font-size:15px;max-width:100%;}
+  /* 修复首屏固定 760px 列宽在窄屏的横向溢出 */
+  .jt-hero.no-preview{grid-template-columns:minmax(0,1fr);}
+  .jt-hero.no-preview>div{max-width:100%;min-width:0;}
+  .jt-hero h1{max-width:100%;overflow-wrap:break-word;}
+  .jt-principles{max-width:100%;}
+  /* 流体球在 1180px 规则里已降级为背景装饰，这里不再重复覆盖透明度 */
+}
+
+/* 11. 无障碍：尊重减少动效 */
+@media(prefers-reduced-motion:reduce){
+  .jt-plan,.jt-strip-item,.jt-submit,.btn,.tabs-ai,
+  .jt-field input,.jt-field select,.big-input{transition:none;}
+  .jt-plan:hover,.jt-strip-item:hover,.jt-submit:hover:not(:disabled),
+  .jt-submit:active:not(:disabled),.btn:hover{transform:none;}
+}
 
 .jt-offline-bar{background:var(--red-dark);color:#fff;text-align:center;padding:8px 18px;font-size:12px;line-height:1.55;}
 .jt-offline-bar b{color:var(--yellow);}
@@ -1064,7 +1791,7 @@ body{background:var(--paper);}
             <option value="西安市">西安市（政策与阶梯电价试点）</option>
             <option value="陕西省其他城市">陕西省其他城市（仅电价估算）</option>
           </select>
-          <span class="help">仅接入西安市 2026 年家电政策；陕西其他城市不展示地方补贴，榆林电价口径暂未覆盖。</span>
+          <span class="help">已核验 2026 年西安市以旧换新 4 类政策（家电、数码智能、汽车报废更新、汽车置换更新；汽车两类仅作政策参考）；陕西其他城市不展示地方补贴，榆林电价口径暂未覆盖。</span>
         </div>
         <div class="jt-field">
           <label for="housingInput">住房情况<span class="req" aria-hidden="true">*</span></label>
@@ -1254,7 +1981,7 @@ body{background:var(--paper);}
 </footer>
 
 <script>
-const CATALOG = {"actions":{"version":"2026.11-xian-evidence","disclaimer":"措施节电参数包含公开资料折算、国标参数计算和工程估算三类。没有实测数据的措施已标记为工程估算，结果不构成检测结论或节电承诺。","actions":[{"id":"ac_temp_26","name":"空调设为 26℃ 并开启睡眠模式","category":"空调","summary":"在不影响舒适度的前提下减少持续制冷耗电。","difficulty":"easy","upfront_cost":0,"saving_type":"percent","saving_value":0.02,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced","deep"],"assumption":"按制冷季空调用电约占家庭用电 25%、设定调整可节省其中约 24% 估算。","saving_range":[0.018,0.025],"evidence_level":"public_reference_calculation","evidence_label":"公开资料折算","source_name":"央广网：空调温度上调1℃的节电报道","source_url":"https://news.cnr.cn/native/gd/20230711/t20230711_526324689.shtml","source_note":"公开报道提出空调每上调1℃可节电，结合空调约占家庭用电25%的工程假设，折算到家庭总用电约1.8%—2.5%，本工具取2%；需以实际设备和用电结构校准。","cost_note":"无需新增设备投入。"},{"id":"ac_filter_clean","name":"清洗空调滤网","category":"空调","summary":"保持送风顺畅，降低无效运行时间。","difficulty":"easy","upfront_cost":0,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced"],"assumption":"按定期清洁可减少约 2% 的家庭月度用电估算。","saving_range":[0.03,0.05],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"空调滤网清洁与风阻关系的一般工程口径","source_url":"","source_note":"按滤网积尘降低换热效率、折算到家庭总用电约3%—5%，取4%；不同污染程度差异较大，需实测。","cost_note":"自行清洗无材料费；上门清洗费用因城市而异。"},{"id":"led_bulbs","name":"将常用灯具更换为 LED","category":"照明","summary":"用低功率 LED 替换高频使用的旧灯具。","difficulty":"easy","upfront_cost":120,"saving_type":"fixed","saving_value":110,"min_monthly_kwh":40,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced"],"assumption":"按替换 5 只常用灯、每天使用 4 小时估算年节电约 110 kWh。","saving_range":[80,220],"evidence_level":"standard_calculation","evidence_label":"国标参数 + 计算","source_name":"GB 30255-2019 普通照明用非定向自镇流LED灯能效限定值及能效等级","source_url":"","source_note":"按5只常用灯、每天4小时、旧灯20—40W替换为9W LED计算，年节电约80—226 kWh；取110 kWh对应较低使用强度。","cost_note":"按5只LED灯及可能的灯具更换估算80—200元，取120元。"},{"id":"standby_strip","name":"用智能插座集中切断待机电源","category":"待机","summary":"减少电视、路由器外设和充电器的持续待机耗电。","difficulty":"easy","upfront_cost":100,"saving_type":"fixed","saving_value":80,"min_monthly_kwh":50,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按常用设备待机功率合计约 15 W、每天闲置 16 小时估算。","saving_range":[40,120],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按待机功率 × 闲置时间计算","source_url":"","source_note":"按家庭常用设备待机功率合计约10—20W、每日闲置16小时估算，年节电约58—117 kWh；取80 kWh。","cost_note":"智能插座市场价约50—150元，取100元。"},{"id":"cold_wash","name":"洗衣改用冷水并自然晾干","category":"洗衣","summary":"减少加热洗涤水和烘干机使用。","difficulty":"easy","upfront_cost":0,"saving_type":"fixed","saving_value":45,"min_monthly_kwh":40,"requires_owner":false,"needs_installation":false,"tiers":["light"],"assumption":"按每周 3 次洗衣、减少热水与烘干估算。","saving_range":[20,80],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按洗衣机电加热与烘干使用频率估算","source_url":"","source_note":"按每周3次洗衣、减少热水加热和烘干估算，受机型、进水温度和晾晒条件影响，需实测。","cost_note":"无需新增设备投入。"},{"id":"fridge_seal","name":"检查冰箱门封并调整摆放位置","category":"冰箱","summary":"避免冷气泄漏和散热受阻造成的额外耗电。","difficulty":"easy","upfront_cost":30,"saving_type":"fixed","saving_value":55,"min_monthly_kwh":60,"requires_owner":false,"needs_installation":false,"tiers":["light"],"assumption":"按门封老化和散热空间不足合计增加约 5% 冰箱用电估算。","saving_range":[30,80],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按冰箱门封漏冷与摆放散热条件估算","source_url":"","source_note":"按密封条老化、冰箱贴墙或散热空间不足导致能耗增加估算，实际效果需检查门封和测温。","cost_note":"密封条或调整位置的材料费约20—50元，取30元。"},{"id":"water_heater_timer","name":"为热水器设置定时与中温模式","category":"热水","summary":"避免全天反复保温，按家庭作息集中加热。","difficulty":"easy","upfront_cost":80,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":80,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按热水器用电约占家庭用电 15%、定时可节省其中约 27% 估算。","saving_range":[0.02,0.06],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按储水式热水器保温与定时使用估算","source_url":"","source_note":"按减少无人时段反复加热估算，占家庭总用电2%—6%；与保温性能、设定温度和使用时段有关。","cost_note":"定时插座或控制器约50—120元，取80元。"},{"id":"water_heater_insulation","name":"为热水管路增加可拆卸保温层","category":"热水","summary":"减少管路散热损失，租房也可采用可拆卸方案。","difficulty":"medium","upfront_cost":150,"saving_type":"percent","saving_value":0.03,"min_monthly_kwh":80,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按热水管路热损失与保温改善幅度综合估算。","saving_range":[0.01,0.04],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按热水管路散热损失估算","source_url":"","source_note":"按可触及热水管路的热损失估算，占家庭总用电1%—4%；管路长度和保温现状影响较大。","cost_note":"可拆卸保温材料约100—250元，取150元。"},{"id":"window_seal_removable","name":"加装可拆卸门窗密封条","category":"围护","summary":"减少夏季冷气和冬季暖气从缝隙流失。","difficulty":"medium","upfront_cost":180,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["balanced","deep"],"assumption":"按可拆卸密封改善门窗气密性、降低空调负荷估算。","saving_range":[0.02,0.06],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按门窗缝隙渗透风与空调负荷估算","source_url":"","source_note":"按密封条改善门窗气密性、减少冷热负荷估算，占家庭总用电2%—6%；效果取决于缝隙面积、风压和空调使用时长。","cost_note":"可拆卸密封材料约100—300元，取180元。"},{"id":"shade_summer","name":"夏季使用遮阳帘或外窗遮阳","category":"围护","summary":"减少太阳直射带来的空调冷负荷。","difficulty":"easy","upfront_cost":220,"saving_type":"percent","saving_value":0.03,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["balanced","deep"],"assumption":"按主要朝西或朝南窗户遮阳后的制冷负荷变化估算。","saving_range":[0.02,0.05],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按外窗太阳得热与空调负荷估算","source_url":"","source_note":"按夏季遮阳降低窗户太阳得热估算，占家庭总用电2%—5%；朝向、窗墙比和遮阳方式影响较大。","cost_note":"遮阳帘或外遮阳材料约150—400元，取220元。"},{"id":"ac_replace_eff","name":"将老旧空调更换为一级能效机型","category":"家电更新","summary":"适合自有住房且空调使用年限较长的家庭。","difficulty":"hard","upfront_cost":3500,"saving_type":"fixed","saving_value":260,"min_monthly_kwh":150,"requires_owner":false,"needs_installation":true,"tiers":["deep"],"assumption":"按 1.5 匹老旧定频机与一级能效变频机的典型使用差异估算。","saving_range":[180,350],"evidence_level":"engineering_estimate","evidence_label":"能效参数估算","source_name":"按旧机与新一级能效机型的额定能效和年使用小时估算","source_url":"","source_note":"以旧机能效衰减、匹数和年制冷/制热小时为假设，年节电约180—350 kWh；必须按具体机型铭牌和APF值核算。 购买家电本身不要求自有住房，租户也可申请。","cost_note":"按一级能效挂机含安装的示例预算3500元，具体以门店报价为准。"},{"id":"fridge_replace_eff","name":"将老旧冰箱更换为一级能效机型","category":"家电更新","summary":"适合自有住房且冰箱使用超过十年的家庭。","difficulty":"hard","upfront_cost":3200,"saving_type":"fixed","saving_value":190,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":true,"tiers":["deep"],"assumption":"按旧冰箱与新一级能效冰箱的典型年耗电差异估算。","saving_range":[120,260],"evidence_level":"engineering_estimate","evidence_label":"能效参数估算","source_name":"按旧冰箱与新一级能效冰箱的铭牌耗电量估算","source_url":"","source_note":"按旧机老化、容积和使用习惯估算，年节电约120—260 kWh；应以旧机和目标机型铭牌耗电量计算。 购买家电本身不要求自有住房，租户也可申请。","cost_note":"按一级能效冰箱示例预算3200元，具体以门店报价为准。"}]},"policies":{"version":"2026.11-xian-official","region_scope":"西安市","coverage_note":"当前仅接入西安市地方政策。陕西省其他城市及其他省份不展示地方补贴，节能方案仍可使用通用估算。","disclaimer":"政策卡仅按城市、日期和关联措施做候选匹配，不代表已确认资格、已获批或可申领；购买能效等级、活动门店、实名信息和材料条件仍需用户核实。","policies":[{"id":"xa_appliance_trade_in_2026","title":"2026年西安市家电以旧换新补贴","region":"西安市","region_level":"city","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":false,"source_name":"西安市商务局","source_url":"https://xasswj.xa.gov.cn/xwzx/tzgg/2019352127281319938.html","source_secondary_url":"https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html","source_retrieved_at":"2026-11-16","benefit":"购买冰箱、洗衣机、电视、空调、电脑、热水器6类中1级能效或水效产品，按最终销售价格15%补贴，单件最高1500元；每人每类可补贴1件。","action_ids":["ac_replace_eff","fridge_replace_eff"],"requires_owner":false,"requirements":["个人消费者购买6类家电中1级能效或水效产品","在西安市参与活动的零售实体门店购买","在云闪付完成实名授权并领取当日消费折扣券","申领人、付款人和补贴确认书签订人为同一人","每人每类产品限补贴1件，单件补贴不超过1500元","保留发票、能效或水效标识、SN码和补贴确认书"],"application":"在参与活动门店选购后，通过云闪付领取消费折扣券并支付，补贴在支付环节直接减免；具体参与门店和资金进度以西安市商务局及云闪付公布为准。","benefit_rule":{"type":"percent_capped","rate":0.15,"cap_yuan":1500},"automatic_checks":["城市为西安市","当前日期在2026年度内","方案包含家电更新措施"],"manual_checks":["1级能效或水效","参与活动门店","云闪付实名与领券","每类限1件"],"updated_at":"2026-11-16","disclaimer":"城市、日期和措施仅用于候选匹配；未核验能效等级、活动门店、补贴资金余额和实名材料，不代表已具备领取资格。"}]},"factors":{"version":"2026.11-official-factor","data_class":"official_factor_and_tariff_with_estimated_baseline","kg_co2e_per_kwh":0.5777,"factor_year":2024,"factor_region":"全国","factor_scope":"2024年全国电力平均碳足迹因子","source":"生态环境部《关于发布2024年电力碳足迹因子数据的公告》附件：2024年全国电力平均碳足迹因子为0.5777 kgCO₂e/kWh。","source_url":"https://www.mee.gov.cn/xxgk2018/xxgk/xxgk01/202510/W020251024569470952545.pdf","source_published_at":"2025-10-24","source_retrieved_at":"2026-11-16","tariff_profile":{"region":"陕西省（不含榆林）","customer_type":"一户一表居民用户","annual_cycle":"7月1日至次年6月30日按年累计","tiers":[{"label":"第一档","limit_kwh":2160,"rate_yuan_per_kwh":0.4983},{"label":"第二档","limit_kwh":4200,"rate_yuan_per_kwh":0.5483},{"label":"第三档","limit_kwh":null,"rate_yuan_per_kwh":0.7983}],"reference_rate_yuan_per_kwh":0.5483,"peak_valley_note":"可选择峰谷分时电价：峰段每kWh加0.05元，谷段每kWh降低0.20元；11月1日至次年3月31日居民阶梯政策适用规则不同。","source":"陕西省居民阶梯电价公开口径（陕价商发〔2017〕97号、〔2018〕73号、〔2018〕83号），长武县人民政府《用电业务办理告知书》转载。","source_url":"https://www.changwu.gov.cn/zfxxgk/zbbmgkml/ggqsydw/gd/ydywblcxjsx/202610/t20261015_2124226.html","source_retrieved_at":"2026-11-16","caveat":"本工具按年化月用电量估算阶梯平均电价，未计入峰谷时段、采暖期特殊规则、合表用户和年度跨期变化。"},"default_monthly_kwh_per_person":70,"default_monthly_kwh_basis":"工程估算：仅用于用户未提供用电量或电费时建立可替换的工程基线，不代表陕西居民统计均值。","default_upfront_budget":8000,"region":"陕西省西安市试点","policy_coverage":["西安市"],"disclaimer":"电力碳足迹因子来自生态环境部公开数据；电价按陕西居民阶梯电价估算。家庭节电量和减碳量仍为估算，不代表实际账单或经第三方核查的减排量。"}};
+const CATALOG = {"actions":{"version":"2026.11-xian-evidence","disclaimer":"措施节电参数包含公开资料折算、国标参数计算和工程估算三类。没有实测数据的措施已标记为工程估算，结果不构成检测结论或节电承诺。","actions":[{"id":"ac_temp_26","name":"空调设为 26℃ 并开启睡眠模式","category":"空调","summary":"在不影响舒适度的前提下减少持续制冷耗电。","difficulty":"easy","upfront_cost":0,"saving_type":"percent","saving_value":0.02,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced","deep"],"assumption":"按制冷季空调用电约占家庭用电 25%、设定调整可节省其中约 24% 估算。","saving_range":[0.018,0.025],"evidence_level":"public_reference_calculation","evidence_label":"公开资料折算","source_name":"央广网：空调温度上调1℃的节电报道","source_url":"https://news.cnr.cn/native/gd/20230711/t20230711_526324689.shtml","source_note":"公开报道提出空调每上调1℃可节电，结合空调约占家庭用电25%的工程假设，折算到家庭总用电约1.8%—2.5%，本工具取2%；需以实际设备和用电结构校准。","cost_note":"无需新增设备投入。"},{"id":"ac_filter_clean","name":"清洗空调滤网","category":"空调","summary":"保持送风顺畅，降低无效运行时间。","difficulty":"easy","upfront_cost":0,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced"],"assumption":"按定期清洁可减少约 2% 的家庭月度用电估算。","saving_range":[0.03,0.05],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"空调滤网清洁与风阻关系的一般工程口径","source_url":"","source_note":"按滤网积尘降低换热效率、折算到家庭总用电约3%—5%，取4%；不同污染程度差异较大，需实测。","cost_note":"自行清洗无材料费；上门清洗费用因城市而异。"},{"id":"led_bulbs","name":"将常用灯具更换为 LED","category":"照明","summary":"用低功率 LED 替换高频使用的旧灯具。","difficulty":"easy","upfront_cost":120,"saving_type":"fixed","saving_value":110,"min_monthly_kwh":40,"requires_owner":false,"needs_installation":false,"tiers":["light","balanced"],"assumption":"按替换 5 只常用灯、每天使用 4 小时估算年节电约 110 kWh。","saving_range":[80,220],"evidence_level":"standard_calculation","evidence_label":"国标参数 + 计算","source_name":"GB 30255-2019 普通照明用非定向自镇流LED灯能效限定值及能效等级","source_url":"","source_note":"按5只常用灯、每天4小时、旧灯20—40W替换为9W LED计算，年节电约80—226 kWh；取110 kWh对应较低使用强度。","cost_note":"按5只LED灯及可能的灯具更换估算80—200元，取120元。"},{"id":"standby_strip","name":"用智能插座集中切断待机电源","category":"待机","summary":"减少电视、路由器外设和充电器的持续待机耗电。","difficulty":"easy","upfront_cost":100,"saving_type":"fixed","saving_value":80,"min_monthly_kwh":50,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按常用设备待机功率合计约 15 W、每天闲置 16 小时估算。","saving_range":[40,120],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按待机功率 × 闲置时间计算","source_url":"","source_note":"按家庭常用设备待机功率合计约10—20W、每日闲置16小时估算，年节电约58—117 kWh；取80 kWh。","cost_note":"智能插座市场价约50—150元，取100元。"},{"id":"cold_wash","name":"洗衣改用冷水并自然晾干","category":"洗衣","summary":"减少加热洗涤水和烘干机使用。","difficulty":"easy","upfront_cost":0,"saving_type":"fixed","saving_value":45,"min_monthly_kwh":40,"requires_owner":false,"needs_installation":false,"tiers":["light"],"assumption":"按每周 3 次洗衣、减少热水与烘干估算。","saving_range":[20,80],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按洗衣机电加热与烘干使用频率估算","source_url":"","source_note":"按每周3次洗衣、减少热水加热和烘干估算，受机型、进水温度和晾晒条件影响，需实测。","cost_note":"无需新增设备投入。"},{"id":"fridge_seal","name":"检查冰箱门封并调整摆放位置","category":"冰箱","summary":"避免冷气泄漏和散热受阻造成的额外耗电。","difficulty":"easy","upfront_cost":30,"saving_type":"fixed","saving_value":55,"min_monthly_kwh":60,"requires_owner":false,"needs_installation":false,"tiers":["light"],"assumption":"按门封老化和散热空间不足合计增加约 5% 冰箱用电估算。","saving_range":[30,80],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按冰箱门封漏冷与摆放散热条件估算","source_url":"","source_note":"按密封条老化、冰箱贴墙或散热空间不足导致能耗增加估算，实际效果需检查门封和测温。","cost_note":"密封条或调整位置的材料费约20—50元，取30元。"},{"id":"water_heater_timer","name":"为热水器设置定时与中温模式","category":"热水","summary":"避免全天反复保温，按家庭作息集中加热。","difficulty":"easy","upfront_cost":80,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":80,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按热水器用电约占家庭用电 15%、定时可节省其中约 27% 估算。","saving_range":[0.02,0.06],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按储水式热水器保温与定时使用估算","source_url":"","source_note":"按减少无人时段反复加热估算，占家庭总用电2%—6%；与保温性能、设定温度和使用时段有关。","cost_note":"定时插座或控制器约50—120元，取80元。"},{"id":"water_heater_insulation","name":"为热水管路增加可拆卸保温层","category":"热水","summary":"减少管路散热损失，租房也可采用可拆卸方案。","difficulty":"medium","upfront_cost":150,"saving_type":"percent","saving_value":0.03,"min_monthly_kwh":80,"requires_owner":false,"needs_installation":false,"tiers":["balanced"],"assumption":"按热水管路热损失与保温改善幅度综合估算。","saving_range":[0.01,0.04],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按热水管路散热损失估算","source_url":"","source_note":"按可触及热水管路的热损失估算，占家庭总用电1%—4%；管路长度和保温现状影响较大。","cost_note":"可拆卸保温材料约100—250元，取150元。"},{"id":"window_seal_removable","name":"加装可拆卸门窗密封条","category":"围护","summary":"减少夏季冷气和冬季暖气从缝隙流失。","difficulty":"medium","upfront_cost":180,"saving_type":"percent","saving_value":0.04,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["balanced","deep"],"assumption":"按可拆卸密封改善门窗气密性、降低空调负荷估算。","saving_range":[0.02,0.06],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按门窗缝隙渗透风与空调负荷估算","source_url":"","source_note":"按密封条改善门窗气密性、减少冷热负荷估算，占家庭总用电2%—6%；效果取决于缝隙面积、风压和空调使用时长。","cost_note":"可拆卸密封材料约100—300元，取180元。"},{"id":"shade_summer","name":"夏季使用遮阳帘或外窗遮阳","category":"围护","summary":"减少太阳直射带来的空调冷负荷。","difficulty":"easy","upfront_cost":220,"saving_type":"percent","saving_value":0.03,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":false,"tiers":["balanced","deep"],"assumption":"按主要朝西或朝南窗户遮阳后的制冷负荷变化估算。","saving_range":[0.02,0.05],"evidence_level":"engineering_estimate","evidence_label":"工程估算","source_name":"按外窗太阳得热与空调负荷估算","source_url":"","source_note":"按夏季遮阳降低窗户太阳得热估算，占家庭总用电2%—5%；朝向、窗墙比和遮阳方式影响较大。","cost_note":"遮阳帘或外遮阳材料约150—400元，取220元。"},{"id":"ac_replace_eff","name":"将老旧空调更换为一级能效机型","category":"家电更新","summary":"适合自有住房且空调使用年限较长的家庭。","difficulty":"hard","upfront_cost":3500,"saving_type":"fixed","saving_value":260,"min_monthly_kwh":150,"requires_owner":false,"needs_installation":true,"tiers":["deep"],"assumption":"按 1.5 匹老旧定频机与一级能效变频机的典型使用差异估算。","saving_range":[180,350],"evidence_level":"engineering_estimate","evidence_label":"能效参数估算","source_name":"按旧机与新一级能效机型的额定能效和年使用小时估算","source_url":"","source_note":"以旧机能效衰减、匹数和年制冷/制热小时为假设，年节电约180—350 kWh；必须按具体机型铭牌和APF值核算。 购买家电本身不要求自有住房，租户也可申请。","cost_note":"按一级能效挂机含安装的示例预算3500元，具体以门店报价为准。"},{"id":"fridge_replace_eff","name":"将老旧冰箱更换为一级能效机型","category":"家电更新","summary":"适合自有住房且冰箱使用超过十年的家庭。","difficulty":"hard","upfront_cost":3200,"saving_type":"fixed","saving_value":190,"min_monthly_kwh":100,"requires_owner":false,"needs_installation":true,"tiers":["deep"],"assumption":"按旧冰箱与新一级能效冰箱的典型年耗电差异估算。","saving_range":[120,260],"evidence_level":"engineering_estimate","evidence_label":"能效参数估算","source_name":"按旧冰箱与新一级能效冰箱的铭牌耗电量估算","source_url":"","source_note":"按旧机老化、容积和使用习惯估算，年节电约120—260 kWh；应以旧机和目标机型铭牌耗电量计算。 购买家电本身不要求自有住房，租户也可申请。","cost_note":"按一级能效冰箱示例预算3200元，具体以门店报价为准。"}]},"policies":{"version":"2026.11-xian-official-4cat","region_scope":"西安市","coverage_note":"当前接入 2026 年西安市消费品以旧换新 4 类补贴（家电、数码智能、汽车报废更新、汽车置换更新）。陕西省其他城市及其他省份不展示地方补贴，节能方案仍可使用通用估算。","disclaimer":"政策卡仅按城市、日期和关联措施做候选匹配，不代表已确认资格、已获批或可申领；购买能效等级、活动门店、实名信息和材料条件仍需用户核实。","policies":[{"id":"xa_appliance_trade_in_2026","title":"2026年西安市家电以旧换新补贴","region":"西安市","region_level":"city","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":false,"source_name":"西安市商务局","source_url":"https://xasswj.xa.gov.cn/xwzx/tzgg/2019352127281319938.html","source_secondary_url":"https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html","source_retrieved_at":"2026-11-18","benefit":"购买冰箱、洗衣机、电视、空调、电脑、热水器6类中1级能效或水效产品，按最终销售价格15%补贴，单件最高1500元；每人每类可补贴1件。","action_ids":["ac_replace_eff","fridge_replace_eff"],"requires_owner":false,"requirements":["个人消费者购买6类家电中1级能效或水效产品","在西安市参与活动的零售实体门店购买","在云闪付完成实名授权并领取当日消费折扣券","申领人、付款人和补贴确认书签订人为同一人","每人每类产品限补贴1件，单件补贴不超过1500元","保留发票、能效或水效标识、SN码和补贴确认书"],"application":"在参与活动门店选购后，通过云闪付领取消费折扣券并支付，补贴在支付环节直接减免；具体参与门店和资金进度以西安市商务局及云闪付公布为准。","benefit_rule":{"type":"percent_capped","rate":0.15,"cap_yuan":1500},"automatic_checks":["城市为西安市","当前日期在2026年度内","方案包含家电更新措施"],"manual_checks":["1级能效或水效","参与活动门店","云闪付实名与领券","每类限1件"],"updated_at":"2026-11-18","disclaimer":"城市、日期和措施仅用于候选匹配；未核验能效等级、活动门店、补贴资金余额和实名材料，不代表已具备领取资格。"},{"source_name":"西安市商务局","source_url":"https://xasswj.xa.gov.cn/xwzx/tzgg/2019352127281319938.html","source_retrieved_at":"2026-11-18","updated_at":"2026-11-18","region":"西安市","region_level":"city","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":false,"requires_owner":false,"id":"xa_digital_device_subsidy_2026","title":"2026年西安市数码和智能产品购新补贴","category":"数码智能产品购新","source_secondary_url":"https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html","benefit":"购买手机、平板、智能手表手环、智能眼镜4类产品（单件售价不超过6000元），按销售价格15%补贴，每人每类可补贴1件，每件补贴不超过500元。","action_ids":["ac_replace_eff","fridge_replace_eff"],"requirements":["购买手机、平板、智能手表手环、智能眼镜4类中任一产品","单件销售价格不超过6000元","在西安市参与活动的实体门店购买","在云闪付完成实名授权并领取当日消费折扣券","每人每类产品限补贴1件，单件补贴不超过500元","保留发票、激活照片、SN码和补贴确认书"],"application":"每日9:30-23:00在云闪付领取消费券，在参与活动门店购买，支付环节直接减免；须签订消费补贴确认书。","benefit_rule":{"type":"percent_capped","rate":0.15,"cap_yuan":500,"max_unit_price_yuan":6000},"automatic_checks":["城市为西安市","当前日期在2026年度内","方案涉及设备更新类措施"],"manual_checks":["单件售价不超过6000元","参与活动门店","云闪付实名与领券","每类限1件"],"disclaimer":"数码产品与家庭节电不直接相关，此卡仅作为设备更新时的政策线索；资格与金额以官方及云闪付公布为准。","link_note":"与家电更新同属设备购置类补贴，随家电更新措施一并提示；购买数码产品本身不影响节电量计算。"},{"source_name":"西安市商务局","source_url":"https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html","source_retrieved_at":"2026-11-18","updated_at":"2026-11-18","region":"西安市","region_level":"city","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":false,"requires_owner":false,"id":"xa_car_scrappage_subsidy_2026","title":"2026年西安市汽车报废更新补贴","category":"汽车报废更新","auto_only":true,"action_ids":[],"benefit":"报废符合条件的旧乘用车并购买新能源乘用车，按车价12%补贴（最高2万元）；购买2.0升及以下排量燃油乘用车，按车价10%补贴（最高1.5万元）。每名消费者2026年内限享受1次报废更新或置换更新补贴。","requirements":["报废2013年6月30日前注册的汽油乘用车，或2015年6月30日前注册的柴油及其他燃料乘用车，或2019年12月31日前注册的新能源乘用车","购买纳入工信部《减免车辆购置税的新能源汽车车型目录》的新能源乘用车，或2.0升及以下排量燃油乘用车","旧车须于2025年1月8日前登记在申请人名下","新车《机动车销售统一发票》须在西安市开具，《机动车登记证书》须在陕西省办理","2026年内限享受1次汽车报废更新或置换更新补贴"],"application":"申领平台上线时间及具体流程另行公告，请关注西安市商务局后续通知。","benefit_rule":{"type":"percent_capped_variant","variants":[{"condition":"购买新能源乘用车","rate":0.12,"cap_yuan":20000},{"condition":"购买2.0升及以下燃油乘用车","rate":0.1,"cap_yuan":15000}]},"automatic_checks":["城市为西安市","当前日期在2026年度内"],"manual_checks":["旧车注册日期","新车车型目录","发票与登记地","每人限1次"],"disclaimer":"汽车更新与家庭节电方案无直接关联，本条仅作为政策资料留存，不参与方案自动匹配；资格以官方公告为准。","link_note":"auto_only=true：数据已核验入库，但不进入节电方案的政策匹配，需用户主动查看官方公告。"},{"source_name":"西安市商务局","source_url":"https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html","source_retrieved_at":"2026-11-18","updated_at":"2026-11-18","region":"西安市","region_level":"city","valid_from":"2026-01-01","valid_to":"2026-12-31","is_demo":false,"requires_owner":false,"id":"xa_car_replacement_subsidy_2026","title":"2026年西安市汽车置换更新补贴","category":"汽车置换更新","auto_only":true,"action_ids":[],"benefit":"转让本人名下符合条件的旧乘用车并购买新能源乘用车，按新车价8%补贴（最高1.5万元）；购买2.0升及以下排量燃油乘用车，按6%补贴（最高1.3万元）。每名消费者2026年内限享受1次报废更新或置换更新补贴。","requirements":["通过售卖方式转让登记在本人名下的乘用车","购买纳入工信部《减免车辆购置税的新能源汽车车型目录》的新能源乘用车，或2.0升及以下排量燃油乘用车","旧车须于2025年1月8日前登记在申请人名下","新车发票在西安市开具、登记证书在陕西省办理","2026年内限享受1次汽车报废更新或置换更新补贴"],"application":"申领平台上线时间及具体流程另行公告，请关注西安市商务局后续通知。","benefit_rule":{"type":"percent_capped_variant","variants":[{"condition":"购买新能源乘用车","rate":0.08,"cap_yuan":15000},{"condition":"购买2.0升及以下燃油乘用车","rate":0.06,"cap_yuan":13000}]},"automatic_checks":["城市为西安市","当前日期在2026年度内"],"manual_checks":["旧车转让条件","新车车型目录","发票与登记地","每人限1次"],"disclaimer":"汽车更新与家庭节电方案无直接关联，本条仅作为政策资料留存，不参与方案自动匹配；资格以官方公告为准。","link_note":"auto_only=true：数据已核验入库，但不进入节电方案的政策匹配，需用户主动查看官方公告。"}]},"factors":{"version":"2026.11-official-factor","data_class":"official_factor_and_tariff_with_estimated_baseline","kg_co2e_per_kwh":0.5777,"factor_year":2024,"factor_region":"全国","factor_scope":"2024年全国电力平均碳足迹因子","source":"生态环境部《关于发布2024年电力碳足迹因子数据的公告》附件：2024年全国电力平均碳足迹因子为0.5777 kgCO₂e/kWh。","source_url":"https://www.mee.gov.cn/xxgk2018/xxgk/xxgk01/202510/W020251024569470952545.pdf","source_published_at":"2025-10-24","source_retrieved_at":"2026-11-16","tariff_profile":{"region":"陕西省（不含榆林）","customer_type":"一户一表居民用户","annual_cycle":"按年累计（具体周期以当地供电部门公布为准）","tiers":[{"label":"第一档","limit_kwh":2160,"rate_yuan_per_kwh":0.4983},{"label":"第二档","limit_kwh":4200,"rate_yuan_per_kwh":0.5483},{"label":"第三档","limit_kwh":null,"rate_yuan_per_kwh":0.7983}],"reference_rate_yuan_per_kwh":0.5483,"peak_valley_note":"可选择峰谷分时电价：峰段每kWh加0.05元，谷段每kWh降低0.20元；11月1日至次年3月31日居民阶梯政策适用规则不同。","source":"陕西省居民阶梯电价公开口径（陕价商发〔2017〕97号、〔2018〕73号、〔2018〕83号），长武县人民政府《用电业务办理告知书》转载。","source_url":"https://www.changwu.gov.cn/zfxxgk/zbbmgkml/ggqsydw/gd/ydywblcxjsx/202610/t20261015_2124226.html","source_retrieved_at":"2026-11-16","caveat":"本工具按年化月用电量估算阶梯平均电价，未计入峰谷时段、采暖期特殊规则、合表用户和年度跨期变化。"},"default_monthly_kwh_per_person":70,"default_monthly_kwh_basis":"工程估算：仅用于用户未提供用电量或电费时建立可替换的工程基线，不代表陕西居民统计均值。","default_upfront_budget":8000,"region":"陕西省西安市试点","policy_coverage":["西安市"],"disclaimer":"电力碳足迹因子来自生态环境部公开数据；电价按陕西居民阶梯电价估算。家庭节电量和减碳量仍为估算，不代表实际账单或经第三方核查的减排量。"}};
 const ACTIONS = CATALOG.actions.actions || [];
 const POLICIES = CATALOG.policies.policies || [];
 const FACTORS = CATALOG.factors;
@@ -1483,9 +2210,9 @@ function buildResponse(payload) {
   const coverageItems = FACTORS.policy_coverage || [];
   const citySupported = coverageItems.some(region => normalizeRegion(region) === normalizeRegion(household.city));
   const coverageMessage = citySupported
-    ? (policies.length ? '已接入西安市地方政策。政策卡只做候选匹配，能效等级、活动门店和材料条件仍需用户确认。'
-      : '已接入西安市地方政策，但当前方案的措施不属于已收录政策范围。')
-    : '当前仅接入西安市地方政策。该城市不展示地方补贴；未提供实际电费时，电价按陕西参考阶梯估算。';
+    ? (policies.length ? '已核验西安市 2026 年以旧换新 4 类政策（汽车两类仅作参考）。政策卡只做候选匹配，能效等级、活动门店和材料条件仍需用户确认。'
+      : '已核验西安市 2026 年以旧换新 4 类政策（汽车两类仅作参考），但当前方案的措施不属于已收录政策范围。')
+    : '当前已核验西安市 4 类以旧换新政策（汽车两类仅作参考）。该城市不展示地方补贴；未提供实际电费时，电价按陕西参考阶梯估算。';
   return {
     household, baseline, budget: household.budget, plans, policies,
     coverage: { citySupported, supportedRegions: coverageItems, message: coverageMessage },

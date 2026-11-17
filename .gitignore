@@ -23,6 +23,8 @@ data/
 
 # 本地临时产物
 *.log
+*.bak
+_local_backup/
 /screenshots/
 .DS_Store
 Thumbs.db

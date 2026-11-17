@@ -142,8 +142,8 @@ tests/
 ├─ rag_ablation.py        # 检索消融对照（不计入主测试数）
 └─ smoke_ui.js            # 前端语法、DOM、接口与品牌残留
 docs/
-├─ 技术报告.md / 数据来源版.docx  # 技术报告源稿与可编辑 Word
-├─ 演示视频脚本.md        # 5–8 分钟录制脚本
+├─ 技术报告.md            # 技术报告源稿
+├─ 节碳家_技术报告_竞赛提交版.docx / .pdf  # 提交用定稿
 ├─ 提交检查清单.md        # 省赛提交前核对项
 ├─ 验收记录.md            # 本地测试与浏览器验收结果
 ├─ 数据来源.md            # 官方来源、参数依据与未验证事项
@@ -190,7 +190,7 @@ core → ai-config → nav → ai-explain → plans → diary → account → ai
 
 ```bash
 python tests/smoke_api.py    # 44 项
-python tests/test_energy.py  # 52 项
+python tests/test_energy.py  # 55 项
 python tests/test_ai.py      # 32 项
 python tests/test_agent.py   # 28 项：Function Calling 工具循环 + JSON 降级
 python tests/test_ocr.py     # 12 项：账单识别、数值校验、越界过滤、接口
@@ -261,8 +261,8 @@ docker run -d --name jietanjia \
 - 榆林电价口径、峰谷分时和采暖期特殊规则尚未完整建模。
 - 方案采用简化年度估算，不考虑气候区、建筑朝向、设备型号和实际使用强度的全部差异。
 - 租住约束仅根据住房类型做基础过滤，实际施工仍需房东和物业确认。
-- 未接入账单 OCR、智能家居、实时电网数据和多端实时同步。
-- 前端保留零构建单页架构，未迁移 TypeScript 或现代组件框架。
+- 账单 OCR 为可选能力，图片仅在用户主动识别时临时传输，不落盘、不入库；智能家居、实时电网数据和多端实时同步尚未接入。
+- 前端保持零构建单页架构，但已引入真实 TypeScript 源码与 `tsc --strict` 编译校验；未迁移 React/Vue 等现代组件框架。
 
 ## 原创与权利边界
 

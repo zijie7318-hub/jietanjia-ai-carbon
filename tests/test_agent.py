@@ -57,7 +57,7 @@ def good_agent(base_url, model, key, system, user, **kwargs):
     return json.dumps({
         "thought": "事实齐全，提交结论", "tool": "finish",
         "args": {
-            "intro": "三档方案由规则算好，AI 只解释如何执行。",
+            "intro": "三档方案由规则算好，AI 自主调用工具完成分析。",
             "tierNotes": [
                 {"tier": "light", "note": "先做低成本措施，租房也能执行。"},
                 {"tier": "forged", "note": "这条应被过滤。"},
