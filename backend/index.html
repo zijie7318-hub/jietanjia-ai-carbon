@@ -1139,8 +1139,19 @@ body{background:var(--paper);}
 .orb-caption b{display:block;font-size:13px;color:var(--red-dark);letter-spacing:.01em;}
 .orb-caption span{display:block;font-size:11px;color:var(--muted-fg);margin-top:3px;line-height:1.6;}
 
-/* 首屏窄屏：流体球隐藏，文字回到单列 */
-@media(max-width:1180px){.jt-orb{display:none;}}
+/* 首屏窄屏：流体球降级为背景装饰（保留动效与视觉亮点，不挤压文字） */
+@media(max-width:1180px){
+  .jt-orb{
+    display:block;                 /* 覆盖旧的 display:none，恢复渲染 */
+    right:-90px;top:58%;
+    width:240px;height:280px;
+    opacity:.22;                   /* 压低透明度，作为背景不抢文字 */
+    z-index:0;
+  }
+  .orb-blobs{filter:blur(18px);}
+  .orb-caption{display:none;}      /* 桌面端说明文字在窄屏隐藏，避免与正文叠字 */
+  .jt-hero.no-preview > div:first-child{z-index:2;} /* 文字始终在球之上 */
+}
 
 /* ---- shadcn: 亮暗双模式（默认亮色不变，尊重系统暗色偏好） ---- */
 @media(prefers-color-scheme:dark){
@@ -1676,7 +1687,7 @@ body{line-height:1.72;}
   .jt-hero.no-preview>div{max-width:100%;min-width:0;}
   .jt-hero h1{max-width:100%;overflow-wrap:break-word;}
   .jt-principles{max-width:100%;}
-  .jt-orb{width:220px;height:260px;right:-40px;opacity:.55;}
+  /* 流体球在 1180px 规则里已降级为背景装饰，这里不再重复覆盖透明度 */
 }
 
 /* 11. 无障碍：尊重减少动效 */
