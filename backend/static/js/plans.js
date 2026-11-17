@@ -94,11 +94,13 @@ function policyCardHtml(policy) {
   const ok = !!policy.eligible;
   const sourceUrl = /^https?:\/\//i.test(policy.sourceUrl || '') ? policy.sourceUrl : '';
   const secondaryUrl = /^https?:\/\//i.test(policy.sourceSecondaryUrl || '') ? policy.sourceSecondaryUrl : '';
+  const isRef = policy.scope === 'reference';
   const meta = [
+    policy.category ? esc(policy.category) : '',
     policy.validFrom && policy.validTo ? ('有效期 ' + policy.validFrom + ' 至 ' + policy.validTo) : '',
     policy.updatedAt ? ('核验 ' + policy.updatedAt) : ''
-  ].filter(Boolean).map(t => '<span>' + esc(t) + '</span>').join('');
-  return '<article class="jt-policy"><div class="jt-policy-head"><h4>' + esc(policy.title) + '</h4>'
+  ].filter(Boolean).map(t => '<span>' + t + '</span>').join('');
+  return '<article class="jt-policy' + (isRef ? ' is-ref' : '') + '"><div class="jt-policy-head"><h4>' + esc(policy.title) + '</h4>'
     + '<span class="jt-status ' + (ok ? 'ok' : 'no') + '">'
     + esc(policy.statusLabel || (ok ? '条件待确认' : '当前不适用')) + '</span></div>'
     + '<p>' + esc(policy.benefit || '') + '</p>'
@@ -130,9 +132,20 @@ function renderPlans(data) {
   planCardsEl.innerHTML = (data.plans || []).map((plan, index) =>
     planCardHtml(plan, index === 1)).join('');
   const coverage = data.coverage || {};
-  policyListEl.innerHTML = (data.policies || []).length
-    ? data.policies.map(policyCardHtml).join('')
-    : '<div class="jt-empty">' + esc(coverage.message || '当前方案没有匹配的已接入政策。') + '</div>';
+  const allPolicies = data.policies || [];
+  const related = allPolicies.filter(p => p.scope !== 'reference');
+  const reference = allPolicies.filter(p => p.scope === 'reference');
+  let policyHtml = '';
+  if (related.length) {
+    policyHtml += '<div class="jt-policy-group-title">与方案相关 · 已初筛</div>'
+      + related.map(policyCardHtml).join('');
+  }
+  if (reference.length) {
+    policyHtml += '<div class="jt-policy-group-title">其他已核验政策 · 供参考（与节电方案无关）</div>'
+      + reference.map(policyCardHtml).join('');
+  }
+  policyListEl.innerHTML = policyHtml
+    || '<div class="jt-empty">' + esc(coverage.message || '当前方案没有匹配的已接入政策。') + '</div>';
   const meta = data.meta || {};
   const factorUrl = /^https?:\/\//i.test(meta.factorUrl || '') ? meta.factorUrl : '';
   const tariffUrl = /^https?:\/\//i.test(meta.tariffUrl || '') ? meta.tariffUrl : '';

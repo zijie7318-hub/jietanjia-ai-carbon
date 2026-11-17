@@ -347,8 +347,11 @@ def match_policies(city: str, housing: str, action_ids: list[str],
         if _norm_region(region) != city_key and _norm_region(region) not in ("全国", "全国范围"):
             continue
         related = [action_id for action_id in policy.get("action_ids", []) if action_id in wanted]
-        if not related:
-            continue
+        # auto_only 政策（如汽车更新）已核验入库但不与节电措施强行关联；
+        # 作为"政策参考"返回，供用户查看，不参与方案匹配。
+        is_reference = bool(policy.get("auto_only")) or not related
+        if is_reference:
+            related = []
 
         reasons, eligible = [], True
         start = date.fromisoformat(str(policy["valid_from"]))
@@ -373,7 +376,10 @@ def match_policies(city: str, housing: str, action_ids: list[str],
             "title": policy.get("title"),
             "region": region,
             "status": "candidate" if eligible else "ineligible",
-            "statusLabel": "涉及此政策 · 条件待确认" if eligible else "当前不适用",
+            "statusLabel": ("政策参考 · 与节电方案无关" if is_reference else
+                            ("涉及此政策 · 条件待确认" if eligible else "当前不适用")),
+            "scope": "reference" if is_reference else "related",
+            "category": policy.get("category"),
             "eligible": eligible,
             "benefit": policy.get("benefit"),
             "benefitRule": deepcopy(policy.get("benefit_rule") or {}),

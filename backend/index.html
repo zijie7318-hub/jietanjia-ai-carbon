@@ -922,6 +922,16 @@ body{background:var(--paper);}
 .jt-subhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin:34px 0 10px;}
 .jt-subhead h3{font-size:19px;}
 .jt-subhead p{font-size:12px;color:var(--muted);margin-top:3px;}
+.jt-policy-group-title{
+  grid-column:1/-1;font-size:12px;font-weight:600;color:var(--muted);
+  letter-spacing:.02em;padding:6px 0 2px;margin-top:4px;
+  border-top:1px dashed var(--line);
+}
+.jt-policy-group-title:first-child{border-top:0;margin-top:0;padding-top:0;}
+.jt-policy.is-ref{opacity:.82;background:var(--paper);}
+.jt-policy.is-ref .jt-status{
+  background:var(--paper-4);color:var(--muted);border-color:var(--line-2);
+}
 .jt-policy-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
 .jt-policy{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0;}
 .jt-policy-head{display:flex;gap:8px;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}

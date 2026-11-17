@@ -28,7 +28,13 @@ client = app_module.app.test_client()
 meta = client.get("/api/energy/meta").get_json()
 check("元数据可读取", meta.get("success") is True, meta)
 check("措施库为 12 项", meta.get("actionCount") == 12, meta.get("actionCount"))
-check("已接入政策为 1 条", meta.get("policyCount") == 1, meta.get("policyCount"))
+check("已接入政策为 4 条", meta.get("policyCount") == 4, meta.get("policyCount"))
+_policy_doc = json.loads((HERE / "catalog" / "policies.json").read_text(encoding="utf-8"))
+check("政策库含家电/数码/汽车报废/汽车置换四类",
+      {"xa_appliance_trade_in_2026", "xa_digital_device_subsidy_2026",
+       "xa_car_scrappage_subsidy_2026", "xa_car_replacement_subsidy_2026"}
+      == {item["id"] for item in _policy_doc["policies"]},
+      [item["id"] for item in _policy_doc["policies"]])
 check("数据不再整体标记为演示", meta.get("isDemo") is False)
 check("包含数据来源和边界说明", len(meta.get("disclaimers") or []) >= 3 and meta.get("factorUrl"),
       meta.get("disclaimers"))
@@ -68,7 +74,13 @@ check("减碳量按版本化因子计算",
       body["plans"][0]["annualCo2eKg"])
 
 policies = body.get("policies") or []
-check("西安市家电更新可匹配一条真实政策", len(policies) == 1, policies)
+related_ids = {p.get("id") for p in policies if p.get("scope") == "related"}
+reference_ids = {p.get("id") for p in policies if p.get("scope") == "reference"}
+check("西安市设备更新可匹配家电与数码两类政策",
+      related_ids == {"xa_appliance_trade_in_2026", "xa_digital_device_subsidy_2026"}, related_ids)
+check("汽车补贴作为政策参考展示，不参与方案匹配",
+      reference_ids == {"xa_car_scrappage_subsidy_2026", "xa_car_replacement_subsidy_2026"}, reference_ids)
+check("全部四类政策均对用户可见", len(policies) == 4, [p.get("id") for p in policies])
 check("政策状态为条件待确认", all(p.get("status") == "candidate" for p in policies), policies)
 check("政策不再标记为演示", all(p.get("isDemo") is False for p in policies))
 check("政策提供官方原文链接", all(p.get("sourceUrl", "").startswith("https://xasswj.xa.gov.cn/") for p in policies),
@@ -86,7 +98,7 @@ check("租房方案排除自有住房措施", all(not a.get("requiresOwner") for
 rent_policies = {p["id"]: p for p in rent_body.get("policies", [])}
 check("家电补贴不额外要求自有住房", rent_policies.get("xa_appliance_trade_in_2026", {}).get("eligible") is True,
       rent_policies.get("xa_appliance_trade_in_2026"))
-check("租房方案只展示与措施相关的政策", set(rent_policies) <= {"xa_appliance_trade_in_2026"},
+check("租房方案相关与参考政策共四条", set(rent_policies) == {"xa_appliance_trade_in_2026", "xa_digital_device_subsidy_2026", "xa_car_scrappage_subsidy_2026", "xa_car_replacement_subsidy_2026"},
       list(rent_policies))
 check("城市简称可匹配西安市政策", "xa_appliance_trade_in_2026" in rent_policies, list(rent_policies))
 

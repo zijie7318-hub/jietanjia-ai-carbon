@@ -1,7 +1,7 @@
 {
-  "version": "2026.11-xian-official",
+  "version": "2026.11-xian-official-4cat",
   "region_scope": "西安市",
-  "coverage_note": "当前仅接入西安市地方政策。陕西省其他城市及其他省份不展示地方补贴，节能方案仍可使用通用估算。",
+  "coverage_note": "当前接入 2026 年西安市消费品以旧换新 4 类补贴（家电、数码智能、汽车报废更新、汽车置换更新）。陕西省其他城市及其他省份不展示地方补贴，节能方案仍可使用通用估算。",
   "disclaimer": "政策卡仅按城市、日期和关联措施做候选匹配，不代表已确认资格、已获批或可申领；购买能效等级、活动门店、实名信息和材料条件仍需用户核实。",
   "policies": [
     {
@@ -15,9 +15,12 @@
       "source_name": "西安市商务局",
       "source_url": "https://xasswj.xa.gov.cn/xwzx/tzgg/2019352127281319938.html",
       "source_secondary_url": "https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html",
-      "source_retrieved_at": "2026-11-16",
+      "source_retrieved_at": "2026-11-18",
       "benefit": "购买冰箱、洗衣机、电视、空调、电脑、热水器6类中1级能效或水效产品，按最终销售价格15%补贴，单件最高1500元；每人每类可补贴1件。",
-      "action_ids": ["ac_replace_eff", "fridge_replace_eff"],
+      "action_ids": [
+        "ac_replace_eff",
+        "fridge_replace_eff"
+      ],
       "requires_owner": false,
       "requirements": [
         "个人消费者购买6类家电中1级能效或水效产品",
@@ -33,10 +36,174 @@
         "rate": 0.15,
         "cap_yuan": 1500
       },
-      "automatic_checks": ["城市为西安市", "当前日期在2026年度内", "方案包含家电更新措施"],
-      "manual_checks": ["1级能效或水效", "参与活动门店", "云闪付实名与领券", "每类限1件"],
-      "updated_at": "2026-11-16",
+      "automatic_checks": [
+        "城市为西安市",
+        "当前日期在2026年度内",
+        "方案包含家电更新措施"
+      ],
+      "manual_checks": [
+        "1级能效或水效",
+        "参与活动门店",
+        "云闪付实名与领券",
+        "每类限1件"
+      ],
+      "updated_at": "2026-11-18",
       "disclaimer": "城市、日期和措施仅用于候选匹配；未核验能效等级、活动门店、补贴资金余额和实名材料，不代表已具备领取资格。"
+    },
+    {
+      "source_name": "西安市商务局",
+      "source_url": "https://xasswj.xa.gov.cn/xwzx/tzgg/2019352127281319938.html",
+      "source_retrieved_at": "2026-11-18",
+      "updated_at": "2026-11-18",
+      "region": "西安市",
+      "region_level": "city",
+      "valid_from": "2026-01-01",
+      "valid_to": "2026-12-31",
+      "is_demo": false,
+      "requires_owner": false,
+      "id": "xa_digital_device_subsidy_2026",
+      "title": "2026年西安市数码和智能产品购新补贴",
+      "category": "数码智能产品购新",
+      "source_secondary_url": "https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html",
+      "benefit": "购买手机、平板、智能手表手环、智能眼镜4类产品（单件售价不超过6000元），按销售价格15%补贴，每人每类可补贴1件，每件补贴不超过500元。",
+      "action_ids": [
+        "ac_replace_eff",
+        "fridge_replace_eff"
+      ],
+      "requirements": [
+        "购买手机、平板、智能手表手环、智能眼镜4类中任一产品",
+        "单件销售价格不超过6000元",
+        "在西安市参与活动的实体门店购买",
+        "在云闪付完成实名授权并领取当日消费折扣券",
+        "每人每类产品限补贴1件，单件补贴不超过500元",
+        "保留发票、激活照片、SN码和补贴确认书"
+      ],
+      "application": "每日9:30-23:00在云闪付领取消费券，在参与活动门店购买，支付环节直接减免；须签订消费补贴确认书。",
+      "benefit_rule": {
+        "type": "percent_capped",
+        "rate": 0.15,
+        "cap_yuan": 500,
+        "max_unit_price_yuan": 6000
+      },
+      "automatic_checks": [
+        "城市为西安市",
+        "当前日期在2026年度内",
+        "方案涉及设备更新类措施"
+      ],
+      "manual_checks": [
+        "单件售价不超过6000元",
+        "参与活动门店",
+        "云闪付实名与领券",
+        "每类限1件"
+      ],
+      "disclaimer": "数码产品与家庭节电不直接相关，此卡仅作为设备更新时的政策线索；资格与金额以官方及云闪付公布为准。",
+      "link_note": "与家电更新同属设备购置类补贴，随家电更新措施一并提示；购买数码产品本身不影响节电量计算。"
+    },
+    {
+      "source_name": "西安市商务局",
+      "source_url": "https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html",
+      "source_retrieved_at": "2026-11-18",
+      "updated_at": "2026-11-18",
+      "region": "西安市",
+      "region_level": "city",
+      "valid_from": "2026-01-01",
+      "valid_to": "2026-12-31",
+      "is_demo": false,
+      "requires_owner": false,
+      "id": "xa_car_scrappage_subsidy_2026",
+      "title": "2026年西安市汽车报废更新补贴",
+      "category": "汽车报废更新",
+      "auto_only": true,
+      "action_ids": [],
+      "benefit": "报废符合条件的旧乘用车并购买新能源乘用车，按车价12%补贴（最高2万元）；购买2.0升及以下排量燃油乘用车，按车价10%补贴（最高1.5万元）。每名消费者2026年内限享受1次报废更新或置换更新补贴。",
+      "requirements": [
+        "报废2013年6月30日前注册的汽油乘用车，或2015年6月30日前注册的柴油及其他燃料乘用车，或2019年12月31日前注册的新能源乘用车",
+        "购买纳入工信部《减免车辆购置税的新能源汽车车型目录》的新能源乘用车，或2.0升及以下排量燃油乘用车",
+        "旧车须于2025年1月8日前登记在申请人名下",
+        "新车《机动车销售统一发票》须在西安市开具，《机动车登记证书》须在陕西省办理",
+        "2026年内限享受1次汽车报废更新或置换更新补贴"
+      ],
+      "application": "申领平台上线时间及具体流程另行公告，请关注西安市商务局后续通知。",
+      "benefit_rule": {
+        "type": "percent_capped_variant",
+        "variants": [
+          {
+            "condition": "购买新能源乘用车",
+            "rate": 0.12,
+            "cap_yuan": 20000
+          },
+          {
+            "condition": "购买2.0升及以下燃油乘用车",
+            "rate": 0.1,
+            "cap_yuan": 15000
+          }
+        ]
+      },
+      "automatic_checks": [
+        "城市为西安市",
+        "当前日期在2026年度内"
+      ],
+      "manual_checks": [
+        "旧车注册日期",
+        "新车车型目录",
+        "发票与登记地",
+        "每人限1次"
+      ],
+      "disclaimer": "汽车更新与家庭节电方案无直接关联，本条仅作为政策资料留存，不参与方案自动匹配；资格以官方公告为准。",
+      "link_note": "auto_only=true：数据已核验入库，但不进入节电方案的政策匹配，需用户主动查看官方公告。"
+    },
+    {
+      "source_name": "西安市商务局",
+      "source_url": "https://xasswj.xa.gov.cn/xwzx/tzgg/2007633309379194881.html",
+      "source_retrieved_at": "2026-11-18",
+      "updated_at": "2026-11-18",
+      "region": "西安市",
+      "region_level": "city",
+      "valid_from": "2026-01-01",
+      "valid_to": "2026-12-31",
+      "is_demo": false,
+      "requires_owner": false,
+      "id": "xa_car_replacement_subsidy_2026",
+      "title": "2026年西安市汽车置换更新补贴",
+      "category": "汽车置换更新",
+      "auto_only": true,
+      "action_ids": [],
+      "benefit": "转让本人名下符合条件的旧乘用车并购买新能源乘用车，按新车价8%补贴（最高1.5万元）；购买2.0升及以下排量燃油乘用车，按6%补贴（最高1.3万元）。每名消费者2026年内限享受1次报废更新或置换更新补贴。",
+      "requirements": [
+        "通过售卖方式转让登记在本人名下的乘用车",
+        "购买纳入工信部《减免车辆购置税的新能源汽车车型目录》的新能源乘用车，或2.0升及以下排量燃油乘用车",
+        "旧车须于2025年1月8日前登记在申请人名下",
+        "新车发票在西安市开具、登记证书在陕西省办理",
+        "2026年内限享受1次汽车报废更新或置换更新补贴"
+      ],
+      "application": "申领平台上线时间及具体流程另行公告，请关注西安市商务局后续通知。",
+      "benefit_rule": {
+        "type": "percent_capped_variant",
+        "variants": [
+          {
+            "condition": "购买新能源乘用车",
+            "rate": 0.08,
+            "cap_yuan": 15000
+          },
+          {
+            "condition": "购买2.0升及以下燃油乘用车",
+            "rate": 0.06,
+            "cap_yuan": 13000
+          }
+        ]
+      },
+      "automatic_checks": [
+        "城市为西安市",
+        "当前日期在2026年度内"
+      ],
+      "manual_checks": [
+        "旧车转让条件",
+        "新车车型目录",
+        "发票与登记地",
+        "每人限1次"
+      ],
+      "disclaimer": "汽车更新与家庭节电方案无直接关联，本条仅作为政策资料留存，不参与方案自动匹配；资格以官方公告为准。",
+      "link_note": "auto_only=true：数据已核验入库，但不进入节电方案的政策匹配，需用户主动查看官方公告。"
     }
   ]
 }
