@@ -1303,6 +1303,38 @@ body{background:var(--paper);}
 .welcome-note{margin-top:14px;background:var(--yellow-t);border:1px solid var(--line);border-radius:var(--radius-md);padding:11px 13px;font-size:11.5px;line-height:1.7;color:var(--yellow-d);}
 @media(max-width:640px){.welcome-opts{grid-template-columns:1fr;}.welcome-panel{padding:26px 20px 20px;}}
 
+/* 首次使用引导：三步上手 + 可选增强 */
+.welcome-steps{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;
+  margin:0 0 18px;
+}
+.welcome-step{
+  display:flex;align-items:flex-start;gap:9px;min-width:0;
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);
+  padding:12px 11px;
+}
+.ws-num{
+  width:20px;height:20px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--red);color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;
+}
+.welcome-step b{display:block;font-size:12px;color:var(--ink);line-height:1.4;}
+.welcome-step small{display:block;font-size:10.5px;line-height:1.6;color:var(--muted);margin-top:3px;}
+.welcome-more{
+  margin:0 0 18px;padding:11px 13px;border-radius:var(--radius-md);
+  background:var(--green-t);border:1px solid #CFE5D8;
+  font-size:11.5px;line-height:1.75;color:var(--body);
+}
+.welcome-more b{display:block;font-size:12px;color:var(--green);margin-bottom:3px;}
+.welcome-more em{font-style:normal;font-weight:600;color:var(--green);}
+.welcome-more i{font-style:normal;font-weight:600;color:var(--green);}
+@media(max-width:640px){
+  .welcome-steps{grid-template-columns:1fr;gap:6px;}
+  .welcome-step{padding:9px 11px;}
+  .welcome-step small{font-size:11px;}
+  .welcome-lead{margin-bottom:14px;}
+}
+
 /* ============================================================
    多模态输入 + AI 工作流可视化（纯前端，浏览器原生 API）
    SpeechRecognition 语音输入 / SpeechSynthesis 朗读 / FileReader 图片预览
@@ -1409,6 +1441,34 @@ body{background:var(--paper);}
 .agent-toggle:hover{border-color:var(--red);}
 .agent-toggle:has(input:checked){background:var(--green-t);border-color:#BFDCCB;color:var(--green);}
 .agent-toggle:has(input:checked) input{accent-color:var(--green);}
+
+/* Agent 开关一次性引导气泡 */
+.agent-hint-wrap{display:inline-flex;align-items:center;}
+.agent-hint{
+  position:absolute;bottom:calc(100% + 9px);right:0;z-index:12;
+  display:flex;align-items:center;gap:8px;white-space:nowrap;
+  background:var(--ink);color:#FFFBF2;border-radius:9px;
+  padding:8px 10px;font-size:11.5px;line-height:1.5;
+  box-shadow:0 8px 20px rgba(16,28,23,.24);
+  animation:hintIn var(--dur-fast) var(--ease-smooth-out) both;
+}
+.agent-hint::before{
+  content:"";position:absolute;bottom:-5px;right:20px;
+  border-left:5px solid transparent;border-right:5px solid transparent;
+  border-top:5px solid var(--ink);
+}
+.agent-hint-x{
+  border:none;background:rgba(255,255,255,.16);color:inherit;cursor:pointer;
+  width:16px;height:16px;border-radius:50%;line-height:14px;text-align:center;
+  font-size:13px;padding:0;flex:none;
+}
+.agent-hint-x:hover{background:rgba(255,255,255,.3);}
+@keyframes hintIn{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:none;}}
+@media(prefers-reduced-motion:reduce){.agent-hint{animation:none;}}
+@media(max-width:640px){
+  .agent-hint{white-space:normal;max-width:230px;right:auto;left:0;line-height:1.65;}
+  .agent-hint::before{right:auto;left:20px;}
+}
 .agent-trace{display:flex;flex-direction:column;gap:6px;margin:0 0 12px;}
 .agent-ev{
   display:flex;gap:8px;align-items:flex-start;font-size:11.5px;line-height:1.6;color:var(--body);
@@ -1674,7 +1734,7 @@ body{line-height:1.72;}
         <path d="M13 38c0-3 2-5 5-6" stroke="#2E9B7E" stroke-width="2.4" stroke-linecap="round"/>
       </svg>
     </div>
-    <div class="orb-caption"><b>规则内核 · AI 解释</b><span>数字由确定性规则算好，AI 只把它讲清楚。</span></div>
+    <div class="orb-caption"><b>规则内核 · AI 分析</b><span>数字由规则算好，AI 自主调用工具做分析。</span></div>
   </div>
   <aside class="jt-preview" id="heroPreview" aria-label="最近一次方案摘要" hidden>
     <div class="jt-preview-head">
@@ -1961,12 +2021,12 @@ body{line-height:1.72;}
   <div class="aimodal-mask" id="aiMask"></div>
   <div class="aimodal-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
     <button type="button" class="aimodal-x" id="aiClose" aria-label="关闭">×</button>
-    <h2 id="aiTitle">选择 AI 解释方式</h2>
-    <p class="aimodal-sub">绑定你自己的 OpenAI 兼容服务后，可用 AI 生成碳迹反馈与方案解释；不配置也能使用全部规则计算。</p>
+    <h2 id="aiTitle">选择 AI 服务</h2>
+    <p class="aimodal-sub">绑定你自己的 OpenAI 兼容服务后，可启用逐字方案解释、Agent 自主分析和账单照片识别；不配置也能使用全部规则计算。</p>
     <div class="aimodal-opts" id="aiOpts">
       <button type="button" class="aio" id="aiChooseLlm">
         <b>使用我的 AI</b>
-        <span>用于自然语言反馈与解释，不参与金额、减碳量或资格计算</span>
+        <span>AI 自主调用工具做分析；数值与资格仍由服务端规则权威产出</span>
       </button>
       <button type="button" class="aio ghost" id="aiChooseLocal">
         <b>暂不使用 AI</b>
@@ -2027,15 +2087,27 @@ body{line-height:1.72;}
     <button type="button" class="welcome-x" id="welcomeClose" aria-label="关闭">×</button>
     <div class="welcome-kicker">WELCOME · 快速上手</div>
     <h2 id="welcomeTitle">你好，欢迎来到节碳家</h2>
-    <p class="welcome-lead">这是一个把家庭节能变成可执行方案的助手。花 10 秒了解下面两件事，能让体验更完整——但都不是必须的，不配置也能用全部核心功能。</p>
+    <p class="welcome-lead">这是一个把家庭节能变成可执行方案的助手。先按下面三步走一遍，就能用上全部能力；下面的两个配置都是可选的，不配置也能完成核心流程。</p>
+
+    <div class="welcome-steps" aria-label="使用步骤">
+      <div class="welcome-step"><span class="ws-num">1</span><div><b>填家庭情况</b><small>月用电量或月电费至少填一项，选好预算</small></div></div>
+      <div class="welcome-step"><span class="ws-num">2</span><div><b>生成三档方案</b><small>看投入、节电、省钱、减碳与回收周期</small></div></div>
+      <div class="welcome-step"><span class="ws-num">3</span><div><b>看解释 · 记碳迹</b><small>开启 Agent 模式看 AI 分析，把行动记入碳迹</small></div></div>
+    </div>
+
+    <div class="welcome-more">
+      <b>可选增强</b>
+      <span>在「AI 方案解释」区打开 <em>Agent 模式</em>，可看 AI 自主调用工具的过程；在碳迹日记「添加照片」后可<i>识别账单</i>自动填入用电量。两者都需要先接入 AI 服务。</span>
+    </div>
+
     <div class="welcome-opts">
       <div class="welcome-opt">
         <div class="welcome-opt-ico">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3a6 6 0 0 0-6 6c0 2.2 1.2 3.6 2.4 4.8.5.5.8 1 .9 1.7h5.4c.1-.7.4-1.2.9-1.7C16.8 12.6 18 11.2 18 9a6 6 0 0 0-6-6Z" stroke="#0E6E5C" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 19h4M10.5 21.5h3" stroke="#0E6E5C" stroke-width="1.7" stroke-linecap="round"/></svg>
         </div>
         <b>接入 AI（可选）</b>
-        <p>绑定你自己的 AI 服务，生成逐字方案解释与政策解读。不配置也能用确定性规则完整计算。</p>
-        <span class="wo-tag">AI 只解释，不算数</span>
+        <p>绑定你自己的 AI 服务，可启用逐字方案解释、Agent 自主分析与账单照片识别。不配置也能用确定性规则完整计算。</p>
+        <span class="wo-tag">AI 做分析，数值仍由规则算</span>
         <button type="button" class="welcome-go" id="welcomeAi">去配置 AI →</button>
       </div>
       <div class="welcome-opt">
@@ -2081,7 +2153,7 @@ body{line-height:1.72;}
         kicker: 'ESTIMATE & DATA BOUNDARY',
         title: '估算与数据边界',
         body:
-          '<p class="info-lead">所有节电量、节省电费和减碳量均由服务端确定性规则计算，属于<b>工程估算</b>，不是实测结论，也不构成节电承诺。AI 不参与任何数值计算。</p>' +
+          '<p class="info-lead">所有节电量、节省电费和减碳量均由服务端确定性规则计算，属于<b>工程估算</b>，不是实测结论，也不构成节电承诺。AI 负责自主分析、检索政策依据并组织解释，但所有数值都由工具从规则结果中读取，模型不能改写。</p>' +
           '<h3>公开来源参数</h3>' +
           '<ul>' +
           '<li><b>电力碳足迹因子：</b>0.5777 kgCO₂e/kWh，来自生态环境部等部门《关于发布 2024 年电力碳足迹因子数据的公告》（2025-10-24）。这是全国平均值，<b>不是西安本地电网因子，也不是边际排放因子</b>。</li>' +
@@ -2125,7 +2197,7 @@ body{line-height:1.72;}
           '<li>登录态是随机签名 token，带有效期并做 HMAC-SHA256 校验，不依赖浏览器本地身份声明。</li>' +
           '</ul>' +
           '<h3>AI 服务 Key</h3>' +
-          '<p>API Key 只保存在本机浏览器，默认关闭浏览器后即清空；使用时仅随当次请求发送到本站服务并转发给模型方。服务端不落盘、不写日志、不参与计算。页面也不能通过 URL 参数把模型地址改写到第三方。</p>' +
+          '<p>API Key 只保存在本机浏览器，默认关闭浏览器后即清空；使用时仅随当次请求发送到本站服务并转发给模型方。服务端不落盘、不写日志，也不采信模型给出的计算结论（数值一律来自规则引擎）。页面也不能通过 URL 参数把模型地址改写到第三方。</p>' +
           '<h3>离线使用</h3>' +
           '<p>关闭 AI 或模型调用失败（超时、Key 失效、返回异常）时，规则计算与全部核心功能仍可正常使用，系统自动展示规则说明，不会出现空白结果。</p>',
         callout: '<b>提醒：</b>请勿在演示或录屏中展示真实 API Key。竞赛演示建议填写测试 Key，用完及时清除。'
@@ -2420,6 +2492,43 @@ body{line-height:1.72;}
     var box = document.getElementById('aiExplainBox');
     if (box) new MutationObserver(sync).observe(box, { attributes: true, attributeFilter: ['hidden'] });
     sync();
+  })();
+
+  /* Agent 模式开启时，三阶段卡切换成"自主规划"的文案（不改任何原逻辑） */
+  (function () {
+    var COPIES = {
+      rules: [['读取规则结果', '服务端算好的方案'], ['检索政策条款', '只把命中片段给模型'], ['组织可读解释', '输出后再次校验']],
+      agent: [['规划调用工具', 'AI 自己决定下一步'], ['工具返回事实', '数值来自规则引擎'], ['提交并校验', '轨迹实时可见']]
+    };
+    function apply(on) {
+      var steps = document.querySelectorAll('#wfTrack .wf-step');
+      var rows = COPIES[on ? 'agent' : 'rules'];
+      Array.prototype.forEach.call(steps, function (step, i) {
+        if (!rows[i]) return;
+        var b = step.querySelector('b'), s = step.querySelector('small');
+        if (b) b.textContent = rows[i][0];
+        if (s) s.textContent = rows[i][1];
+      });
+      var chips = document.querySelectorAll('#aiExplainStages span[data-ai-stage]');
+      Array.prototype.forEach.call(chips, function (c, i) {
+        if (rows[i]) c.textContent = rows[i][0];
+      });
+    }
+    function bind() {
+      var chk = document.querySelector('.agent-toggle input');
+      if (!chk) return false;
+      apply(chk.checked);
+      chk.addEventListener('change', function () { apply(chk.checked); });
+      return true;
+    }
+    // agent-ui.js 在 DOMContentLoaded 后 60ms 才插入开关，这里延迟重试
+    if (!bind()) {
+      var tries = 0;
+      var timer = setInterval(function () {
+        tries++;
+        if (bind() || tries > 20) clearInterval(timer);
+      }, 100);
+    }
   })();
   </script>
 </body>

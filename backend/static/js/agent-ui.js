@@ -29,7 +29,40 @@
 
     var chk = label.querySelector('input');
     chk.checked = agentOn();
-    chk.addEventListener('change', function () { setAgentOn(chk.checked); });
+
+    // 一次性引导气泡：首次进入时提示这个开关的作用，点开关或点关闭后不再出现
+    var HINT_KEY = 'jtc_agent_hint_seen';
+    var hintSeen = false;
+    try { hintSeen = localStorage.getItem(HINT_KEY) === '1'; } catch (e) {}
+    var hint = null;
+    if (!hintSeen && !chk.checked) {
+      var wrap = document.createElement('span');
+      wrap.className = 'agent-hint-wrap';
+      label.parentNode.insertBefore(wrap, label);
+      wrap.appendChild(label);
+      wrap.style.position = 'relative';
+      var bubble = document.createElement('span');
+      bubble.className = 'agent-hint';
+      bubble.innerHTML = '新：开启后 AI 会自主调用工具分析，过程可见 <button type="button" class="agent-hint-x" aria-label="关闭提示">×</button>';
+      wrap.appendChild(bubble);
+      hint = { wrap: wrap, bubble: bubble };
+    }
+    function dismissHint() {
+      if (!hint) return;
+      hint.bubble.remove();
+      hint.wrap.style.position = '';
+      try { localStorage.setItem(HINT_KEY, '1'); } catch (e) {}
+      hint = null;
+    }
+    chk.addEventListener('change', function () {
+      setAgentOn(chk.checked);
+      if (chk.checked) dismissHint();
+    });
+    if (hint) {
+      hint.bubble.querySelector('.agent-hint-x').addEventListener('click', function (ev) {
+        ev.preventDefault(); ev.stopPropagation(); dismissHint();
+      });
+    }
 
     // 覆盖全局解释函数：开启时走 Agent，否则调用保存的原函数
     var original = (typeof window.runAiExplanation === 'function')

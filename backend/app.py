@@ -258,7 +258,7 @@ def _explain_stream(result, evidence, retrieval, llm):
             if kind == "done":
                 yield _sse("done", {
                     "ai": payload,
-                    "aiNote": "AI 解释已生成；数值与资格未由模型决定。",
+                    "aiNote": "AI 解释已生成；数值与资格由规则权威产出，模型不改写。",
                     "retrieval": retrieval,
                 })
             else:
@@ -310,7 +310,7 @@ def energy_explain():
 
     try:
         ai = llm_steps.explain_energy_plan(result, evidence, *llm)
-        note = "AI 解释已生成；数值与资格未由模型决定。"
+        note = "AI 解释已生成；数值与资格由规则权威产出，模型不改写。"
     except LlmError as exc:
         ai = energy_service.build_rule_explanation(result)
         note = "AI 解释暂不可用，已使用规则说明：%s" % str(exc)[:160]
@@ -335,7 +335,7 @@ def _agent_stream(result, evidence, retrieval, llm):
             if kind == "final":
                 yield _sse("done", {
                     "ai": payload,
-                    "aiNote": "AI Agent 已调用工具完成分析；全部数值来自规则计算与政策检索，模型未参与计算。",
+                    "aiNote": "AI Agent 已调用工具完成分析；数值与资格由规则权威产出，模型不改写。",
                     "retrieval": retrieval,
                 })
             elif kind == "error":
@@ -421,7 +421,7 @@ def energy_agent():
 
     try:
         ai = agent.run_agent(result, evidence, *llm)
-        note = "AI Agent 已调用工具完成分析；数值与资格未由模型决定。"
+        note = "AI Agent 已调用工具完成分析；数值与资格由规则权威产出，模型不改写。"
     except LlmError as exc:
         ai = energy_service.build_rule_explanation(result)
         note = "Agent 暂不可用，已使用规则说明：%s" % str(exc)[:160]

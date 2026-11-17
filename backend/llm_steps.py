@@ -130,7 +130,7 @@ def build_explanation(data: dict, result: dict) -> dict:
         "policyNotes": policy_notes,
         "nextStep": next_step,
         "cautions": [
-            "AI 仅组织解释，不参与节电量、费用、减碳量和政策资格计算。",
+            "本解释由模型依据服务端计算结果组织；节电量、费用、减碳量与政策资格均由规则权威产出，模型不改写。",
             "所有数值仍以本次规则计算结果为准；政策卡是候选匹配，不构成获批或申领依据。",
         ],
     }

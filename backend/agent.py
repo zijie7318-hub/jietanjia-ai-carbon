@@ -235,6 +235,10 @@ def agent_stream(result: dict, evidence: list[dict], base_url: str, model: str, 
     ai["mode"] = "llm-agent"
     ai["protocol"] = protocol
     ai["trajectory"] = collected_steps
+    ai["cautions"] = [
+        "AI Agent 自主调用只读工具完成分析；节电量、费用、减碳量与政策资格均由服务端规则权威产出，模型不能改写。",
+        "所有数值仍以本次规则计算结果为准；政策卡是候选匹配，不构成获批或申领依据。",
+    ]
     yield ("final", ai)
 
 
