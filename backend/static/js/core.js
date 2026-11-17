@@ -35,9 +35,19 @@ async function requestJson(path, options, timeout) {
 /** @param {unknown} s @returns {string} */
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-/** @param {number} n @returns {string} */
-const fmt = n => '¥' + Number(n || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const num = (n, d) => Number(n || 0).toLocaleString('zh-CN', { maximumFractionDigits: d == null ? 1 : d });
+/**
+ * 金额/数值格式化：优先委托给 TypeScript 编译产物（src/ts/format.ts），
+ * 保证全站数值口径单一来源；产物未加载时回退到本地等价实现。
+ * @param {number} n
+ * @returns {string}
+ */
+const fmt = n => (globalThis.JtcFormat
+  ? globalThis.JtcFormat.money(n)
+  : '¥' + Number(n || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+/** @param {number} n @param {number} [d] @returns {string} */
+const num = (n, d) => (globalThis.JtcFormat
+  ? globalThis.JtcFormat.num(n, d == null ? 1 : d)
+  : Number(n || 0).toLocaleString('zh-CN', { maximumFractionDigits: d == null ? 1 : d }));
 const pad = n => String(n).padStart(2, '0');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 

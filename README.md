@@ -159,7 +159,8 @@ core → ai-config → nav → ai-explain → plans → diary → account → ai
 ```
 
 - 用普通脚本而非 ES module：`file://` 下直接打开页面也能工作，不必依赖服务器；
-- `types/frontend.d.ts` 声明了方案、措施、政策、碳迹的数据契约，`jsconfig.json` 开启 `checkJs`，以 `tsc -p jsconfig.json` 做类型门禁（0 error），保持 TypeScript 级别的类型规范；
+- **TypeScript 源码**：`src/ts/format.ts` 是数值格式化与边界校验的唯一事实源，带完整类型注解（`MaybeNumber` / `JtcFormatApi` 等），编译产物 `static/js/generated/format.js` 由 `node scripts/build-ts.js` 生成并校验；
+- `types/frontend.d.ts` 声明方案、措施、政策、碳迹的数据契约，`jsconfig.json` 开启 `checkJs`，`tsc -p jsconfig.json` 为类型门禁；后端 9 个 JS 模块保留零构建加载，`core.js` 的 `fmt`/`num` 优先委托 TS 产物，保证数值口径单一来源；
 - AI 解释走 SSE 流式输出，逐字渲染并在结束时替换为服务端校验后的结构；
 - 服务端对文本响应做 gzip，静态模块带 `Cache-Control`，接口响应仍为 `no-store`。
 
@@ -188,7 +189,7 @@ core → ai-config → nav → ai-explain → plans → diary → account → ai
 测试全部离线运行，不需要模型 Key、外部业务接口或网络：
 
 ```bash
-python tests/smoke_api.py    # 43 项
+python tests/smoke_api.py    # 44 项
 python tests/test_energy.py  # 52 项
 python tests/test_ai.py      # 32 项
 python tests/test_agent.py   # 28 项：Function Calling 工具循环 + JSON 降级
@@ -196,11 +197,12 @@ python tests/test_ocr.py     # 12 项：账单识别、数值校验、越界过�
 node tests/smoke_ui.js       # 52 项
 ```
 
-当前结果：**219/219 通过**。
+当前结果：**220/220 通过**。
 
-另有两项不改变计数的门禁：
+另有三项不改变计数的门禁：
 
 ```bash
+node scripts/build-ts.js                    # TypeScript 源码与编译产物一致性门禁，16 项
 npx -y -p typescript tsc -p jsconfig.json   # 前端类型检查，期望 0 error
 python tests/rag_ablation.py                # 检索消融对照，30 组样本
 ```

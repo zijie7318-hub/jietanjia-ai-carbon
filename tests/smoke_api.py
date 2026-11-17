@@ -49,11 +49,14 @@ check("调试账户接口默认关闭", client.get("/api/debug/auth").status_cod
 # 前端资源：模块化加载、gzip 与静态缓存
 home_raw = client.get("/").get_data()
 home_gz = client.get("/", headers={"Accept-Encoding": "gzip"})
-check("首页按序引用 10 个前端模块（含 Agent）",
-      home_raw.decode("utf-8").count('src="static/js/') == 10)
+check("首页按序引用 11 个前端模块（含 TS 产物与 Agent）",
+      home_raw.decode("utf-8").count('src="static/js/') == 11)
 check("Agent 模块在 boot 之后加载",
       home_raw.decode("utf-8").find('static/js/agent-ui.js')
       > home_raw.decode("utf-8").find('static/js/boot.js'))
+check("TypeScript 产物在 core.js 之前加载",
+      home_raw.decode("utf-8").find('static/js/generated/format.js')
+      < home_raw.decode("utf-8").find('static/js/core.js'))
 check("首页文本响应启用 gzip",
       home_gz.headers.get("Content-Encoding") == "gzip" and len(home_gz.get_data()) < len(home_raw),
       "%d → %d 字节" % (len(home_raw), len(home_gz.get_data())))
