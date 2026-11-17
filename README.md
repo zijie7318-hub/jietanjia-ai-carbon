@@ -159,7 +159,7 @@ core → ai-config → nav → ai-explain → plans → diary → account → ai
 ```
 
 - 用普通脚本而非 ES module：`file://` 下直接打开页面也能工作，不必依赖服务器；
-- **TypeScript 源码**：`src/ts/format.ts` 是数值格式化与边界校验的唯一事实源，带完整类型注解（`MaybeNumber` / `JtcFormatApi` 等），编译产物 `static/js/generated/format.js` 由 `node scripts/build-ts.js` 生成并校验；
+- **TypeScript 源码**：`src/ts/format.ts` 是数值格式化与边界校验的唯一事实源，带完整类型注解（`MaybeNumber` / `JtcFormatApi` 等），编译产物 `static/js/generated/format.js` 由 `node scripts/build-ts.js` 调用真实 `tsc --strict` 生成（编译器路径可用 `TSC_PATH` 覆盖，默认 `D:/TypeScript/node_modules/typescript/lib/tsc.js`），产物经 13 项运行时校验；
 - `types/frontend.d.ts` 声明方案、措施、政策、碳迹的数据契约，`jsconfig.json` 开启 `checkJs`，`tsc -p jsconfig.json` 为类型门禁；后端 9 个 JS 模块保留零构建加载，`core.js` 的 `fmt`/`num` 优先委托 TS 产物，保证数值口径单一来源；
 - AI 解释走 SSE 流式输出，逐字渲染并在结束时替换为服务端校验后的结构；
 - 服务端对文本响应做 gzip，静态模块带 `Cache-Control`，接口响应仍为 `no-store`。
@@ -202,7 +202,7 @@ node tests/smoke_ui.js       # 52 项
 另有三项不改变计数的门禁：
 
 ```bash
-node scripts/build-ts.js                    # TypeScript 源码与编译产物一致性门禁，16 项
+node scripts/build-ts.js                    # 真实 tsc --strict 编译 + 13 项产物校验
 npx -y -p typescript tsc -p jsconfig.json   # 前端类型检查，期望 0 error
 python tests/rag_ablation.py                # 检索消融对照，30 组样本
 ```
